@@ -13,8 +13,11 @@ use ratatui::{
 };
 use std::io;
 
+const GRID_WIDTH: usize = 10;
+const GRID_HEIGHT: usize = 5;
+
 struct App {
-    values: [[u8; 10]; 5],
+    values: [[u8; GRID_WIDTH]; GRID_HEIGHT],
     cursor_x: usize,
     cursor_y: usize,
 }
@@ -22,7 +25,7 @@ struct App {
 impl App {
     fn new() -> App {
         App {
-            values: [[0; 10]; 5],
+            values: [[0; GRID_WIDTH]; GRID_HEIGHT],
             cursor_x: 0,
             cursor_y: 0,
         }
@@ -35,7 +38,7 @@ impl App {
     }
 
     fn move_cursor_right(&mut self) {
-        if self.cursor_x < 9 {
+        if self.cursor_x < GRID_WIDTH - 1 {
             self.cursor_x += 1;
         }
     }
@@ -47,7 +50,7 @@ impl App {
     }
 
     fn move_cursor_down(&mut self) {
-        if self.cursor_y < 4 {
+        if self.cursor_y < GRID_HEIGHT - 1 {
             self.cursor_y += 1;
         }
     }
@@ -128,8 +131,8 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
     let cell_width = 4; // 2 digits + spacing
     let cell_height = 1;
 
-    for row in 0..5 {
-        for col in 0..10 {
+    for row in 0..GRID_HEIGHT {
+        for col in 0..GRID_WIDTH {
             let value = app.values[row][col];
             let x = inner.x + (col as u16 * cell_width);
             let y = inner.y + row as u16;
