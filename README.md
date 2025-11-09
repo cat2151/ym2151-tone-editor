@@ -2,6 +2,10 @@
 
 A Windows-compatible Rust TUI (Text User Interface) editor for YM2151 (OPM) FM synthesis tone parameters.
 
+## 状況
+
+開発中です。現在の進捗率は1%ざっくり
+
 ## Features
 
 - Edit YM2151 tone parameters with parameter labels
