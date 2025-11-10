@@ -6,6 +6,14 @@ A Windows-compatible Rust TUI (Text User Interface) editor for YM2151 (OPM) FM s
 
 開発中です。現在の進捗率は1%ざっくり
 
+- 今後の展望
+- ※すべて検証用の仮仕様であり、そのあと破壊的変更をします
+- now : ESCで保存するとき、jsonにして保存。内部音色データ to YM2151-log-JSON
+- 起動時、jsonがあれば、それを内部音色データに変換して読み込み
+- 数値を増減したとき、都度、内部音色データをjson化して、cat-mml-playにわたして演奏（cat-mml-playは自動サーバー機能があるので高速に鳴らせます）
+- 上記までの間に、音が鳴らない等の致命的な不具合が多数予想されるので、進め方をissueにできるだけノウハウとして残しつつ進めるつもり
+- これで最低限、音色づくりの機能ができたので、ドッグフーディング
+
 ## Features
 
 - Edit YM2151 tone parameters with parameter labels
