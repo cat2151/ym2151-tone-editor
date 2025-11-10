@@ -233,7 +233,7 @@ impl App {
         };
 
         let json_string = serde_json::to_string_pretty(&log)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+            .map_err(io::Error::other)?;
 
         // Generate filename with timestamp
         let timestamp = std::time::SystemTime::now()
