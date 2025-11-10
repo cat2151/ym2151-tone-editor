@@ -11,6 +11,8 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Terminal,
 };
+use serde::{Deserialize, Serialize};
+use std::fs;
 use std::io;
 
 const GRID_WIDTH: usize = 10;
@@ -39,6 +41,21 @@ const PARAM_MAX: [u8; GRID_WIDTH] = [
 const ROW_NAMES: [&str; GRID_HEIGHT] = [
     "OP1", "OP2", "OP3", "OP4", "CH "
 ];
+
+/// JSON event structure for ym2151-log-play-server
+#[derive(Serialize, Deserialize, Debug)]
+struct Ym2151Event {
+    time: u32,
+    addr: String,
+    data: String,
+}
+
+/// JSON log structure for ym2151-log-play-server
+#[derive(Serialize, Deserialize, Debug)]
+struct Ym2151Log {
+    event_count: usize,
+    events: Vec<Ym2151Event>,
+}
 
 struct App {
     values: [[u8; GRID_WIDTH]; GRID_HEIGHT],
@@ -112,6 +129,122 @@ impl App {
             self.values[self.cursor_y][self.cursor_x] = current - 1;
         }
     }
+
+    /// Convert tone data to YM2151 register events
+    /// This generates register writes for the YM2151 chip based on the current tone parameters
+    fn to_ym2151_events(&self) -> Vec<Ym2151Event> {
+        let mut events = Vec::new();
+
+        // YM2151 Register Map:
+        // $20-$27: RL, FB, CON (channel 0-7) - Algorithm/Feedback
+        // $28-$2F: KC (Key Code) - Note frequency
+        // $30-$37: KF (Key Fraction) - Fine frequency
+        // $38-$3F: PMS, AMS (Phase/Amplitude Modulation Sensitivity)
+        // $40-$5F: DT1, MUL (Detune/Multiply) - 4 operators x 8 channels
+        // $60-$7F: TL (Total Level) - 4 operators x 8 channels
+        // $80-$9F: KS, AR (Key Scale/Attack Rate) - 4 operators x 8 channels
+        // $A0-$BF: AMS-EN, D1R (Decay 1 Rate) - 4 operators x 8 channels
+        // $C0-$DF: DT2, D2R (Decay 2 Rate) - 4 operators x 8 channels
+        // $E0-$FF: D1L, RR (Decay 1 Level/Release Rate) - 4 operators x 8 channels
+
+        // We'll use channel 0 for this example
+        let channel = 0;
+
+        // For each of 4 operators (M1, M2, C1, C2 in YM2151 terminology)
+        // We map our OP1-OP4 to operators
+        for op in 0..4 {
+            let op_offset = op * 8 + channel; // Operator offset in register map
+            
+            // DT1 (bits 6-4) and MUL (bits 3-0) - Register $40-$5F
+            let dt = self.values[op][0]; // DT parameter
+            let mul = self.values[op][1]; // MUL parameter
+            let dt_mul = ((dt & 0x07) << 4) | (mul & 0x0F);
+            events.push(Ym2151Event {
+                time: 0,
+                addr: format!("0x{:02X}", 0x40 + op_offset),
+                data: format!("0x{:02X}", dt_mul),
+            });
+
+            // TL (Total Level) - Register $60-$7F (7 bits)
+            let tl = self.values[op][2]; // TL parameter
+            events.push(Ym2151Event {
+                time: 0,
+                addr: format!("0x{:02X}", 0x60 + op_offset),
+                data: format!("0x{:02X}", tl & 0x7F),
+            });
+
+            // KS (bits 7-6) and AR (bits 4-0) - Register $80-$9F
+            let ks = self.values[op][3]; // KS parameter
+            let ar = self.values[op][4]; // AR parameter
+            let ks_ar = ((ks & 0x03) << 6) | (ar & 0x1F);
+            events.push(Ym2151Event {
+                time: 0,
+                addr: format!("0x{:02X}", 0x80 + op_offset),
+                data: format!("0x{:02X}", ks_ar),
+            });
+
+            // AMS-EN (bit 7, set to 0) and D1R (bits 4-0) - Register $A0-$BF
+            let d1r = self.values[op][5]; // D1R parameter
+            events.push(Ym2151Event {
+                time: 0,
+                addr: format!("0x{:02X}", 0xA0 + op_offset),
+                data: format!("0x{:02X}", d1r & 0x1F),
+            });
+
+            // DT2 (bits 7-6, set to 0) and D2R (bits 4-0) - Register $C0-$DF
+            let d2r = self.values[op][7]; // D2R parameter
+            events.push(Ym2151Event {
+                time: 0,
+                addr: format!("0x{:02X}", 0xC0 + op_offset),
+                data: format!("0x{:02X}", d2r & 0x0F),
+            });
+
+            // D1L (bits 7-4) and RR (bits 3-0) - Register $E0-$FF
+            let d1l = self.values[op][6]; // D1L parameter
+            let rr = self.values[op][8]; // RR parameter
+            let d1l_rr = ((d1l & 0x0F) << 4) | (rr & 0x0F);
+            events.push(Ym2151Event {
+                time: 0,
+                addr: format!("0x{:02X}", 0xE0 + op_offset),
+                data: format!("0x{:02X}", d1l_rr),
+            });
+        }
+
+        // Channel settings: RL, FB, CON (Algorithm) - Register $20-$27
+        let alg = self.values[4][9]; // ALG parameter from CH row
+        let fb = 0; // Feedback, default to 0
+        let rl = 0xC0; // Both L and R enabled
+        let rl_fb_con = rl | ((fb & 0x07) << 3) | (alg & 0x07);
+        events.push(Ym2151Event {
+            time: 0,
+            addr: format!("0x{:02X}", 0x20 + channel),
+            data: format!("0x{:02X}", rl_fb_con),
+        });
+
+        events
+    }
+
+    /// Save tone data to JSON file in ym2151-log-play-server format
+    fn save_to_json(&self) -> io::Result<()> {
+        let events = self.to_ym2151_events();
+        let log = Ym2151Log {
+            event_count: events.len(),
+            events,
+        };
+
+        let json_string = serde_json::to_string_pretty(&log)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+
+        // Generate filename with timestamp
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let filename = format!("ym2151_tone_{}.json", timestamp);
+
+        fs::write(&filename, json_string)?;
+        Ok(())
+    }
 }
 
 fn main() -> Result<(), io::Error> {
@@ -155,7 +288,11 @@ fn run_app<B: ratatui::backend::Backend>(
                 KeyCode::Char('j') => app.move_cursor_down(),
                 KeyCode::Char('k') => app.move_cursor_up(),
                 KeyCode::Char('l') => app.move_cursor_right(),
-                KeyCode::Esc => return Ok(()),
+                KeyCode::Esc => {
+                    // Save tone data to JSON before exiting
+                    app.save_to_json()?;
+                    return Ok(());
+                }
                 _ => {}
             }
         }
@@ -239,5 +376,85 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
             let paragraph = Paragraph::new(Span::styled(text, style));
             f.render_widget(paragraph, area);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_to_ym2151_events() {
+        let app = App::new();
+        let events = app.to_ym2151_events();
+        
+        // Should have events for 4 operators (6 registers each) + 1 channel register
+        assert_eq!(events.len(), 25);
+        
+        // Check that events have correct format
+        for event in &events {
+            assert_eq!(event.time, 0);
+            assert!(event.addr.starts_with("0x"));
+            assert!(event.data.starts_with("0x"));
+        }
+    }
+
+    #[test]
+    fn test_json_serialization() {
+        let app = App::new();
+        let events = app.to_ym2151_events();
+        let log = Ym2151Log {
+            event_count: events.len(),
+            events,
+        };
+
+        // Test that JSON serialization works
+        let json_result = serde_json::to_string_pretty(&log);
+        assert!(json_result.is_ok());
+
+        let json_string = json_result.unwrap();
+        assert!(json_string.contains("event_count"));
+        assert!(json_string.contains("events"));
+    }
+
+    #[test]
+    fn test_save_to_json_creates_valid_file() {
+        let app = App::new();
+        
+        // Save to JSON
+        let result = app.save_to_json();
+        assert!(result.is_ok());
+        
+        // Find the generated JSON file
+        let entries = std::fs::read_dir(".").unwrap();
+        let mut json_files: Vec<_> = entries
+            .filter_map(|e| e.ok())
+            .filter(|e| {
+                e.path()
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .map(|s| s.starts_with("ym2151_tone_") && s.ends_with(".json"))
+                    .unwrap_or(false)
+            })
+            .collect();
+        
+        assert!(!json_files.is_empty(), "No JSON file was created");
+        
+        // Get the most recent file
+        json_files.sort_by_key(|e| e.metadata().unwrap().modified().unwrap());
+        let json_file = json_files.last().unwrap();
+        
+        // Read and parse the JSON
+        let content = std::fs::read_to_string(json_file.path()).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&content).unwrap();
+        
+        // Verify structure
+        assert!(parsed.get("event_count").is_some());
+        assert!(parsed.get("events").is_some());
+        assert!(parsed["events"].is_array());
+        assert_eq!(parsed["event_count"].as_u64().unwrap(), 25);
+        
+        // Clean up
+        std::fs::remove_file(json_file.path()).ok();
     }
 }
