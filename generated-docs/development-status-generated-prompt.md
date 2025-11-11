@@ -204,6 +204,19 @@ Last updated: 2025-11-11
 - src/main.rs
 
 ## 現在のオープンIssues
+## [Issue #7](../issue-notes/7.md): Add JSON export for YM2151 tone data on ESC exit
+Implements provisional JSON export functionality to save edited tone data in ym2151-log-play-server format when exiting with ESC.
+
+## Changes
+
+- **JSON serialization**: Added `serde`/`serde_json` dependencies with `Ym2151Event` and `Ym2151Log` structures matching the log-play-server schema (`event_c...
+ラベル: 
+--- issue-notes/7.md の内容 ---
+
+```markdown
+
+```
+
 ## [Issue #5](../issue-notes/5.md): 仮仕様として、起動時、カレントディレクトリのjsonファイルを検索し、最新のものを音色データとして読み込み、表示に反映する
 
 ラベル: 
@@ -549,13 +562,41 @@ jobs:
 
 ```
 
+### .github/actions-tmp/issue-notes/7.md
+```md
+# issue issue note生成できるかのtest用 #7
+[issues #7](https://github.com/cat2151/github-actions/issues/7)
+
+- 生成できた
+- closeとする
+
+```
+
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-
+1241bd3 Update README with development status and plans
+6e60585 Update project summaries (overview & development status) [auto]
+b50647d Update project summaries (overview & development status) [auto]
+ce7376f Add project status section to README
+3d63ad9 Merge pull request #6 from cat2151/copilot/add-ym2151-sound-data-format
+04ee657 github-actionsリポジトリの共通ワークフローを導入
+62a1149 Add YM2151 parameter labels and tone data format
+73d44b0 Initial plan
+e0bcb93 jekyll settings
+9f9cef3 Merge pull request #1 from cat2151/copilot/create-tui-editor-for-windows
 
 ### 変更されたファイル:
-
+.github/workflows/call-daily-project-summary.yml
+.github/workflows/call-issue-note.yml
+.github/workflows/call-translate-readme.yml
+README.md
+_config.yml
+generated-docs/development-status-generated-prompt.md
+generated-docs/development-status.md
+generated-docs/project-overview-generated-prompt.md
+generated-docs/project-overview.md
+src/main.rs
 
 
 ---
-Generated at: 2025-11-11 07:08:50 JST
+Generated at: 2025-11-11 09:27:09 JST
