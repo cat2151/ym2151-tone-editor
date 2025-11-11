@@ -42,6 +42,21 @@ const ROW_NAMES: [&str; GRID_HEIGHT] = [
     "OP1", "OP2", "OP3", "OP4", "CH "
 ];
 
+// Parameter column indices (matching PARAM_NAMES order)
+const PARAM_DT: usize = 0;
+const PARAM_MUL: usize = 1;
+const PARAM_TL: usize = 2;
+const PARAM_KS: usize = 3;
+const PARAM_AR: usize = 4;
+const PARAM_D1R: usize = 5;
+const PARAM_D1L: usize = 6;
+const PARAM_D2R: usize = 7;
+const PARAM_RR: usize = 8;
+const PARAM_ALG: usize = 9;
+
+// Row index for channel settings
+const ROW_CH: usize = 4;
+
 /// JSON event structure for ym2151-log-play-server
 #[derive(Serialize, Deserialize, Debug)]
 struct Ym2151Event {
@@ -156,8 +171,8 @@ impl App {
             let op_offset = op * 8 + channel; // Operator offset in register map
             
             // DT1 (bits 6-4) and MUL (bits 3-0) - Register $40-$5F
-            let dt = self.values[op][0]; // DT parameter
-            let mul = self.values[op][1]; // MUL parameter
+            let dt = self.values[op][PARAM_DT];
+            let mul = self.values[op][PARAM_MUL];
             let dt_mul = ((dt & 0x07) << 4) | (mul & 0x0F);
             events.push(Ym2151Event {
                 time: 0,
@@ -166,7 +181,7 @@ impl App {
             });
 
             // TL (Total Level) - Register $60-$7F (7 bits)
-            let tl = self.values[op][2]; // TL parameter
+            let tl = self.values[op][PARAM_TL];
             events.push(Ym2151Event {
                 time: 0,
                 addr: format!("0x{:02X}", 0x60 + op_offset),
@@ -174,8 +189,8 @@ impl App {
             });
 
             // KS (bits 7-6) and AR (bits 4-0) - Register $80-$9F
-            let ks = self.values[op][3]; // KS parameter
-            let ar = self.values[op][4]; // AR parameter
+            let ks = self.values[op][PARAM_KS];
+            let ar = self.values[op][PARAM_AR];
             let ks_ar = ((ks & 0x03) << 6) | (ar & 0x1F);
             events.push(Ym2151Event {
                 time: 0,
@@ -184,7 +199,7 @@ impl App {
             });
 
             // AMS-EN (bit 7, set to 0) and D1R (bits 4-0) - Register $A0-$BF
-            let d1r = self.values[op][5]; // D1R parameter
+            let d1r = self.values[op][PARAM_D1R];
             events.push(Ym2151Event {
                 time: 0,
                 addr: format!("0x{:02X}", 0xA0 + op_offset),
@@ -192,7 +207,7 @@ impl App {
             });
 
             // DT2 (bits 7-6, set to 0) and D2R (bits 4-0) - Register $C0-$DF
-            let d2r = self.values[op][7]; // D2R parameter
+            let d2r = self.values[op][PARAM_D2R];
             events.push(Ym2151Event {
                 time: 0,
                 addr: format!("0x{:02X}", 0xC0 + op_offset),
@@ -200,8 +215,8 @@ impl App {
             });
 
             // D1L (bits 7-4) and RR (bits 3-0) - Register $E0-$FF
-            let d1l = self.values[op][6]; // D1L parameter
-            let rr = self.values[op][8]; // RR parameter
+            let d1l = self.values[op][PARAM_D1L];
+            let rr = self.values[op][PARAM_RR];
             let d1l_rr = ((d1l & 0x0F) << 4) | (rr & 0x0F);
             events.push(Ym2151Event {
                 time: 0,
@@ -211,7 +226,7 @@ impl App {
         }
 
         // Channel settings: RL, FB, CON (Algorithm) - Register $20-$27
-        let alg = self.values[4][9]; // ALG parameter from CH row
+        let alg = self.values[ROW_CH][PARAM_ALG];
         let fb = 0; // Feedback, default to 0
         let rl = 0xC0; // Both L and R enabled
         let rl_fb_con = rl | ((fb & 0x07) << 3) | (alg & 0x07);
