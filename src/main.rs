@@ -1,5 +1,5 @@
 use crossterm::{
-    event::{self, Event, KeyCode},
+    event::{self, Event, KeyCode, KeyEventKind},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -461,19 +461,22 @@ fn run_app<B: ratatui::backend::Backend>(
         terminal.draw(|f| ui(f, app))?;
 
         if let Event::Key(key) = event::read()? {
-            match key.code {
-                KeyCode::Char('q') => app.decrease_value(),
-                KeyCode::Char('e') => app.increase_value(),
-                KeyCode::Char('h') => app.move_cursor_left(),
-                KeyCode::Char('j') => app.move_cursor_down(),
-                KeyCode::Char('k') => app.move_cursor_up(),
-                KeyCode::Char('l') => app.move_cursor_right(),
-                KeyCode::Esc => {
-                    // Save tone data to JSON before exiting
-                    app.save_to_json()?;
-                    return Ok(());
+            // Only process key press events, ignore release and repeat events
+            if key.kind == KeyEventKind::Press {
+                match key.code {
+                    KeyCode::Char('q') => app.decrease_value(),
+                    KeyCode::Char('e') => app.increase_value(),
+                    KeyCode::Char('h') => app.move_cursor_left(),
+                    KeyCode::Char('j') => app.move_cursor_down(),
+                    KeyCode::Char('k') => app.move_cursor_up(),
+                    KeyCode::Char('l') => app.move_cursor_right(),
+                    KeyCode::Esc => {
+                        // Save tone data to JSON before exiting
+                        app.save_to_json()?;
+                        return Ok(());
+                    }
+                    _ => {}
                 }
-                _ => {}
             }
         }
     }
