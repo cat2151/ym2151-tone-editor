@@ -100,11 +100,135 @@ impl App {
         // Channel settings: can be used for feedback, LFO, etc.
         values[4] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 4];
         
-        App {
+        let mut app = App {
             values,
             cursor_x: 0,
             cursor_y: 0,
+        };
+
+        // Try to load the newest JSON file from current directory
+        if let Ok(loaded_values) = App::load_newest_json() {
+            app.values = loaded_values;
         }
+
+        app
+    }
+
+    /// Find the newest JSON file in the current directory matching the pattern ym2151_tone_*.json
+    fn find_newest_json_file() -> io::Result<String> {
+        let entries = fs::read_dir(".")?;
+        
+        let mut json_files: Vec<_> = entries
+            .filter_map(|e| e.ok())
+            .filter(|e| {
+                e.path()
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .map(|s| s.starts_with("ym2151_tone_") && s.ends_with(".json"))
+                    .unwrap_or(false)
+            })
+            .collect();
+
+        if json_files.is_empty() {
+            return Err(io::Error::new(io::ErrorKind::NotFound, "No JSON files found"));
+        }
+
+        // Sort by modification time (newest first)
+        json_files.sort_by_key(|e| {
+            e.metadata()
+                .and_then(|m| m.modified())
+                .ok()
+        });
+        json_files.reverse();
+
+        json_files
+            .first()
+            .map(|e| e.file_name().to_string_lossy().to_string())
+            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "Could not get filename"))
+    }
+
+    /// Load tone data from a JSON file
+    fn load_from_json(filename: &str) -> io::Result<[[u8; GRID_WIDTH]; GRID_HEIGHT]> {
+        let json_string = fs::read_to_string(filename)?;
+        let log: Ym2151Log = serde_json::from_str(&json_string)
+            .map_err(io::Error::other)?;
+
+        App::events_to_tone_data(&log.events)
+    }
+
+    /// Load the newest JSON file and convert to tone data
+    fn load_newest_json() -> io::Result<[[u8; GRID_WIDTH]; GRID_HEIGHT]> {
+        let filename = App::find_newest_json_file()?;
+        App::load_from_json(&filename)
+    }
+
+    /// Convert YM2151 events back to tone data
+    fn events_to_tone_data(events: &[Ym2151Event]) -> io::Result<[[u8; GRID_WIDTH]; GRID_HEIGHT]> {
+        let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
+
+        for event in events {
+            // Parse address and data
+            let addr = u8::from_str_radix(event.addr.trim_start_matches("0x"), 16)
+                .map_err(io::Error::other)?;
+            let data = u8::from_str_radix(event.data.trim_start_matches("0x"), 16)
+                .map_err(io::Error::other)?;
+
+            // Decode based on register address range
+            match addr {
+                // DT1/MUL registers (0x40-0x5F)
+                0x40..=0x5F => {
+                    let op = ((addr - 0x40) / 8) as usize;
+                    if op < 4 {
+                        values[op][PARAM_DT] = (data >> 4) & 0x07;
+                        values[op][PARAM_MUL] = data & 0x0F;
+                    }
+                }
+                // TL registers (0x60-0x7F)
+                0x60..=0x7F => {
+                    let op = ((addr - 0x60) / 8) as usize;
+                    if op < 4 {
+                        values[op][PARAM_TL] = data & 0x7F;
+                    }
+                }
+                // KS/AR registers (0x80-0x9F)
+                0x80..=0x9F => {
+                    let op = ((addr - 0x80) / 8) as usize;
+                    if op < 4 {
+                        values[op][PARAM_KS] = (data >> 6) & 0x03;
+                        values[op][PARAM_AR] = data & 0x1F;
+                    }
+                }
+                // AMS-EN/D1R registers (0xA0-0xBF)
+                0xA0..=0xBF => {
+                    let op = ((addr - 0xA0) / 8) as usize;
+                    if op < 4 {
+                        values[op][PARAM_D1R] = data & 0x1F;
+                    }
+                }
+                // DT2/D2R registers (0xC0-0xDF)
+                0xC0..=0xDF => {
+                    let op = ((addr - 0xC0) / 8) as usize;
+                    if op < 4 {
+                        values[op][PARAM_D2R] = data & 0x0F;
+                    }
+                }
+                // D1L/RR registers (0xE0-0xFF)
+                0xE0..=0xFF => {
+                    let op = ((addr - 0xE0) / 8) as usize;
+                    if op < 4 {
+                        values[op][PARAM_D1L] = (data >> 4) & 0x0F;
+                        values[op][PARAM_RR] = data & 0x0F;
+                    }
+                }
+                // RL/FB/CON register (0x20-0x27)
+                0x20..=0x27 => {
+                    values[ROW_CH][PARAM_ALG] = data & 0x07;
+                }
+                _ => {}
+            }
+        }
+
+        Ok(values)
     }
 
     fn move_cursor_left(&mut self) {
@@ -559,5 +683,126 @@ mod tests {
         app.values[0][0] = PARAM_MAX[0]; // Set to max (7)
         app.increase_value();
         assert_eq!(app.values[0][0], PARAM_MAX[0]);
+    }
+
+    #[test]
+    fn test_events_to_tone_data() {
+        // Create sample events
+        let events = vec![
+            Ym2151Event {
+                time: 0,
+                addr: "0x40".to_string(),
+                data: "0x12".to_string(), // DT=1, MUL=2
+            },
+            Ym2151Event {
+                time: 0,
+                addr: "0x60".to_string(),
+                data: "0x1F".to_string(), // TL=31
+            },
+            Ym2151Event {
+                time: 0,
+                addr: "0x80".to_string(),
+                data: "0x8A".to_string(), // KS=2, AR=10
+            },
+            Ym2151Event {
+                time: 0,
+                addr: "0xA0".to_string(),
+                data: "0x0C".to_string(), // D1R=12
+            },
+            Ym2151Event {
+                time: 0,
+                addr: "0xC0".to_string(),
+                data: "0x05".to_string(), // D2R=5
+            },
+            Ym2151Event {
+                time: 0,
+                addr: "0xE0".to_string(),
+                data: "0x78".to_string(), // D1L=7, RR=8
+            },
+            Ym2151Event {
+                time: 0,
+                addr: "0x20".to_string(),
+                data: "0xC5".to_string(), // ALG=5
+            },
+        ];
+
+        let result = App::events_to_tone_data(&events);
+        assert!(result.is_ok());
+
+        let values = result.unwrap();
+        
+        // Check operator 1 values
+        assert_eq!(values[0][PARAM_DT], 1);
+        assert_eq!(values[0][PARAM_MUL], 2);
+        assert_eq!(values[0][PARAM_TL], 31);
+        assert_eq!(values[0][PARAM_KS], 2);
+        assert_eq!(values[0][PARAM_AR], 10);
+        assert_eq!(values[0][PARAM_D1R], 12);
+        assert_eq!(values[0][PARAM_D1L], 7);
+        assert_eq!(values[0][PARAM_D2R], 5);
+        assert_eq!(values[0][PARAM_RR], 8);
+        
+        // Check channel algorithm
+        assert_eq!(values[ROW_CH][PARAM_ALG], 5);
+    }
+
+    #[test]
+    fn test_load_from_json() {
+        // Create a test JSON file
+        let app = App::new();
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let test_filename = format!("ym2151_tone_test_{}.json", timestamp);
+        
+        // Save current tone data
+        let json_string = app.to_json_string().unwrap();
+        std::fs::write(&test_filename, json_string).unwrap();
+        
+        // Load it back
+        let result = App::load_from_json(&test_filename);
+        assert!(result.is_ok());
+        
+        let loaded_values = result.unwrap();
+        
+        // Verify loaded values match original (at least some key values)
+        assert_eq!(loaded_values[0][PARAM_MUL], app.values[0][PARAM_MUL]);
+        assert_eq!(loaded_values[0][PARAM_TL], app.values[0][PARAM_TL]);
+        assert_eq!(loaded_values[ROW_CH][PARAM_ALG], app.values[ROW_CH][PARAM_ALG]);
+        
+        // Clean up
+        std::fs::remove_file(&test_filename).ok();
+    }
+
+    #[test]
+    fn test_find_newest_json_file() {
+        // Create multiple test JSON files with different timestamps
+        let base_time = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        
+        let file1 = format!("ym2151_tone_{}.json", base_time);
+        let file2 = format!("ym2151_tone_{}.json", base_time + 1);
+        let file3 = format!("ym2151_tone_{}.json", base_time + 2);
+        
+        std::fs::write(&file1, "{}").unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(10));
+        std::fs::write(&file2, "{}").unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(10));
+        std::fs::write(&file3, "{}").unwrap();
+        
+        // Find newest file
+        let result = App::find_newest_json_file();
+        assert!(result.is_ok());
+        
+        let newest = result.unwrap();
+        assert_eq!(newest, file3);
+        
+        // Clean up
+        std::fs::remove_file(&file1).ok();
+        std::fs::remove_file(&file2).ok();
+        std::fs::remove_file(&file3).ok();
     }
 }
