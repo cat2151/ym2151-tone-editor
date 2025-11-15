@@ -1043,4 +1043,52 @@ mod tests {
         app.update_value_from_mouse_y(50);
         assert_eq!(app.values[0][PARAM_DT], initial_value, "Value should not change when terminal_height is 0");
     }
+
+    #[test]
+    fn test_dt2_parameter() {
+        let mut app = App::new();
+        
+        // Set DT2 values for all operators
+        app.values[0][PARAM_DT2] = 1;
+        app.values[1][PARAM_DT2] = 2;
+        app.values[2][PARAM_DT2] = 3;
+        app.values[3][PARAM_DT2] = 0;
+        
+        // Set D2R values to distinguish from DT2
+        app.values[0][PARAM_D2R] = 5;
+        app.values[1][PARAM_D2R] = 7;
+        app.values[2][PARAM_D2R] = 9;
+        app.values[3][PARAM_D2R] = 11;
+        
+        // Generate YM2151 events
+        let events = app.to_ym2151_events();
+        
+        // Verify DT2/D2R register values
+        for op in 0..4 {
+            let dt2_d2r_addr = format!("0x{:02X}", 0xC0 + op * 8);
+            let event = events.iter().find(|e| e.addr == dt2_d2r_addr);
+            assert!(event.is_some(), "DT2/D2R event for operator {} should exist", op);
+            
+            let value = u8::from_str_radix(
+                event.unwrap().data.trim_start_matches("0x"),
+                16
+            ).unwrap();
+            
+            let dt2 = (value >> 6) & 0x03;
+            let d2r = value & 0x0F;
+            
+            assert_eq!(dt2, app.values[op][PARAM_DT2], "Operator {} DT2 should match", op);
+            assert_eq!(d2r, app.values[op][PARAM_D2R], "Operator {} D2R should match", op);
+        }
+        
+        // Test round-trip: convert back to tone data
+        let loaded_values = App::events_to_tone_data(&events).unwrap();
+        
+        for op in 0..4 {
+            assert_eq!(loaded_values[op][PARAM_DT2], app.values[op][PARAM_DT2], 
+                "Operator {} DT2 should round-trip correctly", op);
+            assert_eq!(loaded_values[op][PARAM_D2R], app.values[op][PARAM_D2R], 
+                "Operator {} D2R should round-trip correctly", op);
+        }
+    }
 }
