@@ -1208,4 +1208,67 @@ mod tests {
                 "Operator {} D2R should round-trip correctly", op);
         }
     }
+
+    #[test]
+    fn test_ch_row_alg_fb_parameters() {
+        let mut app = App::new();
+        
+        // Set ALG and FB values
+        app.values[ROW_CH][CH_PARAM_ALG] = 7; // Max ALG value
+        app.values[ROW_CH][CH_PARAM_FB] = 5;
+        
+        // Generate YM2151 events
+        let events = app.to_ym2151_events();
+        
+        // Find the channel register event (0x20)
+        let ch_event = events.iter().find(|e| e.addr == "0x20");
+        assert!(ch_event.is_some(), "Channel register event should exist");
+        
+        let value = u8::from_str_radix(
+            ch_event.unwrap().data.trim_start_matches("0x"),
+            16
+        ).unwrap();
+        
+        let alg = value & 0x07;
+        let fb = (value >> 3) & 0x07;
+        
+        assert_eq!(alg, 7, "ALG should be 7");
+        assert_eq!(fb, 5, "FB should be 5");
+        
+        // Test round-trip: convert back to tone data
+        let loaded_values = App::events_to_tone_data(&events).unwrap();
+        
+        assert_eq!(loaded_values[ROW_CH][CH_PARAM_ALG], 7, "ALG should round-trip correctly");
+        assert_eq!(loaded_values[ROW_CH][CH_PARAM_FB], 5, "FB should round-trip correctly");
+    }
+
+    #[test]
+    fn test_ch_row_cursor_restriction() {
+        let mut app = App::new();
+        
+        // Start on an operator row, move to the right edge
+        app.cursor_y = 0;
+        app.cursor_x = 9; // Last column (DT2)
+        
+        // Move down to CH row - cursor should be clamped
+        app.move_cursor_down();
+        app.move_cursor_down();
+        app.move_cursor_down();
+        app.move_cursor_down();
+        
+        assert_eq!(app.cursor_y, ROW_CH);
+        assert_eq!(app.cursor_x, CH_PARAM_COUNT - 1, "Cursor should be clamped to last CH column");
+        
+        // Try to move right - should not move
+        app.move_cursor_right();
+        assert_eq!(app.cursor_x, CH_PARAM_COUNT - 1, "Cursor should not move beyond CH columns");
+        
+        // Move to column 0
+        app.cursor_x = 0;
+        
+        // Move up to operator row - cursor should stay at 0
+        app.move_cursor_up();
+        assert_eq!(app.cursor_y, 3);
+        assert_eq!(app.cursor_x, 0, "Cursor x should remain valid");
+    }
 }
