@@ -14,7 +14,6 @@ use ratatui::{
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io;
-use std::io::Write;
 use std::process::{Command, Stdio};
 
 const GRID_WIDTH: usize = 10;
@@ -269,8 +268,8 @@ impl App {
         Ok(())
     }
 
-    /// Call cat-play-mml with current tone data as JSON
-    /// This function spawns a child process and passes JSON via stdin
+    /// Call cat-play-mml with current tone data as JSON file
+    /// This function spawns a child process and passes JSON filename as argument
     fn call_cat_play_mml(&self) {
         // Get JSON string of current tone data
         let json_string = match self.to_json_string() {
@@ -278,26 +277,29 @@ impl App {
             Err(_) => return, // Silently fail if JSON conversion fails
         };
 
-        // Spawn cat-play-mml process with stdin pipe
-        // Using spawn() to make it non-blocking
-        let mut child = match Command::new("cat-play-mml")
-            .stdin(Stdio::piped())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn()
-        {
-            Ok(child) => child,
-            Err(_) => return, // Silently fail if command not found or fails to spawn
-        };
+        // Create a temporary JSON file
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_micros(); // Use microseconds for uniqueness
+        let temp_filename = format!("/tmp/ym2151_temp_{}.json", timestamp);
 
-        // Write JSON to stdin
-        if let Some(mut stdin) = child.stdin.take() {
-            let _ = stdin.write_all(json_string.as_bytes());
-            // stdin is automatically closed when dropped
+        // Write JSON to temporary file
+        if fs::write(&temp_filename, json_string).is_err() {
+            return; // Silently fail if unable to write file
         }
 
+        // Spawn cat-play-mml process with the JSON filename as argument
+        // Using spawn() to make it non-blocking
+        let _child = Command::new("cat-play-mml")
+            .arg(&temp_filename)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn();
+
         // Don't wait for the child process to complete (non-blocking)
-        // The process will run in the background
+        // Note: The temporary file will remain in /tmp and can be cleaned up later
+        // or will be cleaned up by the OS on reboot
     }
 }
 
