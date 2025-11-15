@@ -22,3 +22,4 @@ target
 
 # Generated YM2151 tone JSON files
 ym2151_tone_*.json
+test_load
