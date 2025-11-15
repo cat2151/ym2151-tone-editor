@@ -272,12 +272,31 @@ impl App {
         }
     }
 
+    /// Determine which operators are carriers based on algorithm
+    /// Returns a boolean array [op1_is_carrier, op2_is_carrier, op3_is_carrier, op4_is_carrier]
+    fn get_carrier_operators(algorithm: u8) -> [bool; 4] {
+        // YM2151 algorithm carrier patterns
+        // Algorithm determines which operators are carriers (output operators)
+        match algorithm {
+            0 => [false, false, false, true],  // Alg 0: Only OP4 is carrier
+            1 => [false, false, false, true],  // Alg 1: Only OP4 is carrier
+            2 => [false, false, false, true],  // Alg 2: Only OP4 is carrier
+            3 => [false, false, false, true],  // Alg 3: Only OP4 is carrier
+            4 => [false, true, false, true],   // Alg 4: OP2 and OP4 are carriers
+            5 => [false, true, true, true],    // Alg 5: OP2, OP3, OP4 are carriers
+            6 => [false, true, true, true],    // Alg 6: OP2, OP3, OP4 are carriers
+            7 => [true, true, true, true],     // Alg 7: All operators are carriers
+            _ => [false, false, false, true],  // Default to algorithm 0
+        }
+    }
+
     /// Convert tone data to YM2151 register events
     /// This generates register writes for the YM2151 chip based on the current tone parameters
     fn to_ym2151_events(&self) -> Vec<Ym2151Event> {
         let mut events = Vec::new();
 
         // YM2151 Register Map:
+        // $08: Key On/Off - Note on/off control
         // $20-$27: RL, FB, CON (channel 0-7) - Algorithm/Feedback
         // $28-$2F: KC (Key Code) - Note frequency
         // $30-$37: KF (Key Fraction) - Fine frequency
@@ -291,6 +310,10 @@ impl App {
 
         // We'll use channel 0 for this example
         let channel = 0;
+        
+        // Get algorithm to determine carriers
+        let alg = self.values[ROW_CH][PARAM_ALG];
+        let carrier_ops = App::get_carrier_operators(alg);
 
         // For each of 4 operators (M1, M2, C1, C2 in YM2151 terminology)
         // We map our OP1-OP4 to operators
@@ -308,7 +331,12 @@ impl App {
             });
 
             // TL (Total Level) - Register $60-$7F (7 bits)
-            let tl = self.values[op][PARAM_TL];
+            // Provisional specification: Carrier TL is fixed to 0 for clarity
+            let tl = if carrier_ops[op] {
+                0  // Carrier operators have TL=0 (maximum volume)
+            } else {
+                self.values[op][PARAM_TL]
+            };
             events.push(Ym2151Event {
                 time: 0,
                 addr: format!("0x{:02X}", 0x60 + op_offset),
@@ -361,6 +389,31 @@ impl App {
             time: 0,
             addr: format!("0x{:02X}", 0x20 + channel),
             data: format!("0x{:02X}", rl_fb_con),
+        });
+        
+        // Key Code (KC) - Register $28-$2F - Set note to middle C (around KC=0x4C)
+        events.push(Ym2151Event {
+            time: 0,
+            addr: format!("0x{:02X}", 0x28 + channel),
+            data: "0x4C".to_string(),
+        });
+        
+        // Key Fraction (KF) - Register $30-$37 - Fine frequency adjust
+        events.push(Ym2151Event {
+            time: 0,
+            addr: format!("0x{:02X}", 0x30 + channel),
+            data: "0x00".to_string(),
+        });
+        
+        // Note On - Register $08 - Key On with all operators enabled
+        // Bits 0-2: Channel (0-7)
+        // Bits 3-6: Operator enable (M1=bit3, M2=bit4, C1=bit5, C2=bit6)
+        // For YM2151, enabling all 4 operators = 0x78 (bits 3-6 set)
+        let key_on_data = 0x78 | channel; // All operators on for channel
+        events.push(Ym2151Event {
+            time: 0,
+            addr: "0x08".to_string(),
+            data: format!("0x{:02X}", key_on_data),
         });
 
         events
@@ -573,8 +626,14 @@ mod tests {
         let app = App::new();
         let events = app.to_ym2151_events();
         
-        // Should have events for 4 operators (6 registers each) + 1 channel register
-        assert_eq!(events.len(), 25);
+        // Should have events for:
+        // - 4 operators × 6 registers = 24 events
+        // - 1 channel register (RL/FB/CON)
+        // - 1 Key Code register
+        // - 1 Key Fraction register  
+        // - 1 Note On register
+        // Total = 28 events
+        assert_eq!(events.len(), 28);
         
         // Check that events have correct format
         for event in &events {
@@ -582,6 +641,10 @@ mod tests {
             assert!(event.addr.starts_with("0x"));
             assert!(event.data.starts_with("0x"));
         }
+        
+        // Verify note on event is present
+        let note_on_event = events.iter().find(|e| e.addr == "0x08");
+        assert!(note_on_event.is_some(), "Note on event should be present");
     }
 
     #[test]
@@ -637,7 +700,7 @@ mod tests {
         assert!(parsed.get("event_count").is_some());
         assert!(parsed.get("events").is_some());
         assert!(parsed["events"].is_array());
-        assert_eq!(parsed["event_count"].as_u64().unwrap(), 25);
+        assert_eq!(parsed["event_count"].as_u64().unwrap(), 28);
         
         // Clean up
         std::fs::remove_file(json_file.path()).ok();
@@ -660,7 +723,7 @@ mod tests {
         assert!(parsed.get("event_count").is_some());
         assert!(parsed.get("events").is_some());
         assert!(parsed["events"].is_array());
-        assert_eq!(parsed["event_count"].as_u64().unwrap(), 25);
+        assert_eq!(parsed["event_count"].as_u64().unwrap(), 28);
     }
 
     #[test]
@@ -861,5 +924,40 @@ mod tests {
         assert_eq!(app.cursor_x, GRID_WIDTH - 1);
         app.move_cursor_down();
         assert_eq!(app.cursor_y, GRID_HEIGHT - 1);
+    }
+
+    #[test]
+    fn test_carrier_tl_is_zero() {
+        let mut app = App::new();
+        
+        // Set all operator TL values to non-zero
+        for op in 0..4 {
+            app.values[op][PARAM_TL] = 50;
+        }
+        
+        // Test with different algorithms
+        for alg in 0..8 {
+            app.values[ROW_CH][PARAM_ALG] = alg;
+            let events = app.to_ym2151_events();
+            let carrier_ops = App::get_carrier_operators(alg);
+            
+            // Check TL registers for each operator
+            for op in 0..4 {
+                let tl_addr = format!("0x{:02X}", 0x60 + op * 8);
+                let tl_event = events.iter().find(|e| e.addr == tl_addr);
+                assert!(tl_event.is_some(), "TL event for operator {} should exist", op);
+                
+                let tl_value = u8::from_str_radix(
+                    tl_event.unwrap().data.trim_start_matches("0x"),
+                    16
+                ).unwrap();
+                
+                if carrier_ops[op] {
+                    assert_eq!(tl_value, 0, "Carrier operator {} in algorithm {} should have TL=0", op, alg);
+                } else {
+                    assert_eq!(tl_value, 50, "Modulator operator {} in algorithm {} should preserve TL value", op, alg);
+                }
+            }
+        }
     }
 }
