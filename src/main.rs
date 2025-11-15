@@ -14,6 +14,7 @@ use ratatui::{
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io;
+#[cfg(windows)]
 use std::process::{Command, Stdio};
 
 const GRID_WIDTH: usize = 10;
@@ -260,6 +261,7 @@ impl App {
         let max = PARAM_MAX[self.cursor_x];
         if current < max {
             self.values[self.cursor_y][self.cursor_x] = current + 1;
+            #[cfg(windows)]
             self.call_cat_play_mml();
         }
     }
@@ -268,6 +270,7 @@ impl App {
         let current = self.values[self.cursor_y][self.cursor_x];
         if current > 0 {
             self.values[self.cursor_y][self.cursor_x] = current - 1;
+            #[cfg(windows)]
             self.call_cat_play_mml();
         }
     }
@@ -447,6 +450,8 @@ impl App {
 
     /// Call cat-play-mml with current tone data as JSON file
     /// This function spawns a child process and passes JSON filename as argument
+    /// Windows-only functionality
+    #[cfg(windows)]
     fn call_cat_play_mml(&self) {
         // Get JSON string of current tone data
         let json_string = match self.to_json_string() {
@@ -454,29 +459,25 @@ impl App {
             Err(_) => return, // Silently fail if JSON conversion fails
         };
 
-        // Create a temporary JSON file
-        let timestamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_micros(); // Use microseconds for uniqueness
-        let temp_filename = format!("/tmp/ym2151_temp_{}.json", timestamp);
+        // Create a temporary JSON file in the current directory
+        // Fixed filename since it will be recreated multiple times during a session
+        let temp_filename = "ym2151_temp.json";
 
         // Write JSON to temporary file
-        if fs::write(&temp_filename, json_string).is_err() {
+        if fs::write(temp_filename, json_string).is_err() {
             return; // Silently fail if unable to write file
         }
 
         // Spawn cat-play-mml process with the JSON filename as argument
         // Using spawn() to make it non-blocking
         let _child = Command::new("cat-play-mml")
-            .arg(&temp_filename)
+            .arg(temp_filename)
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .spawn();
 
         // Don't wait for the child process to complete (non-blocking)
-        // Note: The temporary file will remain in /tmp and can be cleaned up later
-        // or will be cleaned up by the OS on reboot
+        // Note: The temporary file will remain in current directory
     }
 }
 
