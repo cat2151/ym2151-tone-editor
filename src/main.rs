@@ -808,4 +808,56 @@ mod tests {
         std::fs::remove_file(&file2).ok();
         std::fs::remove_file(&file3).ok();
     }
+
+    #[test]
+    fn test_cursor_movement() {
+        let mut app = App::new();
+        
+        // Test initial position
+        assert_eq!(app.cursor_x, 0);
+        assert_eq!(app.cursor_y, 0);
+        
+        // Test move right
+        app.move_cursor_right();
+        assert_eq!(app.cursor_x, 1);
+        assert_eq!(app.cursor_y, 0);
+        
+        // Test move down
+        app.move_cursor_down();
+        assert_eq!(app.cursor_x, 1);
+        assert_eq!(app.cursor_y, 1);
+        
+        // Test move left
+        app.move_cursor_left();
+        assert_eq!(app.cursor_x, 0);
+        assert_eq!(app.cursor_y, 1);
+        
+        // Test move up
+        app.move_cursor_up();
+        assert_eq!(app.cursor_x, 0);
+        assert_eq!(app.cursor_y, 0);
+        
+        // Test boundary: can't move left from 0,0
+        app.move_cursor_left();
+        assert_eq!(app.cursor_x, 0);
+        app.move_cursor_up();
+        assert_eq!(app.cursor_y, 0);
+        
+        // Test boundary: move to max position
+        for _ in 0..GRID_WIDTH {
+            app.move_cursor_right();
+        }
+        assert_eq!(app.cursor_x, GRID_WIDTH - 1);
+        
+        for _ in 0..GRID_HEIGHT {
+            app.move_cursor_down();
+        }
+        assert_eq!(app.cursor_y, GRID_HEIGHT - 1);
+        
+        // Test can't exceed boundaries
+        app.move_cursor_right();
+        assert_eq!(app.cursor_x, GRID_WIDTH - 1);
+        app.move_cursor_down();
+        assert_eq!(app.cursor_y, GRID_HEIGHT - 1);
+    }
 }
