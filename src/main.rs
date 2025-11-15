@@ -22,7 +22,7 @@ const GRID_HEIGHT: usize = 5;
 
 // Parameter names for each column
 const PARAM_NAMES: [&str; GRID_WIDTH] = [
-    "DT", "MUL", "TL", "KS", "AR", "D1R", "D1L", "D2R", "RR", "ALG"
+    "DT", "MUL", "TL", "KS", "AR", "D1R", "D1L", "D2R", "RR", "DT2"
 ];
 
 // Maximum values for each parameter (respecting YM2151 bit ranges)
@@ -36,7 +36,7 @@ const PARAM_MAX: [u8; GRID_WIDTH] = [
     15,  // D1L: 4 bits (0-15)
     15,  // D2R: 4 bits (0-15)
     15,  // RR: 4 bits (0-15)
-    7    // ALG: 3 bits (0-7)
+    3    // DT2: 2 bits (0-3)
 ];
 
 // Row names for operators
@@ -54,7 +54,7 @@ const PARAM_D1R: usize = 5;
 const PARAM_D1L: usize = 6;
 const PARAM_D2R: usize = 7;
 const PARAM_RR: usize = 8;
-const PARAM_ALG: usize = 9;
+const PARAM_DT2: usize = 9;
 
 // Row index for channel settings
 const ROW_CH: usize = 4;
@@ -87,8 +87,8 @@ impl App {
         // Based on typical YM2151 patch settings
         let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
         
-        // Operator 1 (Carrier): DT, MUL, TL, KS, AR, D1R, D1L, D2R, RR, ALG
-        values[0] = [0, 1, 20, 0, 31, 10, 5, 5, 7, 4];
+        // Operator 1 (Carrier): DT, MUL, TL, KS, AR, D1R, D1L, D2R, RR, DT2
+        values[0] = [0, 1, 20, 0, 31, 10, 5, 5, 7, 0];
         
         // Operator 2 (Modulator): softer attack
         values[1] = [0, 1, 30, 0, 25, 8, 6, 4, 6, 0];
@@ -100,7 +100,7 @@ impl App {
         values[3] = [0, 1, 35, 0, 22, 7, 6, 4, 6, 0];
         
         // Channel settings: can be used for feedback, LFO, etc.
-        values[4] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 4];
+        values[4] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         
         let mut app = App {
             values,
@@ -212,6 +212,7 @@ impl App {
                 0xC0..=0xDF => {
                     let op = ((addr - 0xC0) / 8) as usize;
                     if op < 4 {
+                        values[op][PARAM_DT2] = (data >> 6) & 0x03;
                         values[op][PARAM_D2R] = data & 0x0F;
                     }
                 }
@@ -223,9 +224,10 @@ impl App {
                         values[op][PARAM_RR] = data & 0x0F;
                     }
                 }
-                // RL/FB/CON register (0x20-0x27)
+                // RL/FB/CON register (0x20-0x27) - removed, ALG is no longer used
                 0x20..=0x27 => {
-                    values[ROW_CH][PARAM_ALG] = data & 0x07;
+                    // This register contains RL (bit 7-6), FB (bit 5-3), and CON/ALG (bit 2-0)
+                    // Since we're no longer tracking ALG, we don't need to extract it
                 }
                 _ => {}
             }
@@ -369,12 +371,14 @@ impl App {
                 data: format!("0x{:02X}", d1r & 0x1F),
             });
 
-            // DT2 (bits 7-6, set to 0) and D2R (bits 4-0) - Register $C0-$DF
+            // DT2 (bits 7-6) and D2R (bits 3-0) - Register $C0-$DF
+            let dt2 = self.values[op][PARAM_DT2];
             let d2r = self.values[op][PARAM_D2R];
+            let dt2_d2r = ((dt2 & 0x03) << 6) | (d2r & 0x0F);
             events.push(Ym2151Event {
                 time: 0,
                 addr: format!("0x{:02X}", 0xC0 + op_offset),
-                data: format!("0x{:02X}", d2r & 0x0F),
+                data: format!("0x{:02X}", dt2_d2r),
             });
 
             // D1L (bits 7-4) and RR (bits 3-0) - Register $E0-$FF
@@ -389,7 +393,8 @@ impl App {
         }
 
         // Channel settings: RL, FB, CON (Algorithm) - Register $20-$27
-        let alg = self.values[ROW_CH][PARAM_ALG];
+        // Since ALG is no longer in the parameter grid, use a default algorithm
+        let alg = 4; // Default algorithm (simple FM)
         let fb = 0; // Feedback, default to 0
         let rl = 0xC0; // Both L and R enabled
         let rl_fb_con = rl | ((fb & 0x07) << 3) | (alg & 0x07);
@@ -799,17 +804,12 @@ mod tests {
             Ym2151Event {
                 time: 0,
                 addr: "0xC0".to_string(),
-                data: "0x05".to_string(), // D2R=5
+                data: "0x85".to_string(), // DT2=2, D2R=5
             },
             Ym2151Event {
                 time: 0,
                 addr: "0xE0".to_string(),
                 data: "0x78".to_string(), // D1L=7, RR=8
-            },
-            Ym2151Event {
-                time: 0,
-                addr: "0x20".to_string(),
-                data: "0xC5".to_string(), // ALG=5
             },
         ];
 
@@ -828,9 +828,7 @@ mod tests {
         assert_eq!(values[0][PARAM_D1L], 7);
         assert_eq!(values[0][PARAM_D2R], 5);
         assert_eq!(values[0][PARAM_RR], 8);
-        
-        // Check channel algorithm
-        assert_eq!(values[ROW_CH][PARAM_ALG], 5);
+        assert_eq!(values[0][PARAM_DT2], 2);
     }
 
     #[test]
@@ -856,7 +854,7 @@ mod tests {
         // Verify loaded values match original (at least some key values)
         assert_eq!(loaded_values[0][PARAM_MUL], app.values[0][PARAM_MUL]);
         assert_eq!(loaded_values[0][PARAM_TL], app.values[0][PARAM_TL]);
-        assert_eq!(loaded_values[ROW_CH][PARAM_ALG], app.values[ROW_CH][PARAM_ALG]);
+        assert_eq!(loaded_values[0][PARAM_DT2], app.values[0][PARAM_DT2]);
         
         // Clean up
         std::fs::remove_file(&test_filename).ok();
@@ -979,25 +977,22 @@ mod tests {
             app.values[op][PARAM_TL] = 50;
         }
         
-        // Test with different algorithms
-        for alg in 0..8 {
-            app.values[ROW_CH][PARAM_ALG] = alg;
-            let events = app.to_ym2151_events();
+        // Test that TL values are preserved in the output
+        let events = app.to_ym2151_events();
+        
+        // Check TL registers for each operator
+        for op in 0..4 {
+            let tl_addr = format!("0x{:02X}", 0x60 + op * 8);
+            let tl_event = events.iter().find(|e| e.addr == tl_addr);
+            assert!(tl_event.is_some(), "TL event for operator {} should exist", op);
             
-            // Check TL registers for each operator
-            for op in 0..4 {
-                let tl_addr = format!("0x{:02X}", 0x60 + op * 8);
-                let tl_event = events.iter().find(|e| e.addr == tl_addr);
-                assert!(tl_event.is_some(), "TL event for operator {} should exist", op);
-                
-                let tl_value = u8::from_str_radix(
-                    tl_event.unwrap().data.trim_start_matches("0x"),
-                    16
-                ).unwrap();
-                
-                // All operators should preserve their TL value (carrier TL is now editable)
-                assert_eq!(tl_value, 50, "Operator {} in algorithm {} should preserve TL value", op, alg);
-            }
+            let tl_value = u8::from_str_radix(
+                tl_event.unwrap().data.trim_start_matches("0x"),
+                16
+            ).unwrap();
+            
+            // All operators should preserve their TL value (carrier TL is now editable)
+            assert_eq!(tl_value, 50, "Operator {} should preserve TL value", op);
         }
     }
 
@@ -1047,5 +1042,53 @@ mod tests {
         // Should not crash or change value when terminal_height is 0
         app.update_value_from_mouse_y(50);
         assert_eq!(app.values[0][PARAM_DT], initial_value, "Value should not change when terminal_height is 0");
+    }
+
+    #[test]
+    fn test_dt2_parameter() {
+        let mut app = App::new();
+        
+        // Set DT2 values for all operators
+        app.values[0][PARAM_DT2] = 1;
+        app.values[1][PARAM_DT2] = 2;
+        app.values[2][PARAM_DT2] = 3;
+        app.values[3][PARAM_DT2] = 0;
+        
+        // Set D2R values to distinguish from DT2
+        app.values[0][PARAM_D2R] = 5;
+        app.values[1][PARAM_D2R] = 7;
+        app.values[2][PARAM_D2R] = 9;
+        app.values[3][PARAM_D2R] = 11;
+        
+        // Generate YM2151 events
+        let events = app.to_ym2151_events();
+        
+        // Verify DT2/D2R register values
+        for op in 0..4 {
+            let dt2_d2r_addr = format!("0x{:02X}", 0xC0 + op * 8);
+            let event = events.iter().find(|e| e.addr == dt2_d2r_addr);
+            assert!(event.is_some(), "DT2/D2R event for operator {} should exist", op);
+            
+            let value = u8::from_str_radix(
+                event.unwrap().data.trim_start_matches("0x"),
+                16
+            ).unwrap();
+            
+            let dt2 = (value >> 6) & 0x03;
+            let d2r = value & 0x0F;
+            
+            assert_eq!(dt2, app.values[op][PARAM_DT2], "Operator {} DT2 should match", op);
+            assert_eq!(d2r, app.values[op][PARAM_D2R], "Operator {} D2R should match", op);
+        }
+        
+        // Test round-trip: convert back to tone data
+        let loaded_values = App::events_to_tone_data(&events).unwrap();
+        
+        for op in 0..4 {
+            assert_eq!(loaded_values[op][PARAM_DT2], app.values[op][PARAM_DT2], 
+                "Operator {} DT2 should round-trip correctly", op);
+            assert_eq!(loaded_values[op][PARAM_D2R], app.values[op][PARAM_D2R], 
+                "Operator {} D2R should round-trip correctly", op);
+        }
     }
 }
