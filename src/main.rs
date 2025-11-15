@@ -461,8 +461,10 @@ fn run_app<B: ratatui::backend::Backend>(
         terminal.draw(|f| ui(f, app))?;
 
         if let Event::Key(key) = event::read()? {
-            // Only process key press events, ignore release and repeat events
-            if key.kind == KeyEventKind::Press {
+            // Only process key press and repeat events, ignore release events
+            // This follows crossterm/ratatui best practices for avoiding duplicate
+            // actions while still supporting key repeat functionality
+            if key.kind == KeyEventKind::Press || key.kind == KeyEventKind::Repeat {
                 match key.code {
                     KeyCode::Char('q') => app.decrease_value(),
                     KeyCode::Char('e') => app.increase_value(),
