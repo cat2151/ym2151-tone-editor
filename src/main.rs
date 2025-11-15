@@ -307,24 +307,6 @@ impl App {
         }
     }
 
-    /// Determine which operators are carriers based on algorithm
-    /// Returns a boolean array [op1_is_carrier, op2_is_carrier, op3_is_carrier, op4_is_carrier]
-    fn get_carrier_operators(algorithm: u8) -> [bool; 4] {
-        // YM2151 algorithm carrier patterns
-        // Algorithm determines which operators are carriers (output operators)
-        match algorithm {
-            0 => [false, false, false, true],  // Alg 0: Only OP4 is carrier
-            1 => [false, false, false, true],  // Alg 1: Only OP4 is carrier
-            2 => [false, false, false, true],  // Alg 2: Only OP4 is carrier
-            3 => [false, false, false, true],  // Alg 3: Only OP4 is carrier
-            4 => [false, true, false, true],   // Alg 4: OP2 and OP4 are carriers
-            5 => [false, true, true, true],    // Alg 5: OP2, OP3, OP4 are carriers
-            6 => [false, true, true, true],    // Alg 6: OP2, OP3, OP4 are carriers
-            7 => [true, true, true, true],     // Alg 7: All operators are carriers
-            _ => [false, false, false, true],  // Default to algorithm 0
-        }
-    }
-
     /// Convert tone data to YM2151 register events
     /// This generates register writes for the YM2151 chip based on the current tone parameters
     fn to_ym2151_events(&self) -> Vec<Ym2151Event> {
@@ -345,10 +327,6 @@ impl App {
 
         // We'll use channel 0 for this example
         let channel = 0;
-        
-        // Get algorithm to determine carriers
-        let alg = self.values[ROW_CH][PARAM_ALG];
-        let carrier_ops = App::get_carrier_operators(alg);
 
         // For each of 4 operators (M1, M2, C1, C2 in YM2151 terminology)
         // We map our OP1-OP4 to operators
@@ -366,12 +344,7 @@ impl App {
             });
 
             // TL (Total Level) - Register $60-$7F (7 bits)
-            // Provisional specification: Carrier TL is fixed to 0 for clarity
-            let tl = if carrier_ops[op] {
-                0  // Carrier operators have TL=0 (maximum volume)
-            } else {
-                self.values[op][PARAM_TL]
-            };
+            let tl = self.values[op][PARAM_TL];
             events.push(Ym2151Event {
                 time: 0,
                 addr: format!("0x{:02X}", 0x60 + op_offset),
@@ -973,7 +946,7 @@ mod tests {
     }
 
     #[test]
-    fn test_carrier_tl_is_zero() {
+    fn test_carrier_tl_is_editable() {
         let mut app = App::new();
         
         // Set all operator TL values to non-zero
@@ -985,7 +958,6 @@ mod tests {
         for alg in 0..8 {
             app.values[ROW_CH][PARAM_ALG] = alg;
             let events = app.to_ym2151_events();
-            let carrier_ops = App::get_carrier_operators(alg);
             
             // Check TL registers for each operator
             for op in 0..4 {
@@ -998,11 +970,8 @@ mod tests {
                     16
                 ).unwrap();
                 
-                if carrier_ops[op] {
-                    assert_eq!(tl_value, 0, "Carrier operator {} in algorithm {} should have TL=0", op, alg);
-                } else {
-                    assert_eq!(tl_value, 50, "Modulator operator {} in algorithm {} should preserve TL value", op, alg);
-                }
+                // All operators should preserve their TL value (carrier TL is now editable)
+                assert_eq!(tl_value, 50, "Operator {} in algorithm {} should preserve TL value", op, alg);
             }
         }
     }
