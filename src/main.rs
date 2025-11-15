@@ -544,6 +544,57 @@ impl App {
     }
 }
 
+/// Get ASCII art diagram for YM2151 algorithm (0-7)
+/// Returns a vector of strings, one per line of the diagram
+fn get_algorithm_diagram(alg: u8) -> Vec<&'static str> {
+    match alg {
+        0 => vec![
+            "ALG 0: 4->3->2->1->OUT",
+            "       (Pure FM cascade)",
+        ],
+        1 => vec![
+            "ALG 1: 4->3-+",
+            "       2----+->1->OUT",
+            "       (Parallel mod)",
+        ],
+        2 => vec![
+            "ALG 2: 4-+",
+            "       3-+->2->1->OUT",
+            "       (Fork cascade)",
+        ],
+        3 => vec![
+            "ALG 3: 4->3->1->OUT",
+            "       2-------->OUT",
+            "       (Cascade+carrier)",
+        ],
+        4 => vec![
+            "ALG 4: 4->3->OUT",
+            "       2->1->OUT",
+            "       (Two FM pairs)",
+        ],
+        5 => vec![
+            "ALG 5: 4->3->OUT",
+            "       4->2->OUT",
+            "       4->1->OUT",
+            "       (Fan out)",
+        ],
+        6 => vec![
+            "ALG 6: 4->3->OUT",
+            "       2------>OUT",
+            "       1------>OUT",
+            "       (Cascade+carriers)",
+        ],
+        7 => vec![
+            "ALG 7: 4->OUT",
+            "       3->OUT",
+            "       2->OUT",
+            "       1->OUT",
+            "       (Additive)",
+        ],
+        _ => vec!["Invalid ALG"],
+    }
+}
+
 fn main() -> Result<(), io::Error> {
     // Setup terminal
     enable_raw_mode()?;
@@ -753,6 +804,28 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
         let text = format!("{:2}", value);
         let paragraph = Paragraph::new(Span::styled(text, style));
         f.render_widget(paragraph, area);
+    }
+
+    // Draw algorithm diagram below the CH row
+    let alg_value = app.values[ROW_CH][CH_PARAM_ALG];
+    let diagram = get_algorithm_diagram(alg_value);
+    let diagram_start_y = ch_row_y + 2; // Leave one line of space
+    
+    for (i, line) in diagram.iter().enumerate() {
+        let y = diagram_start_y + i as u16;
+        if y < size.height - 1 { // Make sure we don't draw outside the terminal
+            let area = Rect {
+                x: inner.x,
+                y,
+                width: inner.width,
+                height: 1,
+            };
+            let paragraph = Paragraph::new(Span::styled(
+                *line,
+                Style::default().fg(Color::Green),
+            ));
+            f.render_widget(paragraph, area);
+        }
     }
 }
 
@@ -1083,6 +1156,29 @@ mod tests {
         
         app.move_cursor_down();  // Called by 'j' or 's'
         assert_eq!(app.cursor_y, 2);
+    }
+
+    #[test]
+    fn test_get_algorithm_diagram() {
+        // Test that each algorithm returns a diagram
+        for alg in 0..=7 {
+            let diagram = get_algorithm_diagram(alg);
+            assert!(!diagram.is_empty(), "Algorithm {} should have a diagram", alg);
+            assert!(diagram[0].starts_with("ALG "), "First line should start with 'ALG '");
+        }
+        
+        // Test specific algorithms
+        let alg0 = get_algorithm_diagram(0);
+        assert!(alg0[0].contains("4->3->2->1->OUT"), "ALG 0 should show cascade");
+        
+        let alg7 = get_algorithm_diagram(7);
+        assert!(alg7.len() >= 5, "ALG 7 should have at least 5 lines");
+        assert!(alg7[0].contains("4->OUT"), "ALG 7 should show operator 4 to output");
+        
+        // Test invalid algorithm
+        let invalid = get_algorithm_diagram(8);
+        assert_eq!(invalid.len(), 1);
+        assert_eq!(invalid[0], "Invalid ALG");
     }
 
     #[test]
