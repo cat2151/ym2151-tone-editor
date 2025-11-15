@@ -532,10 +532,10 @@ fn run_app<B: ratatui::backend::Backend>(
                     match key.code {
                         KeyCode::Char('q') => app.decrease_value(),
                         KeyCode::Char('e') => app.increase_value(),
-                        KeyCode::Char('h') => app.move_cursor_left(),
-                        KeyCode::Char('j') => app.move_cursor_down(),
-                        KeyCode::Char('k') => app.move_cursor_up(),
-                        KeyCode::Char('l') => app.move_cursor_right(),
+                        KeyCode::Char('h') | KeyCode::Char('a') => app.move_cursor_left(),
+                        KeyCode::Char('j') | KeyCode::Char('s') => app.move_cursor_down(),
+                        KeyCode::Char('k') | KeyCode::Char('w') => app.move_cursor_up(),
+                        KeyCode::Char('l') | KeyCode::Char('d') => app.move_cursor_right(),
                         KeyCode::Esc => {
                             // Save tone data to JSON before exiting
                             app.save_to_json()?;
@@ -560,7 +560,7 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
     let size = f.area();
 
     let block = Block::default()
-        .title("YM2151 Tone Editor (hjkl:move, q/e:dec/inc, mouse:move to change value, ESC:quit)")
+        .title("YM2151 Tone Editor (hjkl/wasd:move, q/e:dec/inc, mouse:move to change value, ESC:quit)")
         .borders(Borders::ALL);
     let inner = block.inner(size);
     f.render_widget(block, size);
@@ -943,6 +943,31 @@ mod tests {
         assert_eq!(app.cursor_x, GRID_WIDTH - 1);
         app.move_cursor_down();
         assert_eq!(app.cursor_y, GRID_HEIGHT - 1);
+    }
+
+    #[test]
+    fn test_wasd_cursor_movement() {
+        // This test verifies WASD key mapping works the same as HJKL
+        // The actual key handling is in run_app, but we test the movement functions
+        // to ensure they work correctly when called by either key set
+        let mut app = App::new();
+        
+        // Reset to known position
+        app.cursor_x = 2;
+        app.cursor_y = 2;
+        
+        // Test that movement functions work (which are called by both hjkl and wasd)
+        app.move_cursor_left();  // Called by 'h' or 'a'
+        assert_eq!(app.cursor_x, 1);
+        
+        app.move_cursor_right(); // Called by 'l' or 'd'
+        assert_eq!(app.cursor_x, 2);
+        
+        app.move_cursor_up();    // Called by 'k' or 'w'
+        assert_eq!(app.cursor_y, 1);
+        
+        app.move_cursor_down();  // Called by 'j' or 's'
+        assert_eq!(app.cursor_y, 2);
     }
 
     #[test]

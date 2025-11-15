@@ -19,7 +19,7 @@ A Windows-compatible Rust TUI (Text User Interface) editor for YM2151 (OPM) FM s
 - Edit YM2151 tone parameters with parameter labels
 - Display 10 parameters × 5 rows (4 operators + 1 channel row)
 - Visual parameter names: DT, MUL, TL, KS, AR, D1R, D1L, D2R, RR, ALG
-- Vim-style cursor navigation with `hjkl` keys
+- Cursor navigation with `hjkl` (Vim-style) or `wasd` keys
 - Increase/decrease values with `e`/`q` keys (respects parameter max values)
 - Exit with `ESC` key
 - Initialized with a basic FM piano-like tone
@@ -79,10 +79,10 @@ Or run the compiled binary directly:
 
 | Key | Action |
 |-----|--------|
-| `h` | Move cursor left |
-| `j` | Move cursor down |
-| `k` | Move cursor up |
-| `l` | Move cursor right |
+| `h` / `a` | Move cursor left |
+| `j` / `s` | Move cursor down |
+| `k` / `w` | Move cursor up |
+| `l` / `d` | Move cursor right |
 | `q` | Decrease value at cursor |
 | `e` | Increase value at cursor |
 | `Mouse Move` | Change value at cursor position based on vertical mouse position (top = max, bottom = 0) |
