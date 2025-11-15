@@ -14,8 +14,6 @@ use ratatui::{
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io;
-#[cfg(windows)]
-use std::process::{Command, Stdio};
 
 const GRID_WIDTH: usize = 10;
 const GRID_HEIGHT: usize = 5;
@@ -511,8 +509,8 @@ impl App {
         Ok(())
     }
 
-    /// Call cat-play-mml with current tone data as JSON file
-    /// This function spawns a child process and passes JSON filename as argument
+    /// Call ym2151-log-play-server client with current tone data as JSON string
+    /// This function sends JSON content directly via named pipe to the server
     /// Windows-only functionality
     #[cfg(windows)]
     fn call_cat_play_mml(&self) {
@@ -522,25 +520,12 @@ impl App {
             Err(_) => return, // Silently fail if JSON conversion fails
         };
 
-        // Create a temporary JSON file in the current directory
-        // Fixed filename since it will be recreated multiple times during a session
-        let temp_filename = "ym2151_temp.json";
-
-        // Write JSON to temporary file
-        if fs::write(temp_filename, json_string).is_err() {
-            return; // Silently fail if unable to write file
-        }
-
-        // Spawn cat-play-mml process with the JSON filename as argument
-        // Using spawn() to make it non-blocking
-        let _child = Command::new("cat-play-mml")
-            .arg(temp_filename)
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn();
-
-        // Don't wait for the child process to complete (non-blocking)
-        // Note: The temporary file will remain in current directory
+        // Send JSON content string directly to server via named pipe
+        // Using the ym2151-log-play-server client library
+        let _ = ym2151_log_play_server::client::play_file(&json_string);
+        
+        // Silently ignore errors - server might not be running yet
+        // The server will auto-start on first call from cat-play-mml application
     }
 }
 
