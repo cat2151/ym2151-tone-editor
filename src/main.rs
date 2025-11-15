@@ -14,6 +14,7 @@ use ratatui::{
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io;
+use std::process::{Command, Stdio};
 
 const GRID_WIDTH: usize = 10;
 const GRID_HEIGHT: usize = 5;
@@ -135,6 +136,7 @@ impl App {
         let max = PARAM_MAX[self.cursor_x];
         if current < max {
             self.values[self.cursor_y][self.cursor_x] = current + 1;
+            self.call_cat_play_mml();
         }
     }
 
@@ -142,6 +144,7 @@ impl App {
         let current = self.values[self.cursor_y][self.cursor_x];
         if current > 0 {
             self.values[self.cursor_y][self.cursor_x] = current - 1;
+            self.call_cat_play_mml();
         }
     }
 
@@ -239,15 +242,19 @@ impl App {
         events
     }
 
-    /// Save tone data to JSON file in ym2151-log-play-server format
-    fn save_to_json(&self) -> io::Result<()> {
+    /// Convert tone data to JSON string in ym2151-log-play-server format
+    fn to_json_string(&self) -> Result<String, serde_json::Error> {
         let events = self.to_ym2151_events();
         let log = Ym2151Log {
             event_count: events.len(),
             events,
         };
+        serde_json::to_string_pretty(&log)
+    }
 
-        let json_string = serde_json::to_string_pretty(&log)
+    /// Save tone data to JSON file in ym2151-log-play-server format
+    fn save_to_json(&self) -> io::Result<()> {
+        let json_string = self.to_json_string()
             .map_err(io::Error::other)?;
 
         // Generate filename with timestamp
@@ -259,6 +266,40 @@ impl App {
 
         fs::write(&filename, json_string)?;
         Ok(())
+    }
+
+    /// Call cat-play-mml with current tone data as JSON file
+    /// This function spawns a child process and passes JSON filename as argument
+    fn call_cat_play_mml(&self) {
+        // Get JSON string of current tone data
+        let json_string = match self.to_json_string() {
+            Ok(json) => json,
+            Err(_) => return, // Silently fail if JSON conversion fails
+        };
+
+        // Create a temporary JSON file
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_micros(); // Use microseconds for uniqueness
+        let temp_filename = format!("/tmp/ym2151_temp_{}.json", timestamp);
+
+        // Write JSON to temporary file
+        if fs::write(&temp_filename, json_string).is_err() {
+            return; // Silently fail if unable to write file
+        }
+
+        // Spawn cat-play-mml process with the JSON filename as argument
+        // Using spawn() to make it non-blocking
+        let _child = Command::new("cat-play-mml")
+            .arg(&temp_filename)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn();
+
+        // Don't wait for the child process to complete (non-blocking)
+        // Note: The temporary file will remain in /tmp and can be cleaned up later
+        // or will be cleaned up by the OS on reboot
     }
 }
 
@@ -471,5 +512,52 @@ mod tests {
         
         // Clean up
         std::fs::remove_file(json_file.path()).ok();
+    }
+
+    #[test]
+    fn test_to_json_string() {
+        let app = App::new();
+        
+        // Test that to_json_string works
+        let json_result = app.to_json_string();
+        assert!(json_result.is_ok());
+
+        let json_string = json_result.unwrap();
+        assert!(json_string.contains("event_count"));
+        assert!(json_string.contains("events"));
+        
+        // Parse the JSON to verify structure
+        let parsed: serde_json::Value = serde_json::from_str(&json_string).unwrap();
+        assert!(parsed.get("event_count").is_some());
+        assert!(parsed.get("events").is_some());
+        assert!(parsed["events"].is_array());
+        assert_eq!(parsed["event_count"].as_u64().unwrap(), 25);
+    }
+
+    #[test]
+    fn test_increase_decrease_value() {
+        let mut app = App::new();
+        
+        // Store initial value
+        let initial_value = app.values[0][0];
+        
+        // Increase value
+        app.increase_value();
+        assert_eq!(app.values[0][0], initial_value + 1);
+        
+        // Decrease value
+        app.decrease_value();
+        assert_eq!(app.values[0][0], initial_value);
+        
+        // Test boundary: decrease at 0 should not go negative
+        app.values[0][0] = 0;
+        app.decrease_value();
+        assert_eq!(app.values[0][0], 0);
+        
+        // Test boundary: increase at max should not exceed
+        app.cursor_x = 0; // DT parameter
+        app.values[0][0] = PARAM_MAX[0]; // Set to max (7)
+        app.increase_value();
+        assert_eq!(app.values[0][0], PARAM_MAX[0]);
     }
 }
