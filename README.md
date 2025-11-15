@@ -17,8 +17,8 @@ A Windows-compatible Rust TUI (Text User Interface) editor for YM2151 (OPM) FM s
 ## Features
 
 - Edit YM2151 tone parameters with parameter labels
-- Display 10 parameters × 5 rows (4 operators + 1 channel row)
-- Visual parameter names: DT, MUL, TL, KS, AR, D1R, D1L, D2R, RR, DT2
+- Display 11 parameters × 5 rows (4 operators + 1 channel row)
+- Visual parameter names: DT, MUL, TL, KS, AR, D1R, D1L, D2R, RR, DT2, AMS
 - Cursor navigation with `hjkl` (Vim-style) or `wasd` keys
 - Increase/decrease values with `e`/`q` keys (respects parameter max values)
 - Exit with `ESC` key
@@ -28,7 +28,7 @@ A Windows-compatible Rust TUI (Text User Interface) editor for YM2151 (OPM) FM s
 
 This editor uses a provisional tone data format based on the YM2151 register map:
 
-### Parameters (10 columns)
+### Parameters (11 columns)
 
 | Parameter | Name | Range | Description |
 |-----------|------|-------|-------------|
@@ -42,6 +42,7 @@ This editor uses a provisional tone data format based on the YM2151 register map
 | D2R | Decay 2 Rate | 0-15 | Second decay/sustain rate (4 bits) |
 | RR | Release Rate | 0-15 | Envelope release rate (4 bits) |
 | DT2 | Detune 2 | 0-3 | Coarse frequency detuning (2 bits) |
+| AMS | AM Sensitivity | 0-3 | Amplitude modulation sensitivity (2 bits) |
 
 ### Rows (5 operators/channels)
 

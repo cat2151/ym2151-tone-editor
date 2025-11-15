@@ -15,12 +15,12 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io;
 
-const GRID_WIDTH: usize = 10;
+const GRID_WIDTH: usize = 11;
 const GRID_HEIGHT: usize = 5;
 
 // Parameter names for each column
 const PARAM_NAMES: [&str; GRID_WIDTH] = [
-    "DT", "MUL", "TL", "KS", "AR", "D1R", "D1L", "D2R", "RR", "DT2"
+    "DT", "MUL", "TL", "KS", "AR", "D1R", "D1L", "D2R", "RR", "DT2", "AMS"
 ];
 
 // CH row has only 2 parameters
@@ -38,7 +38,8 @@ const PARAM_MAX: [u8; GRID_WIDTH] = [
     15,  // D1L: 4 bits (0-15)
     15,  // D2R: 4 bits (0-15)
     15,  // RR: 4 bits (0-15)
-    3    // DT2: 2 bits (0-3)
+    3,   // DT2: 2 bits (0-3)
+    3    // AMS: 2 bits (0-3)
 ];
 
 // Maximum values for CH row parameters
@@ -63,6 +64,7 @@ const PARAM_D1L: usize = 6;
 const PARAM_D2R: usize = 7;
 const PARAM_RR: usize = 8;
 const PARAM_DT2: usize = 9;
+const PARAM_AMS: usize = 10;
 
 // Parameter column indices for CH row (matching CH_PARAM_NAMES order)
 const CH_PARAM_ALG: usize = 0;
@@ -99,21 +101,21 @@ impl App {
         // Based on typical YM2151 patch settings
         let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
         
-        // Operator 1 (Carrier): DT, MUL, TL, KS, AR, D1R, D1L, D2R, RR, DT2
-        values[0] = [0, 1, 20, 0, 31, 10, 5, 5, 7, 0];
+        // Operator 1 (Carrier): DT, MUL, TL, KS, AR, D1R, D1L, D2R, RR, DT2, AMS
+        values[0] = [0, 1, 20, 0, 31, 10, 5, 5, 7, 0, 0];
         
         // Operator 2 (Modulator): softer attack
-        values[1] = [0, 1, 30, 0, 25, 8, 6, 4, 6, 0];
+        values[1] = [0, 1, 30, 0, 25, 8, 6, 4, 6, 0, 0];
         
         // Operator 3 (Modulator): even softer
-        values[2] = [0, 2, 40, 0, 20, 6, 7, 3, 5, 0];
+        values[2] = [0, 2, 40, 0, 20, 6, 7, 3, 5, 0, 0];
         
         // Operator 4 (Modulator): gentle
-        values[3] = [0, 1, 35, 0, 22, 7, 6, 4, 6, 0];
+        values[3] = [0, 1, 35, 0, 22, 7, 6, 4, 6, 0, 0];
         
         // Channel settings: ALG (algorithm) and FB (feedback) in first 2 positions
         // Default to ALG=4 (simple FM) and FB=0 (no feedback)
-        values[4] = [4, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        values[4] = [4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         
         let mut app = App {
             values,
@@ -218,6 +220,7 @@ impl App {
                 0xA0..=0xBF => {
                     let op = ((addr - 0xA0) / 8) as usize;
                     if op < 4 {
+                        values[op][PARAM_AMS] = (data >> 6) & 0x03;
                         values[op][PARAM_D1R] = data & 0x1F;
                     }
                 }
@@ -414,12 +417,14 @@ impl App {
                 data: format!("0x{:02X}", ks_ar),
             });
 
-            // AMS-EN (bit 7, set to 0) and D1R (bits 4-0) - Register $A0-$BF
+            // AMS (bits 7-6) and D1R (bits 4-0) - Register $A0-$BF
+            let ams = self.values[op][PARAM_AMS];
             let d1r = self.values[op][PARAM_D1R];
+            let ams_d1r = ((ams & 0x03) << 6) | (d1r & 0x1F);
             events.push(Ym2151Event {
                 time: 0,
                 addr: format!("0x{:02X}", 0xA0 + op_offset),
-                data: format!("0x{:02X}", d1r & 0x1F),
+                data: format!("0x{:02X}", ams_d1r),
             });
 
             // DT2 (bits 7-6) and D2R (bits 3-0) - Register $C0-$DF
@@ -1351,5 +1356,53 @@ mod tests {
         app.move_cursor_up();
         assert_eq!(app.cursor_y, 3);
         assert_eq!(app.cursor_x, 0, "Cursor x should remain valid");
+    }
+
+    #[test]
+    fn test_ams_parameter() {
+        let mut app = App::new();
+        
+        // Set AMS values for all operators
+        app.values[0][PARAM_AMS] = 1;
+        app.values[1][PARAM_AMS] = 2;
+        app.values[2][PARAM_AMS] = 3;
+        app.values[3][PARAM_AMS] = 0;
+        
+        // Set D1R values to distinguish from AMS
+        app.values[0][PARAM_D1R] = 15;
+        app.values[1][PARAM_D1R] = 20;
+        app.values[2][PARAM_D1R] = 25;
+        app.values[3][PARAM_D1R] = 30;
+        
+        // Generate YM2151 events
+        let events = app.to_ym2151_events();
+        
+        // Verify AMS/D1R register values
+        for op in 0..4 {
+            let ams_d1r_addr = format!("0x{:02X}", 0xA0 + op * 8);
+            let event = events.iter().find(|e| e.addr == ams_d1r_addr);
+            assert!(event.is_some(), "AMS/D1R event for operator {} should exist", op);
+            
+            let value = u8::from_str_radix(
+                event.unwrap().data.trim_start_matches("0x"),
+                16
+            ).unwrap();
+            
+            let ams = (value >> 6) & 0x03;
+            let d1r = value & 0x1F;
+            
+            assert_eq!(ams, app.values[op][PARAM_AMS], "Operator {} AMS should match", op);
+            assert_eq!(d1r, app.values[op][PARAM_D1R], "Operator {} D1R should match", op);
+        }
+        
+        // Test round-trip: convert back to tone data
+        let loaded_values = App::events_to_tone_data(&events).unwrap();
+        
+        for op in 0..4 {
+            assert_eq!(loaded_values[op][PARAM_AMS], app.values[op][PARAM_AMS], 
+                "Operator {} AMS should round-trip correctly", op);
+            assert_eq!(loaded_values[op][PARAM_D1R], app.values[op][PARAM_D1R], 
+                "Operator {} D1R should round-trip correctly", op);
+        }
     }
 }
