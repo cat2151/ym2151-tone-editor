@@ -1,4 +1,4 @@
-Last updated: 2025-11-12
+Last updated: 2025-11-16
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -73,16 +73,16 @@ A Windows-compatible Rust TUI (Text User Interface) editor for YM2151 (OPM) FM s
 - ※すべて検証用の仮仕様であり、そのあと破壊的変更をします
 - now : ESCで保存するとき、jsonにして保存。内部音色データ to YM2151-log-JSON
 - 起動時、jsonがあれば、それを内部音色データに変換して読み込み
-- 数値を増減したとき、都度、内部音色データをjson化して、cat-mml-playにわたして演奏（cat-mml-playは自動サーバー機能があるので高速に鳴らせます）
+- 数値を増減したとき、都度、内部音色データをjson化して、ym2151-log-play-serverライブラリ経由で名前付きパイプで直接送信し演奏（高速処理により、キーリピート時も無音にならずスムーズに鳴らせます）
 - 上記までの間に、音が鳴らない等の致命的な不具合が多数予想されるので、進め方をissueにできるだけノウハウとして残しつつ進めるつもり
 - これで最低限、音色づくりの機能ができたので、ドッグフーディング
 
 ## Features
 
 - Edit YM2151 tone parameters with parameter labels
-- Display 10 parameters × 5 rows (4 operators + 1 channel row)
-- Visual parameter names: DT, MUL, TL, KS, AR, D1R, D1L, D2R, RR, ALG
-- Vim-style cursor navigation with `hjkl` keys
+- Display 11 parameters × 5 rows (4 operators + 1 channel row)
+- Visual parameter names: DT, MUL, TL, KS, AR, D1R, D1L, D2R, RR, DT2, AMS
+- Cursor navigation with `hjkl` (Vim-style) or `wasd` keys
 - Increase/decrease values with `e`/`q` keys (respects parameter max values)
 - Exit with `ESC` key
 - Initialized with a basic FM piano-like tone
@@ -91,7 +91,7 @@ A Windows-compatible Rust TUI (Text User Interface) editor for YM2151 (OPM) FM s
 
 This editor uses a provisional tone data format based on the YM2151 register map:
 
-### Parameters (10 columns)
+### Parameters (11 columns)
 
 | Parameter | Name | Range | Description |
 |-----------|------|-------|-------------|
@@ -104,7 +104,8 @@ This editor uses a provisional tone data format based on the YM2151 register map
 | D1L | Decay 1 Level | 0-15 | Sustain level (4 bits) |
 | D2R | Decay 2 Rate | 0-15 | Second decay/sustain rate (4 bits) |
 | RR | Release Rate | 0-15 | Envelope release rate (4 bits) |
-| ALG | Algorithm | 0-7 | FM algorithm selection (3 bits) |
+| DT2 | Detune 2 | 0-3 | Coarse frequency detuning (2 bits) |
+| AMS | AM Sensitivity | 0-3 | Amplitude modulation sensitivity (2 bits) |
 
 ### Rows (5 operators/channels)
 
@@ -142,12 +143,13 @@ Or run the compiled binary directly:
 
 | Key | Action |
 |-----|--------|
-| `h` | Move cursor left |
-| `j` | Move cursor down |
-| `k` | Move cursor up |
-| `l` | Move cursor right |
+| `h` / `a` | Move cursor left |
+| `j` / `s` | Move cursor down |
+| `k` / `w` | Move cursor up |
+| `l` / `d` | Move cursor right |
 | `q` | Decrease value at cursor |
 | `e` | Increase value at cursor |
+| `Mouse Move` | Change value at cursor position based on vertical mouse position (top = max, bottom = 0) |
 | `ESC` | Exit application |
 
 ## Dependencies
@@ -164,9 +166,23 @@ Or run the compiled binary directly:
 📄 Cargo.lock
 📄 Cargo.toml
 📄 LICENSE
+📖 NOTE_ON_VISUALIZATION.md
 📖 README.md
 📄 _config.yml
 📁 generated-docs/
+📁 issue-notes/
+  📖 10.md
+  📖 11.md
+  📖 14.md
+  📖 16.md
+  📖 18.md
+  📖 20.md
+  📖 21.md
+  📖 22.md
+  📖 23.md
+  📖 24.md
+  📖 30.md
+  📖 32.md
 📁 src/
   📄 main.rs
 
@@ -177,7 +193,20 @@ Or run the compiled binary directly:
 関数呼び出し階層を分析できませんでした
 
 ## プロジェクト構造（ファイル一覧）
+NOTE_ON_VISUALIZATION.md
 README.md
+issue-notes/10.md
+issue-notes/11.md
+issue-notes/14.md
+issue-notes/16.md
+issue-notes/18.md
+issue-notes/20.md
+issue-notes/21.md
+issue-notes/22.md
+issue-notes/23.md
+issue-notes/24.md
+issue-notes/30.md
+issue-notes/32.md
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
 特に以下の点を重視してください：
@@ -189,4 +218,4 @@ README.md
 
 
 ---
-Generated at: 2025-11-12 07:08:39 JST
+Generated at: 2025-11-16 07:06:48 JST

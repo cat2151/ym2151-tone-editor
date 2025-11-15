@@ -1,4 +1,4 @@
-Last updated: 2025-11-12
+Last updated: 2025-11-16
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -198,228 +198,51 @@ Last updated: 2025-11-12
 - Cargo.lock
 - Cargo.toml
 - LICENSE
+- NOTE_ON_VISUALIZATION.md
 - README.md
 - _config.yml
 - generated-docs/project-overview-generated-prompt.md
+- issue-notes/10.md
+- issue-notes/11.md
+- issue-notes/14.md
+- issue-notes/16.md
+- issue-notes/18.md
+- issue-notes/20.md
+- issue-notes/21.md
+- issue-notes/22.md
+- issue-notes/23.md
+- issue-notes/24.md
+- issue-notes/30.md
+- issue-notes/32.md
 - src/main.rs
 
 ## 現在のオープンIssues
-## [Issue #5](../issue-notes/5.md): 仮仕様として、起動時、カレントディレクトリのjsonファイルを検索し、最新のものを音色データとして読み込み、表示に反映する
-
-ラベル: 
---- issue-notes/5.md の内容 ---
-
-```markdown
-
-```
-
-## [Issue #2](../issue-notes/2.md): 数値を増減したとき、子プロセスでcat-play-mmlを呼び出すようにする
-
-ラベル: 
---- issue-notes/2.md の内容 ---
-
-```markdown
-
-```
+オープン中のIssueはありません
 
 ## ドキュメントで言及されているファイルの内容
-### .github/actions-tmp/issue-notes/2.md
-```md
-# issue GitHub Actions「関数コールグラフhtmlビジュアライズ生成」を共通ワークフロー化する #2
-[issues #2](https://github.com/cat2151/github-actions/issues/2)
 
-
-# prompt
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-このymlファイルを、以下の2つのファイルに分割してください。
-1. 共通ワークフロー       cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
-2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-callgraph_enhanced.yml
-まずplanしてください
-```
-
-# 結果
-- indent
-    - linter？がindentのエラーを出しているがyml内容は見た感じOK
-    - テキストエディタとagentの相性問題と判断する
-    - 別のテキストエディタでsaveしなおし、テキストエディタをreload
-    - indentのエラーは解消した
-- LLMレビュー
-    - agent以外の複数のLLMにレビューさせる
-    - prompt
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューしてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
-
---- 共通ワークフロー
-
-# GitHub Actions Reusable Workflow for Call Graph Generation
-name: Generate Call Graph
-
-# TODO Windowsネイティブでのtestをしていた名残が残っているので、今後整理していく。今はWSL act でtestしており、Windowsネイティブ環境依存問題が解決した
-#  ChatGPTにレビューさせるとそこそこ有用そうな提案が得られたので、今後それをやる予定
-#  agentに自己チェックさせる手も、セカンドオピニオンとして選択肢に入れておく
-
-on:
-  workflow_call:
-
-jobs:
-  check-commits:
-    runs-on: ubuntu-latest
-    outputs:
-      should-run: ${{ steps.check.outputs.should-run }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 50 # 過去のコミットを取得
-
-      - name: Check for user commits in last 24 hours
-        id: check
-        run: |
-          node .github/scripts/callgraph_enhanced/check-commits.cjs
-
-  generate-callgraph:
-    needs: check-commits
-    if: needs.check-commits.outputs.should-run == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      security-events: write
-      actions: read
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set Git identity
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Remove old CodeQL packages cache
-        run: rm -rf ~/.codeql/packages
-
-      - name: Check Node.js version
-        run: |
-          node .github/scripts/callgraph_enhanced/check-node-version.cjs
-
-      - name: Install CodeQL CLI
-        run: |
-          wget https://github.com/github/codeql-cli-binaries/releases/download/v2.22.1/codeql-linux64.zip
-          unzip codeql-linux64.zip
-          sudo mv codeql /opt/codeql
-          echo "/opt/codeql" >> $GITHUB_PATH
-
-      - name: Install CodeQL query packs
-        run: |
-          /opt/codeql/codeql pack install .github/codeql-queries
-
-      - name: Check CodeQL exists
-        run: |
-          node .github/scripts/callgraph_enhanced/check-codeql-exists.cjs
-
-      - name: Verify CodeQL Configuration
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs verify-config
-
-      - name: Remove existing CodeQL DB (if any)
-        run: |
-          rm -rf codeql-db
-
-      - name: Perform CodeQL Analysis
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs analyze
-
-      - name: Check CodeQL Analysis Results
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs check-results
-
-      - name: Debug CodeQL execution
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs debug
-
-      - name: Wait for CodeQL results
-        run: |
-          node -e "setTimeout(()=>{}, 10000)"
-
-      - name: Find and process CodeQL results
-        run: |
-          node .github/scripts/callgraph_enhanced/find-process-results.cjs
-
-      - name: Generate HTML graph
-        run: |
-          node .github/scripts/callgraph_enhanced/generate-html-graph.cjs
-
-      - name: Copy files to generated-docs and commit results
-        run: |
-          node .github/scripts/callgraph_enhanced/copy-commit-results.cjs
-
---- 呼び出し元
-# 呼び出し元ワークフロー: call-callgraph_enhanced.yml
-name: Call Call Graph Enhanced
-
-on:
-  schedule:
-    # 毎日午前5時(JST) = UTC 20:00前日
-    - cron: '0 20 * * *'
-  workflow_dispatch:
-
-jobs:
-  call-callgraph-enhanced:
-    # uses: cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
-    uses: ./.github/workflows/callgraph_enhanced.yml # ローカルでのテスト用
-```
-
-# レビュー結果OKと判断する
-- レビュー結果を人力でレビューした形になった
-
-# test
-- #4 同様にローカル WSL + act でtestする
-- エラー。userのtest設計ミス。
-  - scriptの挙動 : src/ がある前提
-  - 今回の共通ワークフローのリポジトリ : src/ がない
-  - 今回testで実現したいこと
-    - 仮のソースでよいので、関数コールグラフを生成させる
-  - 対策
-    - src/ にダミーを配置する
-- test green
-  - ただしcommit pushはしてないので、html内容が0件NG、といったケースの検知はできない
-  - もしそうなったら別issueとしよう
-
-# test green
-
-# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
-
-# closeとする
-- もしhtml内容が0件NG、などになったら、別issueとするつもり
-
-```
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-ddcb5e2 Merge pull request #7 from cat2151/copilot/save-sound-data-as-json
-fd6a832 Replace magic numbers with named constants for array indices
-76dc352 Update project summaries (overview & development status) [auto]
-ecc2c07 Fix clippy warning: use io::Error::other instead of io::Error::new
-9401236 Add .gitignore entry for generated JSON files
-be91ecf Implement JSON save functionality for YM2151 tone data on ESC exit
-1241bd3 Update README with development status and plans
-05f4089 Initial plan
-6e60585 Update project summaries (overview & development status) [auto]
-b50647d Update project summaries (overview & development status) [auto]
+511b8fc Merge pull request #33 from cat2151/copilot/add-slot-mask-to-ch-column
+ecdfde6 Add SLOT MASK functionality to CH row
+910691a Add issue note for #32 [auto]
+371d001 Initial plan
+ca01eda Merge pull request #31 from cat2151/copilot/add-ams-to-tone-data
+1490bfe Add AMS parameter to operator tone data
+16499b4 Initial plan
+16fbc52 Add issue note for #30 [auto]
+f116c4f Merge pull request #29 from cat2151/copilot/integrate-cat-play-mml-library
+d600e92 Update README to reflect ym2151-log-play-server integration
 
 ### 変更されたファイル:
-.gitignore
 Cargo.lock
 Cargo.toml
 README.md
-generated-docs/development-status-generated-prompt.md
-generated-docs/development-status.md
-generated-docs/project-overview-generated-prompt.md
-generated-docs/project-overview.md
+issue-notes/30.md
+issue-notes/32.md
 src/main.rs
 
 
 ---
-Generated at: 2025-11-12 07:08:39 JST
+Generated at: 2025-11-16 07:06:49 JST
