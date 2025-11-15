@@ -460,21 +460,18 @@ impl App {
         };
 
         // Create a temporary JSON file in the current directory
-        let timestamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_micros(); // Use microseconds for uniqueness
-        let temp_filename = format!("ym2151_temp_{}.json", timestamp);
+        // Fixed filename since it will be recreated multiple times during a session
+        let temp_filename = "ym2151_temp.json";
 
         // Write JSON to temporary file
-        if fs::write(&temp_filename, json_string).is_err() {
+        if fs::write(temp_filename, json_string).is_err() {
             return; // Silently fail if unable to write file
         }
 
         // Spawn cat-play-mml process with the JSON filename as argument
         // Using spawn() to make it non-blocking
         let _child = Command::new("cat-play-mml")
-            .arg(&temp_filename)
+            .arg(temp_filename)
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .spawn();
