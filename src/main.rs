@@ -1,5 +1,5 @@
 use crossterm::{
-    event::{self, Event, KeyCode, KeyEventKind},
+    event::{self, Event, KeyCode, KeyEventKind, MouseEventKind, EnableMouseCapture, DisableMouseCapture},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -78,6 +78,7 @@ struct App {
     values: [[u8; GRID_WIDTH]; GRID_HEIGHT],
     cursor_x: usize,
     cursor_y: usize,
+    terminal_height: u16,
 }
 
 impl App {
@@ -105,6 +106,7 @@ impl App {
             values,
             cursor_x: 0,
             cursor_y: 0,
+            terminal_height: 24, // Default, will be updated in main loop
         };
 
         // Try to load the newest JSON file from current directory
@@ -270,6 +272,36 @@ impl App {
         let current = self.values[self.cursor_y][self.cursor_x];
         if current > 0 {
             self.values[self.cursor_y][self.cursor_x] = current - 1;
+            #[cfg(windows)]
+            self.call_cat_play_mml();
+        }
+    }
+
+    /// Update the parameter value based on mouse Y position
+    /// Maps mouse Y position to parameter value range (0 to PARAM_MAX)
+    fn update_value_from_mouse_y(&mut self, mouse_y: u16) {
+        if self.terminal_height == 0 {
+            return; // Avoid division by zero
+        }
+
+        // Map mouse Y position to parameter value
+        // Y=0 (top) -> max value, Y=terminal_height (bottom) -> 0
+        let max_value = PARAM_MAX[self.cursor_x];
+        
+        // Calculate the parameter value based on mouse position
+        // Invert Y so that top = max value, bottom = 0
+        let normalized = if mouse_y >= self.terminal_height {
+            0.0
+        } else {
+            1.0 - (mouse_y as f32 / self.terminal_height as f32)
+        };
+        
+        let new_value = (normalized * max_value as f32).round() as u8;
+        let clamped_value = new_value.min(max_value);
+        
+        // Only update and play sound if the value actually changed
+        if self.values[self.cursor_y][self.cursor_x] != clamped_value {
+            self.values[self.cursor_y][self.cursor_x] = clamped_value;
             #[cfg(windows)]
             self.call_cat_play_mml();
         }
@@ -485,7 +517,7 @@ fn main() -> Result<(), io::Error> {
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen)?;
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
@@ -497,7 +529,7 @@ fn main() -> Result<(), io::Error> {
 
     // Restore terminal
     disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen, DisableMouseCapture)?;
     terminal.show_cursor()?;
 
     if let Err(err) = res {
@@ -512,28 +544,41 @@ fn run_app<B: ratatui::backend::Backend>(
     app: &mut App,
 ) -> io::Result<()> {
     loop {
-        terminal.draw(|f| ui(f, app))?;
+        terminal.draw(|f| {
+            // Update terminal height for mouse position calculations
+            app.terminal_height = f.area().height;
+            ui(f, app);
+        })?;
 
-        if let Event::Key(key) = event::read()? {
-            // Only process key press and repeat events, ignore release events
-            // This follows crossterm/ratatui best practices for avoiding duplicate
-            // actions while still supporting key repeat functionality
-            if key.kind == KeyEventKind::Press || key.kind == KeyEventKind::Repeat {
-                match key.code {
-                    KeyCode::Char('q') => app.decrease_value(),
-                    KeyCode::Char('e') => app.increase_value(),
-                    KeyCode::Char('h') => app.move_cursor_left(),
-                    KeyCode::Char('j') => app.move_cursor_down(),
-                    KeyCode::Char('k') => app.move_cursor_up(),
-                    KeyCode::Char('l') => app.move_cursor_right(),
-                    KeyCode::Esc => {
-                        // Save tone data to JSON before exiting
-                        app.save_to_json()?;
-                        return Ok(());
+        match event::read()? {
+            Event::Key(key) => {
+                // Only process key press and repeat events, ignore release events
+                // This follows crossterm/ratatui best practices for avoiding duplicate
+                // actions while still supporting key repeat functionality
+                if key.kind == KeyEventKind::Press || key.kind == KeyEventKind::Repeat {
+                    match key.code {
+                        KeyCode::Char('q') => app.decrease_value(),
+                        KeyCode::Char('e') => app.increase_value(),
+                        KeyCode::Char('h') => app.move_cursor_left(),
+                        KeyCode::Char('j') => app.move_cursor_down(),
+                        KeyCode::Char('k') => app.move_cursor_up(),
+                        KeyCode::Char('l') => app.move_cursor_right(),
+                        KeyCode::Esc => {
+                            // Save tone data to JSON before exiting
+                            app.save_to_json()?;
+                            return Ok(());
+                        }
+                        _ => {}
                     }
-                    _ => {}
                 }
             }
+            Event::Mouse(mouse) => {
+                // Handle mouse movement to update parameter value
+                if mouse.kind == MouseEventKind::Moved {
+                    app.update_value_from_mouse_y(mouse.row);
+                }
+            }
+            _ => {}
         }
     }
 }
@@ -542,7 +587,7 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
     let size = f.area();
 
     let block = Block::default()
-        .title("YM2151 Tone Editor (hjkl:move, q/e:dec/inc, ESC:quit)")
+        .title("YM2151 Tone Editor (hjkl:move, q/e:dec/inc, mouse:move to change value, ESC:quit)")
         .borders(Borders::ALL);
     let inner = block.inner(size);
     f.render_widget(block, size);
@@ -960,5 +1005,53 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_update_value_from_mouse_y() {
+        let mut app = App::new();
+        app.terminal_height = 100;
+        app.cursor_x = PARAM_DT; // DT has max value of 7
+        app.cursor_y = 0;
+        
+        // Test mouse at top (y=0) should give max value
+        app.update_value_from_mouse_y(0);
+        assert_eq!(app.values[0][PARAM_DT], 7, "Top of screen should give max value");
+        
+        // Test mouse at bottom (y=100) should give min value (0)
+        app.update_value_from_mouse_y(100);
+        assert_eq!(app.values[0][PARAM_DT], 0, "Bottom of screen should give min value");
+        
+        // Test mouse at middle (y=50) should give approximately half of max
+        app.update_value_from_mouse_y(50);
+        let middle_value = app.values[0][PARAM_DT];
+        assert!(middle_value >= 3 && middle_value <= 4, "Middle of screen should give ~half of max value, got {}", middle_value);
+        
+        // Test with different parameter (MUL has max value of 15)
+        app.cursor_x = PARAM_MUL;
+        app.update_value_from_mouse_y(0);
+        assert_eq!(app.values[0][PARAM_MUL], 15, "Top of screen should give max value for MUL");
+        
+        app.update_value_from_mouse_y(100);
+        assert_eq!(app.values[0][PARAM_MUL], 0, "Bottom of screen should give min value for MUL");
+        
+        // Test edge case: mouse beyond terminal height
+        app.cursor_x = PARAM_DT;
+        app.update_value_from_mouse_y(150);
+        assert_eq!(app.values[0][PARAM_DT], 0, "Mouse beyond terminal should give min value");
+    }
+
+    #[test]
+    fn test_update_value_from_mouse_y_zero_height() {
+        let mut app = App::new();
+        app.terminal_height = 0;
+        app.cursor_x = PARAM_DT;
+        app.cursor_y = 0;
+        
+        let initial_value = app.values[0][PARAM_DT];
+        
+        // Should not crash or change value when terminal_height is 0
+        app.update_value_from_mouse_y(50);
+        assert_eq!(app.values[0][PARAM_DT], initial_value, "Value should not change when terminal_height is 0");
     }
 }

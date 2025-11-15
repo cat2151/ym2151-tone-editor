@@ -85,6 +85,7 @@ Or run the compiled binary directly:
 | `l` | Move cursor right |
 | `q` | Decrease value at cursor |
 | `e` | Increase value at cursor |
+| `Mouse Move` | Change value at cursor position based on vertical mouse position (top = max, bottom = 0) |
 | `ESC` | Exit application |
 
 ## Dependencies
