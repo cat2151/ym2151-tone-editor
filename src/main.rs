@@ -23,9 +23,9 @@ const PARAM_NAMES: [&str; GRID_WIDTH] = [
     "DT", "MUL", "TL", "KS", "AR", "D1R", "D1L", "D2R", "RR", "DT2", "AMS"
 ];
 
-// CH row has only 2 parameters
-const CH_PARAM_COUNT: usize = 2;
-const CH_PARAM_NAMES: [&str; CH_PARAM_COUNT] = ["ALG", "FB"];
+// CH row has 6 parameters: ALG, FB, and 4 slot masks
+const CH_PARAM_COUNT: usize = 6;
+const CH_PARAM_NAMES: [&str; CH_PARAM_COUNT] = ["ALG", "FB", "OP1", "OP2", "OP3", "OP4"];
 
 // Maximum values for each parameter (respecting YM2151 bit ranges)
 const PARAM_MAX: [u8; GRID_WIDTH] = [
@@ -45,7 +45,11 @@ const PARAM_MAX: [u8; GRID_WIDTH] = [
 // Maximum values for CH row parameters
 const CH_PARAM_MAX: [u8; CH_PARAM_COUNT] = [
     7,  // ALG: 3 bits (0-7) - Algorithm
-    7   // FB: 3 bits (0-7) - Feedback
+    7,  // FB: 3 bits (0-7) - Feedback
+    1,  // OP1 MASK: 0 or 1
+    1,  // OP2 MASK: 0 or 1
+    1,  // OP3 MASK: 0 or 1
+    1   // OP4 MASK: 0 or 1
 ];
 
 // Row names for operators
@@ -69,6 +73,10 @@ const PARAM_AMS: usize = 10;
 // Parameter column indices for CH row (matching CH_PARAM_NAMES order)
 const CH_PARAM_ALG: usize = 0;
 const CH_PARAM_FB: usize = 1;
+const CH_PARAM_OP1_MASK: usize = 2;
+const CH_PARAM_OP2_MASK: usize = 3;
+const CH_PARAM_OP3_MASK: usize = 4;
+const CH_PARAM_OP4_MASK: usize = 5;
 
 // Row index for channel settings
 const ROW_CH: usize = 4;
@@ -115,7 +123,8 @@ impl App {
         
         // Channel settings: ALG (algorithm) and FB (feedback) in first 2 positions
         // Default to ALG=4 (simple FM) and FB=0 (no feedback)
-        values[4] = [4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        // Slot masks: OP1, OP2, OP3, OP4 all enabled (1)
+        values[4] = [4, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0];
         
         let mut app = App {
             values,
@@ -246,6 +255,15 @@ impl App {
                     // Extract ALG and FB to CH row
                     values[ROW_CH][CH_PARAM_ALG] = data & 0x07; // ALG is bits 0-2
                     values[ROW_CH][CH_PARAM_FB] = (data >> 3) & 0x07; // FB is bits 3-5
+                }
+                // Key On register (0x08)
+                0x08 => {
+                    // Bits 3-6 contain operator enable flags
+                    // Bit 3: OP1, Bit 4: OP2, Bit 5: OP3, Bit 6: OP4
+                    values[ROW_CH][CH_PARAM_OP1_MASK] = (data >> 3) & 0x01;
+                    values[ROW_CH][CH_PARAM_OP2_MASK] = (data >> 4) & 0x01;
+                    values[ROW_CH][CH_PARAM_OP3_MASK] = (data >> 5) & 0x01;
+                    values[ROW_CH][CH_PARAM_OP4_MASK] = (data >> 6) & 0x01;
                 }
                 _ => {}
             }
@@ -474,11 +492,17 @@ impl App {
             data: "0x00".to_string(),
         });
         
-        // Note On - Register $08 - Key On with all operators enabled
+        // Note On - Register $08 - Key On with operators based on slot masks
         // Bits 0-2: Channel (0-7)
         // Bits 3-6: Operator enable (M1=bit3, M2=bit4, C1=bit5, C2=bit6)
-        // For YM2151, enabling all 4 operators = 0x78 (bits 3-6 set)
-        let key_on_data = 0x78 | channel; // All operators on for channel
+        // Use slot masks from CH row to determine which operators to enable
+        let op1_mask = self.values[ROW_CH][CH_PARAM_OP1_MASK];
+        let op2_mask = self.values[ROW_CH][CH_PARAM_OP2_MASK];
+        let op3_mask = self.values[ROW_CH][CH_PARAM_OP3_MASK];
+        let op4_mask = self.values[ROW_CH][CH_PARAM_OP4_MASK];
+        
+        let key_on_data = ((op1_mask & 1) << 3) | ((op2_mask & 1) << 4) 
+                        | ((op3_mask & 1) << 5) | ((op4_mask & 1) << 6) | (channel as u8);
         events.push(Ym2151Event {
             time: 0,
             addr: "0x08".to_string(),
@@ -754,7 +778,7 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
         f.render_widget(paragraph, area);
     }
 
-    // Draw CH row (row 4) with only ALG and FB
+    // Draw CH row (row 4) with ALG, FB, and slot masks
     let ch_row_y = inner.y + label_offset + 5;
     
     // Draw row label (CH)
@@ -770,7 +794,7 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
     ));
     f.render_widget(row_label, row_label_area);
 
-    // Draw only ALG and FB values
+    // Draw all CH row values (ALG, FB, and 4 slot masks)
     for col in 0..CH_PARAM_COUNT {
         let value = app.values[ROW_CH][col];
         let x = inner.x + row_label_width + (col as u16 * cell_width);
@@ -1404,5 +1428,137 @@ mod tests {
             assert_eq!(loaded_values[op][PARAM_D1R], app.values[op][PARAM_D1R], 
                 "Operator {} D1R should round-trip correctly", op);
         }
+    }
+
+    #[test]
+    fn test_slot_mask_parameters() {
+        let mut app = App::new();
+        
+        // Set slot masks to different values
+        app.values[ROW_CH][CH_PARAM_OP1_MASK] = 1;
+        app.values[ROW_CH][CH_PARAM_OP2_MASK] = 0;
+        app.values[ROW_CH][CH_PARAM_OP3_MASK] = 1;
+        app.values[ROW_CH][CH_PARAM_OP4_MASK] = 0;
+        
+        // Generate YM2151 events
+        let events = app.to_ym2151_events();
+        
+        // Find the Key On event (0x08)
+        let key_on_event = events.iter().find(|e| e.addr == "0x08");
+        assert!(key_on_event.is_some(), "Key On event should exist");
+        
+        let value = u8::from_str_radix(
+            key_on_event.unwrap().data.trim_start_matches("0x"),
+            16
+        ).unwrap();
+        
+        // Extract operator enable bits
+        let op1_enable = (value >> 3) & 0x01;
+        let op2_enable = (value >> 4) & 0x01;
+        let op3_enable = (value >> 5) & 0x01;
+        let op4_enable = (value >> 6) & 0x01;
+        
+        // Verify slot masks are correctly encoded in KEY ON register
+        assert_eq!(op1_enable, 1, "OP1 should be enabled");
+        assert_eq!(op2_enable, 0, "OP2 should be disabled");
+        assert_eq!(op3_enable, 1, "OP3 should be enabled");
+        assert_eq!(op4_enable, 0, "OP4 should be disabled");
+        
+        // Test round-trip: convert back to tone data
+        let loaded_values = App::events_to_tone_data(&events).unwrap();
+        
+        assert_eq!(loaded_values[ROW_CH][CH_PARAM_OP1_MASK], 1, "OP1 mask should round-trip correctly");
+        assert_eq!(loaded_values[ROW_CH][CH_PARAM_OP2_MASK], 0, "OP2 mask should round-trip correctly");
+        assert_eq!(loaded_values[ROW_CH][CH_PARAM_OP3_MASK], 1, "OP3 mask should round-trip correctly");
+        assert_eq!(loaded_values[ROW_CH][CH_PARAM_OP4_MASK], 0, "OP4 mask should round-trip correctly");
+    }
+
+    #[test]
+    fn test_slot_mask_all_enabled() {
+        let mut app = App::new();
+        
+        // Set all slot masks to 1 (all enabled)
+        app.values[ROW_CH][CH_PARAM_OP1_MASK] = 1;
+        app.values[ROW_CH][CH_PARAM_OP2_MASK] = 1;
+        app.values[ROW_CH][CH_PARAM_OP3_MASK] = 1;
+        app.values[ROW_CH][CH_PARAM_OP4_MASK] = 1;
+        
+        // Generate YM2151 events
+        let events = app.to_ym2151_events();
+        
+        // Find the Key On event
+        let key_on_event = events.iter().find(|e| e.addr == "0x08");
+        assert!(key_on_event.is_some());
+        
+        let value = u8::from_str_radix(
+            key_on_event.unwrap().data.trim_start_matches("0x"),
+            16
+        ).unwrap();
+        
+        // With all operators enabled, bits 3-6 should all be 1
+        // Channel 0, so bits 0-2 are 0
+        // Expected: 0111 1000 = 0x78
+        assert_eq!(value, 0x78, "All operators should be enabled");
+    }
+
+    #[test]
+    fn test_slot_mask_all_disabled() {
+        let mut app = App::new();
+        
+        // Set all slot masks to 0 (all disabled)
+        app.values[ROW_CH][CH_PARAM_OP1_MASK] = 0;
+        app.values[ROW_CH][CH_PARAM_OP2_MASK] = 0;
+        app.values[ROW_CH][CH_PARAM_OP3_MASK] = 0;
+        app.values[ROW_CH][CH_PARAM_OP4_MASK] = 0;
+        
+        // Generate YM2151 events
+        let events = app.to_ym2151_events();
+        
+        // Find the Key On event
+        let key_on_event = events.iter().find(|e| e.addr == "0x08");
+        assert!(key_on_event.is_some());
+        
+        let value = u8::from_str_radix(
+            key_on_event.unwrap().data.trim_start_matches("0x"),
+            16
+        ).unwrap();
+        
+        // With all operators disabled, bits 3-6 should all be 0
+        // Channel 0, so bits 0-2 are 0
+        // Expected: 0000 0000 = 0x00
+        assert_eq!(value, 0x00, "All operators should be disabled");
+    }
+
+    #[test]
+    fn test_slot_mask_default_initialization() {
+        let app = App::new();
+        
+        // Default initialization should have all slot masks set to 1
+        assert_eq!(app.values[ROW_CH][CH_PARAM_OP1_MASK], 1, "OP1 mask should default to 1");
+        assert_eq!(app.values[ROW_CH][CH_PARAM_OP2_MASK], 1, "OP2 mask should default to 1");
+        assert_eq!(app.values[ROW_CH][CH_PARAM_OP3_MASK], 1, "OP3 mask should default to 1");
+        assert_eq!(app.values[ROW_CH][CH_PARAM_OP4_MASK], 1, "OP4 mask should default to 1");
+    }
+
+    #[test]
+    fn test_ch_row_has_six_parameters() {
+        // Verify that CH_PARAM_COUNT is correctly set to 6
+        assert_eq!(CH_PARAM_COUNT, 6, "CH row should have 6 parameters");
+        
+        // Verify parameter names
+        assert_eq!(CH_PARAM_NAMES[0], "ALG");
+        assert_eq!(CH_PARAM_NAMES[1], "FB");
+        assert_eq!(CH_PARAM_NAMES[2], "OP1");
+        assert_eq!(CH_PARAM_NAMES[3], "OP2");
+        assert_eq!(CH_PARAM_NAMES[4], "OP3");
+        assert_eq!(CH_PARAM_NAMES[5], "OP4");
+        
+        // Verify max values
+        assert_eq!(CH_PARAM_MAX[0], 7, "ALG max should be 7");
+        assert_eq!(CH_PARAM_MAX[1], 7, "FB max should be 7");
+        assert_eq!(CH_PARAM_MAX[2], 1, "OP1 mask max should be 1");
+        assert_eq!(CH_PARAM_MAX[3], 1, "OP2 mask max should be 1");
+        assert_eq!(CH_PARAM_MAX[4], 1, "OP3 mask max should be 1");
+        assert_eq!(CH_PARAM_MAX[5], 1, "OP4 mask max should be 1");
     }
 }
