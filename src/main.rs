@@ -19,7 +19,12 @@ use app::App;
 fn main() -> Result<(), io::Error> {
     // Ensure server is running (Windows only)
     #[cfg(windows)]
-    ensure_server_running();
+    {
+        if let Err(e) = ym2151_log_play_server::client::ensure_server_ready("cat-play-mml") {
+            eprintln!("⚠️  Warning: Failed to ensure server is ready: {}", e);
+            eprintln!("   Live audio feedback may not be available.");
+        }
+    }
 
     // Setup terminal
     enable_raw_mode()?;
@@ -86,37 +91,6 @@ fn run_app<B: ratatui::backend::Backend>(
                 }
             }
             _ => {}
-        }
-    }
-}
-
-/// Ensure the ym2151-log-play-server is running
-/// If not running, start it in a background thread
-#[cfg(windows)]
-fn ensure_server_running() {
-    use std::thread;
-    use std::time::Duration;
-    
-    // Try to connect to the server to check if it's running
-    match ym2151_log_play_server::client::send_json("") {
-        Ok(_) => {
-            // Server is running
-            eprintln!("✅ ym2151-log-play-server is already running");
-        }
-        Err(_) => {
-            // Server is not running, start it
-            eprintln!("🚀 Starting ym2151-log-play-server in background...");
-            
-            thread::spawn(|| {
-                let server = ym2151_log_play_server::server::Server::new();
-                if let Err(e) = server.run() {
-                    eprintln!("❌ Server error: {}", e);
-                }
-            });
-            
-            // Give the server time to start
-            thread::sleep(Duration::from_millis(500));
-            eprintln!("✅ ym2151-log-play-server started");
         }
     }
 }

@@ -78,16 +78,16 @@ Or run the compiled binary directly:
 
 ## Live Audio Feedback (Windows only)
 
-The editor automatically starts the `ym2151-log-play-server` in the background when you run it. You'll hear audio feedback in real-time as you modify tone parameters.
+The editor automatically ensures the server is ready using the `ensure_server_ready()` function from the ym2151-log-play-server library. This handles server installation, startup, and readiness checks automatically.
 
 ```bash
-# Just run the tone editor - the server starts automatically
+# Just run the tone editor - the server is automatically set up and started
 cargo run
 ```
 
 The editor uses `send_json` to send tone updates via named pipe, which automatically chooses the optimal transmission method based on data size (direct or file-based). This provides instant audio feedback with improved response time, allowing sound to play even during key repeat operations.
 
-**Note**: If you prefer to manage the server manually, you can start it separately with `ym2151-log-play-server --server` before running the editor.
+**Note**: The library's `ensure_server_ready()` function handles all server management, including installation if needed.
 
 ## Controls
 
