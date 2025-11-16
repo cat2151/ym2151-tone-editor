@@ -1,5 +1,7 @@
 use crate::models::*;
-use crate::{file_ops, register};
+use crate::file_ops;
+#[cfg(windows)]
+use crate::register;
 
 pub struct App {
     pub values: ToneData,
