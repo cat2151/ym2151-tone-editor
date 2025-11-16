@@ -123,7 +123,8 @@ impl App {
 
     /// Update the parameter value based on mouse X position
     /// Maps mouse X position to parameter value range (0 to PARAM_MAX)
-    /// Uses only the middle third of the terminal width for full range
+    /// Uses the middle third of the terminal width for full range
+    /// Left of middle third sets to min (0), right of middle third sets to max
     pub fn update_value_from_mouse_x(&mut self, mouse_x: u16, terminal_width: u16) {
         if terminal_width == 0 {
             return; // Avoid division by zero
@@ -134,34 +135,36 @@ impl App {
         let left_boundary = third_width;
         let right_boundary = third_width * 2;
         
-        // Only respond to mouse in the middle third
-        if mouse_x < left_boundary || mouse_x > right_boundary {
-            return;
-        }
-
-        // Map mouse X position within middle third to parameter value
-        // left_boundary -> 0, right_boundary -> max value
         let max_value = if self.cursor_y == ROW_CH && self.cursor_x < CH_PARAM_COUNT {
             CH_PARAM_MAX[self.cursor_x]
         } else {
             PARAM_MAX[self.cursor_x]
         };
         
-        // Calculate the parameter value based on mouse position within middle third
-        let middle_width = right_boundary - left_boundary;
-        let relative_x = mouse_x - left_boundary;
-        let normalized = if middle_width == 0 {
-            0.0
+        let new_value = if mouse_x < left_boundary {
+            // Mouse is left of middle third -> set to minimum (0)
+            0
+        } else if mouse_x > right_boundary {
+            // Mouse is right of middle third -> set to maximum
+            max_value
         } else {
-            relative_x as f32 / middle_width as f32
+            // Mouse is within middle third -> map proportionally
+            // left_boundary -> 0, right_boundary -> max value
+            let middle_width = right_boundary - left_boundary;
+            let relative_x = mouse_x - left_boundary;
+            let normalized = if middle_width == 0 {
+                0.0
+            } else {
+                relative_x as f32 / middle_width as f32
+            };
+            
+            let value = (normalized * max_value as f32).round() as u8;
+            value.min(max_value)
         };
         
-        let new_value = (normalized * max_value as f32).round() as u8;
-        let clamped_value = new_value.min(max_value);
-        
         // Only update and play sound if the value actually changed
-        if self.values[self.cursor_y][self.cursor_x] != clamped_value {
-            self.values[self.cursor_y][self.cursor_x] = clamped_value;
+        if self.values[self.cursor_y][self.cursor_x] != new_value {
+            self.values[self.cursor_y][self.cursor_x] = new_value;
             #[cfg(windows)]
             self.call_cat_play_mml();
         }
@@ -316,11 +319,11 @@ mod tests {
         
         // Test mouse at left boundary of middle third (x=40) should give min value (0)
         app.update_value_from_mouse_x(40, terminal_width);
-        assert_eq!(app.values[0][PARAM_DT], 0, "Left of middle third should give min value");
+        assert_eq!(app.values[0][PARAM_DT], 0, "Left boundary of middle third should give min value");
         
         // Test mouse at right boundary of middle third (x=80) should give max value
         app.update_value_from_mouse_x(80, terminal_width);
-        assert_eq!(app.values[0][PARAM_DT], 7, "Right of middle third should give max value");
+        assert_eq!(app.values[0][PARAM_DT], 7, "Right boundary of middle third should give max value");
         
         // Test mouse at center of middle third (x=60) should give approximately half of max
         app.update_value_from_mouse_x(60, terminal_width);
@@ -330,20 +333,19 @@ mod tests {
         // Test with different parameter (MUL has max value of 15)
         app.cursor_x = PARAM_MUL;
         app.update_value_from_mouse_x(40, terminal_width);
-        assert_eq!(app.values[0][PARAM_MUL], 0, "Left of middle third should give min value for MUL");
+        assert_eq!(app.values[0][PARAM_MUL], 0, "Left boundary of middle third should give min value for MUL");
         
         app.update_value_from_mouse_x(80, terminal_width);
-        assert_eq!(app.values[0][PARAM_MUL], 15, "Right of middle third should give max value for MUL");
+        assert_eq!(app.values[0][PARAM_MUL], 15, "Right boundary of middle third should give max value for MUL");
         
-        // Test edge case: mouse outside middle third (left side)
-        let initial_dt = app.values[0][PARAM_DT];
+        // Test edge case: mouse left of middle third (left side) should set to min (0)
         app.cursor_x = PARAM_DT;
         app.update_value_from_mouse_x(20, terminal_width); // Left third
-        assert_eq!(app.values[0][PARAM_DT], initial_dt, "Mouse outside middle third should not change value");
+        assert_eq!(app.values[0][PARAM_DT], 0, "Mouse left of middle third should set to min value (0)");
         
-        // Test edge case: mouse outside middle third (right side)
+        // Test edge case: mouse right of middle third (right side) should set to max
         app.update_value_from_mouse_x(100, terminal_width); // Right third
-        assert_eq!(app.values[0][PARAM_DT], initial_dt, "Mouse outside middle third should not change value");
+        assert_eq!(app.values[0][PARAM_DT], 7, "Mouse right of middle third should set to max value (7)");
     }
 
     #[test]
@@ -358,5 +360,54 @@ mod tests {
         // Should not crash or change value when terminal_width is 0
         app.update_value_from_mouse_x(50, terminal_width);
         assert_eq!(app.values[0][PARAM_DT], initial_value, "Value should not change when terminal_width is 0");
+    }
+
+    #[test]
+    fn test_update_value_from_mouse_x_left_right_edges() {
+        let mut app = App::new();
+        let terminal_width = 120;
+        
+        // Test with DT parameter (max value = 7)
+        app.cursor_x = PARAM_DT;
+        app.cursor_y = 0;
+        
+        // Far left (x=0) should set to min (0)
+        app.update_value_from_mouse_x(0, terminal_width);
+        assert_eq!(app.values[0][PARAM_DT], 0, "Far left should set to min value (0)");
+        
+        // Far right (x=119) should set to max (7)
+        app.update_value_from_mouse_x(119, terminal_width);
+        assert_eq!(app.values[0][PARAM_DT], 7, "Far right should set to max value (7)");
+        
+        // Just before left boundary (x=39) should set to min (0)
+        app.update_value_from_mouse_x(39, terminal_width);
+        assert_eq!(app.values[0][PARAM_DT], 0, "Just before left boundary should set to min value (0)");
+        
+        // Just after right boundary (x=81) should set to max (7)
+        app.update_value_from_mouse_x(81, terminal_width);
+        assert_eq!(app.values[0][PARAM_DT], 7, "Just after right boundary should set to max value (7)");
+        
+        // Test with TL parameter (max value = 99)
+        app.cursor_x = PARAM_TL;
+        
+        // Far left should set to min (0)
+        app.update_value_from_mouse_x(0, terminal_width);
+        assert_eq!(app.values[0][PARAM_TL], 0, "Far left should set to min value (0) for TL");
+        
+        // Far right should set to max (99)
+        app.update_value_from_mouse_x(119, terminal_width);
+        assert_eq!(app.values[0][PARAM_TL], 99, "Far right should set to max value (99) for TL");
+        
+        // Test with CH row parameters
+        app.cursor_y = ROW_CH;
+        app.cursor_x = CH_PARAM_ALG; // ALG has max value of 7
+        
+        // Far left should set to min (0)
+        app.update_value_from_mouse_x(0, terminal_width);
+        assert_eq!(app.values[ROW_CH][CH_PARAM_ALG], 0, "Far left should set to min value (0) for CH ALG");
+        
+        // Far right should set to max (7)
+        app.update_value_from_mouse_x(119, terminal_width);
+        assert_eq!(app.values[ROW_CH][CH_PARAM_ALG], 7, "Far right should set to max value (7) for CH ALG");
     }
 }
