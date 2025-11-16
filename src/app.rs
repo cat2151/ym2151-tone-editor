@@ -30,7 +30,8 @@ impl App {
         // Channel settings: ALG (algorithm) and FB (feedback) in first 2 positions
         // Default to ALG=4 (simple FM) and FB=0 (no feedback)
         // Slot masks: OP1, OP2, OP3, OP4 all enabled (1)
-        values[4] = [4, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0];
+        // MIDI Note Number: 60 (middle C)
+        values[4] = [4, 0, 1, 1, 1, 1, 60, 0, 0, 0, 0];
         
         let mut app = App {
             values,

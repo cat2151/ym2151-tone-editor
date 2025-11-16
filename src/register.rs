@@ -1,6 +1,72 @@
 use std::io;
 use crate::models::*;
 
+/// Convert MIDI note number to YM2151 KC (Key Code) and KF (Key Fraction) values
+/// 
+/// MIDI note 60 = middle C
+/// YM2151 uses KC (key code) and KF (key fraction) for pitch control
+/// 
+/// Returns (kc, kf) tuple
+pub fn midi_note_to_kc_kf(midi_note: u8) -> (u8, u8) {
+    // YM2151 frequency formula:
+    // F = 3.98 MHz / 64 / (2048 - KC*64 - KF) * 2^(octave-1)
+    // 
+    // Simplified approach: Map MIDI notes to YM2151 octave and note
+    // MIDI note = octave * 12 + semitone
+    // YM2151 KC format: bits 6-4 = octave (0-7), bits 3-0 = note (0-15)
+    
+    // Clamp MIDI note to valid range
+    let note = midi_note.min(127);
+    
+    // Calculate octave (MIDI octave -1 to map to YM2151's 0-7 range)
+    // MIDI note 0 = C-1, note 60 = C4 (middle C)
+    // Handle note 0-11 specially to avoid underflow
+    let octave = if note < 12 {
+        0
+    } else {
+        ((note / 12) - 1).min(7)
+    };
+    
+    // Calculate semitone within octave (0-11)
+    let semitone = note % 12;
+    
+    // Map semitone to YM2151 note value (0-15)
+    // YM2151 has 16 values per octave for fine-tuning
+    // Scale semitone (0-11) to note (0-15): note = semitone * 16 / 12
+    let note_val = ((semitone as u16 * 16) / 12) as u8;
+    
+    // Construct KC: octave in bits 6-4, note in bits 3-0
+    let kc = (octave << 4) | (note_val & 0x0F);
+    
+    // KF (key fraction) provides fine-tuning (6 bits)
+    // Calculate fractional part: (semitone * 16) % 12
+    let fraction = ((semitone as u16 * 16) % 12) as u16;
+    // Scale to 6-bit range (0-63) and shift left 2 bits for YM2151 format
+    let kf = (((fraction * 64) / 12) << 2) as u8;
+    
+    (kc, kf)
+}
+
+/// Convert YM2151 KC (Key Code) to approximate MIDI note number
+/// 
+/// This is an approximate reverse conversion since YM2151 has finer
+/// pitch resolution than MIDI's semitone-based system
+pub fn kc_to_midi_note(kc: u8) -> u8 {
+    // Extract octave (bits 6-4) and note value (bits 3-0)
+    let octave = (kc >> 4) & 0x07;
+    let note_val = kc & 0x0F;
+    
+    // Convert note value (0-15) back to semitone (0-11)
+    // Reverse of: note_val = semitone * 16 / 12
+    let semitone = ((note_val as u16 * 12) / 16) as u8;
+    
+    // Calculate MIDI note number
+    // Add 1 to octave to reverse the -1 offset we applied in midi_note_to_kc_kf
+    let midi_note = ((octave + 1) * 12 + semitone).min(127);
+    
+    midi_note
+}
+
 /// Convert tone data to YM2151 register events
 /// This generates register writes for the YM2151 chip based on the current tone parameters
 pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
@@ -98,18 +164,22 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
         data: format!("0x{:02X}", rl_fb_con),
     });
     
-    // Key Code (KC) - Register $28-$2F - Set note to middle C (around KC=0x4C)
+    // Key Code (KC) and Key Fraction (KF) - Use MIDI note number from CH row
+    let midi_note = values[ROW_CH][CH_PARAM_NOTE];
+    let (kc, kf) = midi_note_to_kc_kf(midi_note);
+    
+    // Key Code (KC) - Register $28-$2F
     events.push(Ym2151Event {
         time: 0,
         addr: format!("0x{:02X}", 0x28 + channel),
-        data: "0x4C".to_string(),
+        data: format!("0x{:02X}", kc),
     });
     
     // Key Fraction (KF) - Register $30-$37 - Fine frequency adjust
     events.push(Ym2151Event {
         time: 0,
         addr: format!("0x{:02X}", 0x30 + channel),
-        data: "0x00".to_string(),
+        data: format!("0x{:02X}", kf),
     });
     
     // Note On - Register $08 - Key On with operators based on slot masks
@@ -207,6 +277,11 @@ pub fn events_to_tone_data(events: &[Ym2151Event]) -> io::Result<ToneData> {
                 values[ROW_CH][CH_PARAM_OP2_MASK] = (data >> 4) & 0x01;
                 values[ROW_CH][CH_PARAM_OP3_MASK] = (data >> 5) & 0x01;
                 values[ROW_CH][CH_PARAM_OP4_MASK] = (data >> 6) & 0x01;
+            }
+            // KC (Key Code) register (0x28-0x2F)
+            0x28..=0x2F => {
+                // Convert KC back to MIDI note number
+                values[ROW_CH][CH_PARAM_NOTE] = kc_to_midi_note(data);
             }
             _ => {}
         }
@@ -332,5 +407,121 @@ mod tests {
         let json_string = json_result.unwrap();
         assert!(json_string.contains("event_count"));
         assert!(json_string.contains("events"));
+    }
+
+    #[test]
+    fn test_midi_note_to_kc_kf_middle_c() {
+        // MIDI note 60 = middle C (C4)
+        let (kc, _kf) = midi_note_to_kc_kf(60);
+        
+        // Octave 4, note 0 (C) should give approximately 0x40
+        // Octave = (60 / 12) - 1 = 4
+        // Semitone = 60 % 12 = 0
+        assert_eq!(kc >> 4, 4, "Octave should be 4 for middle C");
+        assert_eq!(kc & 0x0F, 0, "Note should be 0 for C");
+    }
+
+    #[test]
+    fn test_midi_note_to_kc_kf_various_notes() {
+        // Test A4 (MIDI note 69)
+        let (kc, _) = midi_note_to_kc_kf(69);
+        let octave = kc >> 4;
+        assert_eq!(octave, 4, "A4 should be in octave 4");
+        
+        // Test C5 (MIDI note 72)
+        let (kc, _) = midi_note_to_kc_kf(72);
+        let octave = kc >> 4;
+        assert_eq!(octave, 5, "C5 should be in octave 5");
+        
+        // Test C3 (MIDI note 48)
+        let (kc, _) = midi_note_to_kc_kf(48);
+        let octave = kc >> 4;
+        assert_eq!(octave, 3, "C3 should be in octave 3");
+    }
+
+    #[test]
+    fn test_midi_note_to_kc_kf_boundary_values() {
+        // Test minimum MIDI note
+        let (kc, _) = midi_note_to_kc_kf(0);
+        assert!(kc <= 0x7F, "KC should be within valid range");
+        
+        // Test maximum MIDI note
+        let (kc, _) = midi_note_to_kc_kf(127);
+        assert!(kc <= 0x7F, "KC should be within valid range");
+        
+        // Test clamping beyond 127
+        let (kc1, kf1) = midi_note_to_kc_kf(127);
+        let (kc2, kf2) = midi_note_to_kc_kf(200);
+        assert_eq!(kc1, kc2, "Values above 127 should be clamped");
+        assert_eq!(kf1, kf2, "KF should also be clamped");
+    }
+
+    #[test]
+    fn test_kc_to_midi_note_middle_c() {
+        // KC for middle C (octave 4, note 0)
+        let kc = 0x40; // 0100 0000 = octave 4, note 0
+        let midi_note = kc_to_midi_note(kc);
+        
+        // Should be approximately 60 (middle C)
+        assert_eq!(midi_note, 60, "KC 0x40 should convert to MIDI note 60");
+    }
+
+    #[test]
+    fn test_midi_note_roundtrip() {
+        // Test that converting MIDI -> KC -> MIDI gives approximately the same value
+        for midi_in in [36, 48, 60, 72, 84, 96] {
+            let (kc, _) = midi_note_to_kc_kf(midi_in);
+            let midi_out = kc_to_midi_note(kc);
+            
+            // Allow small difference due to quantization
+            let diff = if midi_in > midi_out { midi_in - midi_out } else { midi_out - midi_in };
+            assert!(diff <= 1, "MIDI note {} -> KC 0x{:02X} -> MIDI note {} (diff={})", 
+                    midi_in, kc, midi_out, diff);
+        }
+    }
+
+    #[test]
+    fn test_to_ym2151_events_with_midi_note() {
+        let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
+        
+        // Set MIDI note to 72 (C5)
+        values[ROW_CH][CH_PARAM_NOTE] = 72;
+        values[ROW_CH][CH_PARAM_ALG] = 4;
+        values[ROW_CH][CH_PARAM_OP1_MASK] = 1;
+        values[ROW_CH][CH_PARAM_OP2_MASK] = 1;
+        values[ROW_CH][CH_PARAM_OP3_MASK] = 1;
+        values[ROW_CH][CH_PARAM_OP4_MASK] = 1;
+        
+        let events = to_ym2151_events(&values);
+        
+        // Find KC event (register 0x28)
+        let kc_event = events.iter().find(|e| e.addr == "0x28");
+        assert!(kc_event.is_some(), "KC event should be present");
+        
+        // Verify KC value corresponds to MIDI note 72
+        let kc_data = kc_event.unwrap().data.trim_start_matches("0x");
+        let kc = u8::from_str_radix(kc_data, 16).unwrap();
+        let octave = kc >> 4;
+        assert_eq!(octave, 5, "MIDI note 72 (C5) should be in octave 5");
+    }
+
+    #[test]
+    fn test_events_to_tone_data_with_kc() {
+        // Create events with KC register
+        let events = vec![
+            Ym2151Event {
+                time: 0,
+                addr: "0x28".to_string(),
+                data: "0x40".to_string(), // KC for middle C (octave 4, note 0)
+            },
+        ];
+        
+        let result = events_to_tone_data(&events);
+        assert!(result.is_ok());
+        
+        let values = result.unwrap();
+        
+        // Check that MIDI note was extracted
+        assert_eq!(values[ROW_CH][CH_PARAM_NOTE], 60, "KC 0x40 should convert to MIDI note 60");
     }
 }

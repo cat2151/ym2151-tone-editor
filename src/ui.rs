@@ -173,7 +173,7 @@ pub fn ui(f: &mut Frame, app: &App) {
     ));
     f.render_widget(row_label, row_label_area);
 
-    // Draw all CH row values (ALG, FB, and 4 slot masks)
+    // Draw all CH row values (ALG, FB, 4 slot masks, and MIDI note number)
     for col in 0..CH_PARAM_COUNT {
         let value = app.values[ROW_CH][col];
         let x = inner.x + row_label_width + (col as u16 * cell_width);
