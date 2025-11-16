@@ -57,8 +57,6 @@ fn run_app<B: ratatui::backend::Backend>(
 ) -> io::Result<()> {
     loop {
         terminal.draw(|f| {
-            // Update terminal height for mouse position calculations
-            app.terminal_height = f.area().height;
             ui::ui(f, app);
         })?;
 
@@ -86,8 +84,11 @@ fn run_app<B: ratatui::backend::Backend>(
             }
             Event::Mouse(mouse) => {
                 // Handle mouse movement to update parameter value
+                // Only responds to mouse movement within the terminal
                 if mouse.kind == MouseEventKind::Moved {
-                    app.update_value_from_mouse_y(mouse.row);
+                    // Get terminal width from the current frame
+                    let terminal_width = terminal.size().map(|size| size.width).unwrap_or(80);
+                    app.update_value_from_mouse_x(mouse.column, terminal_width);
                 }
             }
             _ => {}

@@ -7,7 +7,6 @@ pub struct App {
     pub values: ToneData,
     pub cursor_x: usize,
     pub cursor_y: usize,
-    pub terminal_height: u16,
 }
 
 impl App {
@@ -37,7 +36,6 @@ impl App {
             values,
             cursor_x: 0,
             cursor_y: 0,
-            terminal_height: 24, // Default, will be updated in main loop
         };
 
         // Try to load the newest JSON file from current directory
@@ -123,27 +121,39 @@ impl App {
         }
     }
 
-    /// Update the parameter value based on mouse Y position
-    /// Maps mouse Y position to parameter value range (0 to PARAM_MAX)
-    pub fn update_value_from_mouse_y(&mut self, mouse_y: u16) {
-        if self.terminal_height == 0 {
+    /// Update the parameter value based on mouse X position
+    /// Maps mouse X position to parameter value range (0 to PARAM_MAX)
+    /// Uses only the middle third of the terminal width for full range
+    pub fn update_value_from_mouse_x(&mut self, mouse_x: u16, terminal_width: u16) {
+        if terminal_width == 0 {
             return; // Avoid division by zero
         }
 
-        // Map mouse Y position to parameter value
-        // Y=0 (top) -> max value, Y=terminal_height (bottom) -> 0
+        // Calculate middle third boundaries
+        let third_width = terminal_width / 3;
+        let left_boundary = third_width;
+        let right_boundary = third_width * 2;
+        
+        // Only respond to mouse in the middle third
+        if mouse_x < left_boundary || mouse_x > right_boundary {
+            return;
+        }
+
+        // Map mouse X position within middle third to parameter value
+        // left_boundary -> 0, right_boundary -> max value
         let max_value = if self.cursor_y == ROW_CH && self.cursor_x < CH_PARAM_COUNT {
             CH_PARAM_MAX[self.cursor_x]
         } else {
             PARAM_MAX[self.cursor_x]
         };
         
-        // Calculate the parameter value based on mouse position
-        // Invert Y so that top = max value, bottom = 0
-        let normalized = if mouse_y >= self.terminal_height {
+        // Calculate the parameter value based on mouse position within middle third
+        let middle_width = right_boundary - left_boundary;
+        let relative_x = mouse_x - left_boundary;
+        let normalized = if middle_width == 0 {
             0.0
         } else {
-            1.0 - (mouse_y as f32 / self.terminal_height as f32)
+            relative_x as f32 / middle_width as f32
         };
         
         let new_value = (normalized * max_value as f32).round() as u8;
@@ -298,50 +308,55 @@ mod tests {
     }
 
     #[test]
-    fn test_update_value_from_mouse_y() {
+    fn test_update_value_from_mouse_x() {
         let mut app = App::new();
-        app.terminal_height = 100;
+        let terminal_width = 120;
         app.cursor_x = PARAM_DT; // DT has max value of 7
         app.cursor_y = 0;
         
-        // Test mouse at top (y=0) should give max value
-        app.update_value_from_mouse_y(0);
-        assert_eq!(app.values[0][PARAM_DT], 7, "Top of screen should give max value");
+        // Test mouse at left boundary of middle third (x=40) should give min value (0)
+        app.update_value_from_mouse_x(40, terminal_width);
+        assert_eq!(app.values[0][PARAM_DT], 0, "Left of middle third should give min value");
         
-        // Test mouse at bottom (y=100) should give min value (0)
-        app.update_value_from_mouse_y(100);
-        assert_eq!(app.values[0][PARAM_DT], 0, "Bottom of screen should give min value");
+        // Test mouse at right boundary of middle third (x=80) should give max value
+        app.update_value_from_mouse_x(80, terminal_width);
+        assert_eq!(app.values[0][PARAM_DT], 7, "Right of middle third should give max value");
         
-        // Test mouse at middle (y=50) should give approximately half of max
-        app.update_value_from_mouse_y(50);
+        // Test mouse at center of middle third (x=60) should give approximately half of max
+        app.update_value_from_mouse_x(60, terminal_width);
         let middle_value = app.values[0][PARAM_DT];
-        assert!(middle_value >= 3 && middle_value <= 4, "Middle of screen should give ~half of max value, got {}", middle_value);
+        assert!(middle_value >= 3 && middle_value <= 4, "Center of middle third should give ~half of max value, got {}", middle_value);
         
         // Test with different parameter (MUL has max value of 15)
         app.cursor_x = PARAM_MUL;
-        app.update_value_from_mouse_y(0);
-        assert_eq!(app.values[0][PARAM_MUL], 15, "Top of screen should give max value for MUL");
+        app.update_value_from_mouse_x(40, terminal_width);
+        assert_eq!(app.values[0][PARAM_MUL], 0, "Left of middle third should give min value for MUL");
         
-        app.update_value_from_mouse_y(100);
-        assert_eq!(app.values[0][PARAM_MUL], 0, "Bottom of screen should give min value for MUL");
+        app.update_value_from_mouse_x(80, terminal_width);
+        assert_eq!(app.values[0][PARAM_MUL], 15, "Right of middle third should give max value for MUL");
         
-        // Test edge case: mouse beyond terminal height
+        // Test edge case: mouse outside middle third (left side)
+        let initial_dt = app.values[0][PARAM_DT];
         app.cursor_x = PARAM_DT;
-        app.update_value_from_mouse_y(150);
-        assert_eq!(app.values[0][PARAM_DT], 0, "Mouse beyond terminal should give min value");
+        app.update_value_from_mouse_x(20, terminal_width); // Left third
+        assert_eq!(app.values[0][PARAM_DT], initial_dt, "Mouse outside middle third should not change value");
+        
+        // Test edge case: mouse outside middle third (right side)
+        app.update_value_from_mouse_x(100, terminal_width); // Right third
+        assert_eq!(app.values[0][PARAM_DT], initial_dt, "Mouse outside middle third should not change value");
     }
 
     #[test]
-    fn test_update_value_from_mouse_y_zero_height() {
+    fn test_update_value_from_mouse_x_zero_width() {
         let mut app = App::new();
-        app.terminal_height = 0;
+        let terminal_width = 0;
         app.cursor_x = PARAM_DT;
         app.cursor_y = 0;
         
         let initial_value = app.values[0][PARAM_DT];
         
-        // Should not crash or change value when terminal_height is 0
-        app.update_value_from_mouse_y(50);
-        assert_eq!(app.values[0][PARAM_DT], initial_value, "Value should not change when terminal_height is 0");
+        // Should not crash or change value when terminal_width is 0
+        app.update_value_from_mouse_x(50, terminal_width);
+        assert_eq!(app.values[0][PARAM_DT], initial_value, "Value should not change when terminal_width is 0");
     }
 }
