@@ -161,7 +161,7 @@ impl App {
     }
 
     /// Call ym2151-log-play-server client with current tone data as JSON string
-    /// This function sends JSON content directly via named pipe to the server
+    /// This function sends JSON content via named pipe to the server
     /// Windows-only functionality
     #[cfg(windows)]
     fn call_cat_play_mml(&self) {
@@ -171,10 +171,10 @@ impl App {
             Err(_) => return, // Silently fail if JSON conversion fails
         };
 
-        // Send JSON content string directly to server via named pipe
-        // Using the ym2151-log-play-server client library with send_json_direct
-        // This improves response time and allows sound during key repeat
-        let _ = ym2151_log_play_server::client::send_json_direct(&json_string);
+        // Send JSON content to server via named pipe
+        // Using the ym2151-log-play-server client library with send_json
+        // Automatically chooses optimal method (direct or file-based) based on size
+        let _ = ym2151_log_play_server::client::send_json(&json_string);
         
         // Silently ignore errors - server should be auto-started at app launch
     }

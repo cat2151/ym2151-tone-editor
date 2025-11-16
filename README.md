@@ -85,7 +85,7 @@ The editor automatically starts the `ym2151-log-play-server` in the background w
 cargo run
 ```
 
-The editor uses `send_json_direct` to send tone updates directly via named pipe, providing instant audio feedback with improved response time. This allows sound to play even during key repeat operations.
+The editor uses `send_json` to send tone updates via named pipe, which automatically chooses the optimal transmission method based on data size (direct or file-based). This provides instant audio feedback with improved response time, allowing sound to play even during key repeat operations.
 
 **Note**: If you prefer to manage the server manually, you can start it separately with `ym2151-log-play-server --server` before running the editor.
 

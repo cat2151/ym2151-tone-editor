@@ -98,7 +98,7 @@ fn ensure_server_running() {
     use std::time::Duration;
     
     // Try to connect to the server to check if it's running
-    match ym2151_log_play_server::client::send_json_direct("") {
+    match ym2151_log_play_server::client::send_json("") {
         Ok(_) => {
             // Server is running
             eprintln!("✅ ym2151-log-play-server is already running");
