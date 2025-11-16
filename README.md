@@ -99,7 +99,7 @@ The editor uses `send_json` to send tone updates via named pipe, which automatic
 | `l` / `d` | Move cursor right |
 | `q` | Decrease value at cursor |
 | `e` | Increase value at cursor |
-| `Mouse Move` | Change value at cursor position based on vertical mouse position (top = max, bottom = 0) |
+| `Mouse Move` | Change value at cursor position based on horizontal mouse position (left = 0, middle third = proportional, right = max) |
 | `ESC` | Exit application |
 
 ## Dependencies
