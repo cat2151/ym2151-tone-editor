@@ -25,3 +25,4 @@ ym2151_tone_*.json
 # Temporary JSON file for sound playback
 ym2151_temp.json
 test_load
+*.log
