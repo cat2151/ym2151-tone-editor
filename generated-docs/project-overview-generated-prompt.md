@@ -1,4 +1,4 @@
-Last updated: 2025-11-16
+Last updated: 2025-11-17
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -139,6 +139,19 @@ Or run the compiled binary directly:
 ./target/release/ym2151-tone-editor
 ```
 
+## Live Audio Feedback (Windows only)
+
+The editor automatically ensures the server is ready using the `ensure_server_ready()` function from the ym2151-log-play-server library. This handles server installation, startup, and readiness checks automatically.
+
+```bash
+# Just run the tone editor - the server is automatically set up and started
+cargo run
+```
+
+The editor uses `send_json` to send tone updates via named pipe, which automatically chooses the optimal transmission method based on data size (direct or file-based). This provides instant audio feedback with improved response time, allowing sound to play even during key repeat operations.
+
+**Note**: The library's `ensure_server_ready()` function handles all server management, including installation if needed.
+
 ## Controls
 
 | Key | Action |
@@ -149,7 +162,7 @@ Or run the compiled binary directly:
 | `l` / `d` | Move cursor right |
 | `q` | Decrease value at cursor |
 | `e` | Increase value at cursor |
-| `Mouse Move` | Change value at cursor position based on vertical mouse position (top = max, bottom = 0) |
+| `Mouse Move` | Change value at cursor position based on horizontal mouse position (left = 0, middle third = proportional, right = max) |
 | `ESC` | Exit application |
 
 ## Dependencies
@@ -183,8 +196,19 @@ Or run the compiled binary directly:
   📖 24.md
   📖 30.md
   📖 32.md
+  📖 34.md
+  📖 36.md
+  📖 38.md
+  📖 40.md
+  📖 41.md
+  📖 42.md
 📁 src/
+  📄 app.rs
+  📄 file_ops.rs
   📄 main.rs
+  📄 models.rs
+  📄 register.rs
+  📄 ui.rs
 
 ## ファイル詳細分析
 
@@ -207,6 +231,12 @@ issue-notes/23.md
 issue-notes/24.md
 issue-notes/30.md
 issue-notes/32.md
+issue-notes/34.md
+issue-notes/36.md
+issue-notes/38.md
+issue-notes/40.md
+issue-notes/41.md
+issue-notes/42.md
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
 特に以下の点を重視してください：
@@ -218,4 +248,4 @@ issue-notes/32.md
 
 
 ---
-Generated at: 2025-11-16 07:06:48 JST
+Generated at: 2025-11-17 07:07:45 JST

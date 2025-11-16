@@ -1,4 +1,4 @@
-Last updated: 2025-11-16
+Last updated: 2025-11-17
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -191,6 +191,7 @@ Last updated: 2025-11-16
 - .github/actions-tmp/package-lock.json
 - .github/actions-tmp/package.json
 - .github/actions-tmp/src/main.js
+- .github/copilot-instructions.md
 - .github/workflows/call-daily-project-summary.yml
 - .github/workflows/call-issue-note.yml
 - .github/workflows/call-translate-readme.yml
@@ -214,35 +215,244 @@ Last updated: 2025-11-16
 - issue-notes/24.md
 - issue-notes/30.md
 - issue-notes/32.md
+- issue-notes/34.md
+- issue-notes/36.md
+- issue-notes/38.md
+- issue-notes/40.md
+- issue-notes/41.md
+- issue-notes/42.md
+- src/app.rs
+- src/file_ops.rs
 - src/main.rs
+- src/models.rs
+- src/register.rs
+- src/ui.rs
 
 ## 現在のオープンIssues
-オープン中のIssueはありません
+## [Issue #42](../issue-notes/42.md): ESCでアプリ終了したときのjsonのファイル名を仕様変更する（日付と時刻を、ファイル名から取り除く）。意図せず大量に残って不便なので。
+[issue-notes/42.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/42.md)
+
+...
+ラベル: 
+--- issue-notes/42.md の内容 ---
+
+```markdown
+# issue ESCでアプリ終了したときのjsonのファイル名を仕様変更する（日付と時刻を、ファイル名から取り除く）。意図せず大量に残って不便なので。 #42
+[issues #42](https://github.com/cat2151/ym2151-tone-editor/issues/42)
+
+
+
+```
 
 ## ドキュメントで言及されているファイルの内容
+### .github/actions-tmp/issue-notes/2.md
+```md
+# issue GitHub Actions「関数コールグラフhtmlビジュアライズ生成」を共通ワークフロー化する #2
+[issues #2](https://github.com/cat2151/github-actions/issues/2)
 
+
+# prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+このymlファイルを、以下の2つのファイルに分割してください。
+1. 共通ワークフロー       cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
+2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-callgraph_enhanced.yml
+まずplanしてください
+```
+
+# 結果
+- indent
+    - linter？がindentのエラーを出しているがyml内容は見た感じOK
+    - テキストエディタとagentの相性問題と判断する
+    - 別のテキストエディタでsaveしなおし、テキストエディタをreload
+    - indentのエラーは解消した
+- LLMレビュー
+    - agent以外の複数のLLMにレビューさせる
+    - prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューしてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
+
+--- 共通ワークフロー
+
+# GitHub Actions Reusable Workflow for Call Graph Generation
+name: Generate Call Graph
+
+# TODO Windowsネイティブでのtestをしていた名残が残っているので、今後整理していく。今はWSL act でtestしており、Windowsネイティブ環境依存問題が解決した
+#  ChatGPTにレビューさせるとそこそこ有用そうな提案が得られたので、今後それをやる予定
+#  agentに自己チェックさせる手も、セカンドオピニオンとして選択肢に入れておく
+
+on:
+  workflow_call:
+
+jobs:
+  check-commits:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50 # 過去のコミットを取得
+
+      - name: Check for user commits in last 24 hours
+        id: check
+        run: |
+          node .github/scripts/callgraph_enhanced/check-commits.cjs
+
+  generate-callgraph:
+    needs: check-commits
+    if: needs.check-commits.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Remove old CodeQL packages cache
+        run: rm -rf ~/.codeql/packages
+
+      - name: Check Node.js version
+        run: |
+          node .github/scripts/callgraph_enhanced/check-node-version.cjs
+
+      - name: Install CodeQL CLI
+        run: |
+          wget https://github.com/github/codeql-cli-binaries/releases/download/v2.22.1/codeql-linux64.zip
+          unzip codeql-linux64.zip
+          sudo mv codeql /opt/codeql
+          echo "/opt/codeql" >> $GITHUB_PATH
+
+      - name: Install CodeQL query packs
+        run: |
+          /opt/codeql/codeql pack install .github/codeql-queries
+
+      - name: Check CodeQL exists
+        run: |
+          node .github/scripts/callgraph_enhanced/check-codeql-exists.cjs
+
+      - name: Verify CodeQL Configuration
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs verify-config
+
+      - name: Remove existing CodeQL DB (if any)
+        run: |
+          rm -rf codeql-db
+
+      - name: Perform CodeQL Analysis
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs analyze
+
+      - name: Check CodeQL Analysis Results
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs check-results
+
+      - name: Debug CodeQL execution
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs debug
+
+      - name: Wait for CodeQL results
+        run: |
+          node -e "setTimeout(()=>{}, 10000)"
+
+      - name: Find and process CodeQL results
+        run: |
+          node .github/scripts/callgraph_enhanced/find-process-results.cjs
+
+      - name: Generate HTML graph
+        run: |
+          node .github/scripts/callgraph_enhanced/generate-html-graph.cjs
+
+      - name: Copy files to generated-docs and commit results
+        run: |
+          node .github/scripts/callgraph_enhanced/copy-commit-results.cjs
+
+--- 呼び出し元
+# 呼び出し元ワークフロー: call-callgraph_enhanced.yml
+name: Call Call Graph Enhanced
+
+on:
+  schedule:
+    # 毎日午前5時(JST) = UTC 20:00前日
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+jobs:
+  call-callgraph-enhanced:
+    # uses: cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
+    uses: ./.github/workflows/callgraph_enhanced.yml # ローカルでのテスト用
+```
+
+# レビュー結果OKと判断する
+- レビュー結果を人力でレビューした形になった
+
+# test
+- #4 同様にローカル WSL + act でtestする
+- エラー。userのtest設計ミス。
+  - scriptの挙動 : src/ がある前提
+  - 今回の共通ワークフローのリポジトリ : src/ がない
+  - 今回testで実現したいこと
+    - 仮のソースでよいので、関数コールグラフを生成させる
+  - 対策
+    - src/ にダミーを配置する
+- test green
+  - ただしcommit pushはしてないので、html内容が0件NG、といったケースの検知はできない
+  - もしそうなったら別issueとしよう
+
+# test green
+
+# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
+
+# closeとする
+- もしhtml内容が0件NG、などになったら、別issueとするつもり
+
+```
+
+### issue-notes/42.md
+```md
+# issue ESCでアプリ終了したときのjsonのファイル名を仕様変更する（日付と時刻を、ファイル名から取り除く）。意図せず大量に残って不便なので。 #42
+[issues #42](https://github.com/cat2151/ym2151-tone-editor/issues/42)
+
+
+
+```
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-511b8fc Merge pull request #33 from cat2151/copilot/add-slot-mask-to-ch-column
-ecdfde6 Add SLOT MASK functionality to CH row
-910691a Add issue note for #32 [auto]
-371d001 Initial plan
-ca01eda Merge pull request #31 from cat2151/copilot/add-ams-to-tone-data
-1490bfe Add AMS parameter to operator tone data
-16499b4 Initial plan
-16fbc52 Add issue note for #30 [auto]
-f116c4f Merge pull request #29 from cat2151/copilot/integrate-cat-play-mml-library
-d600e92 Update README to reflect ym2151-log-play-server integration
+ea1d3a2 Merge pull request #44 from cat2151/copilot/fix-slot-mask-issue
+c13b1f9 Fix YM2151 slot mask bit order to OP1, OP3, OP2, OP4
+b4950c2 Initial plan
+8ad199d Merge pull request #43 from cat2151/copilot/add-midi-notenumber-display
+b2cc007 Use smf-to-ym2151log-rust library for MIDI to YM2151 conversion
+c9ab900 Add MIDI note number parameter to CH row with conversion functions
+064e709 Initial plan
+b76f86c Merge pull request #39 from cat2151/copilot/add-value-mix-max-functionality
+4c6e9fe Add issue note for #42 [auto]
+458ba60 Add issue note for #41 [auto]
 
 ### 変更されたファイル:
 Cargo.lock
 Cargo.toml
 README.md
-issue-notes/30.md
-issue-notes/32.md
-src/main.rs
+issue-notes/38.md
+issue-notes/40.md
+issue-notes/41.md
+issue-notes/42.md
+src/app.rs
+src/models.rs
+src/register.rs
+src/ui.rs
 
 
 ---
-Generated at: 2025-11-16 07:06:49 JST
+Generated at: 2025-11-17 07:07:45 JST
