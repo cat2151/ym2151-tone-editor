@@ -144,15 +144,17 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
     
     // Note On - Register $08 - Key On with operators based on slot masks
     // Bits 0-2: Channel (0-7)
-    // Bits 3-6: Operator enable (M1=bit3, M2=bit4, C1=bit5, C2=bit6)
+    // Bits 3-6: Operator enable (M1/OP1=bit3, C1/OP3=bit4, M2/OP2=bit5, C2/OP4=bit6)
+    // YM2151 hardware uses non-sequential bit order: OP1, OP3, OP2, OP4
     // Use slot masks from CH row to determine which operators to enable
     let op1_mask = values[ROW_CH][CH_PARAM_OP1_MASK];
     let op2_mask = values[ROW_CH][CH_PARAM_OP2_MASK];
     let op3_mask = values[ROW_CH][CH_PARAM_OP3_MASK];
     let op4_mask = values[ROW_CH][CH_PARAM_OP4_MASK];
     
-    let key_on_data = ((op1_mask & 1) << 3) | ((op2_mask & 1) << 4) 
-                    | ((op3_mask & 1) << 5) | ((op4_mask & 1) << 6) | (channel as u8);
+    // Correct bit mapping: OP1→bit3, OP3→bit4, OP2→bit5, OP4→bit6
+    let key_on_data = ((op1_mask & 1) << 3) | ((op3_mask & 1) << 4) 
+                    | ((op2_mask & 1) << 5) | ((op4_mask & 1) << 6) | (channel as u8);
     events.push(Ym2151Event {
         time: 0,
         addr: "0x08".to_string(),
@@ -232,10 +234,11 @@ pub fn events_to_tone_data(events: &[Ym2151Event]) -> io::Result<ToneData> {
             // Key On register (0x08)
             0x08 => {
                 // Bits 3-6 contain operator enable flags
-                // Bit 3: OP1, Bit 4: OP2, Bit 5: OP3, Bit 6: OP4
+                // YM2151 hardware uses non-sequential bit order:
+                // Bit 3: OP1, Bit 4: OP3, Bit 5: OP2, Bit 6: OP4
                 values[ROW_CH][CH_PARAM_OP1_MASK] = (data >> 3) & 0x01;
-                values[ROW_CH][CH_PARAM_OP2_MASK] = (data >> 4) & 0x01;
-                values[ROW_CH][CH_PARAM_OP3_MASK] = (data >> 5) & 0x01;
+                values[ROW_CH][CH_PARAM_OP3_MASK] = (data >> 4) & 0x01;
+                values[ROW_CH][CH_PARAM_OP2_MASK] = (data >> 5) & 0x01;
                 values[ROW_CH][CH_PARAM_OP4_MASK] = (data >> 6) & 0x01;
             }
             // KC (Key Code) register (0x28-0x2F)
@@ -476,5 +479,65 @@ mod tests {
         
         // Check that MIDI note was extracted
         assert_eq!(values[ROW_CH][CH_PARAM_NOTE], 60, "KC 0x3E should convert to MIDI note 60");
+    }
+
+    #[test]
+    fn test_slot_mask_bit_order() {
+        // Test that slot masks use correct YM2151 bit order: OP1, OP3, OP2, OP4
+        let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
+        
+        // Enable only OP2
+        values[ROW_CH][CH_PARAM_OP1_MASK] = 0;
+        values[ROW_CH][CH_PARAM_OP2_MASK] = 1;  // OP2 should map to bit 5
+        values[ROW_CH][CH_PARAM_OP3_MASK] = 0;
+        values[ROW_CH][CH_PARAM_OP4_MASK] = 0;
+        values[ROW_CH][CH_PARAM_ALG] = 4;
+        
+        let events = to_ym2151_events(&values);
+        
+        // Find the Key On event (register 0x08)
+        let key_on_event = events.iter().find(|e| e.addr == "0x08");
+        assert!(key_on_event.is_some(), "Key On event should be present");
+        
+        let key_on_data = key_on_event.unwrap().data.trim_start_matches("0x");
+        let data = u8::from_str_radix(key_on_data, 16).unwrap();
+        
+        // OP2 should be at bit 5, so data should be 0b00100000 | channel = 0x20
+        assert_eq!(data, 0x20, "OP2 should map to bit 5 (0x20)");
+        
+        // Test OP3
+        values[ROW_CH][CH_PARAM_OP2_MASK] = 0;
+        values[ROW_CH][CH_PARAM_OP3_MASK] = 1;  // OP3 should map to bit 4
+        
+        let events = to_ym2151_events(&values);
+        let key_on_event = events.iter().find(|e| e.addr == "0x08");
+        let key_on_data = key_on_event.unwrap().data.trim_start_matches("0x");
+        let data = u8::from_str_radix(key_on_data, 16).unwrap();
+        
+        // OP3 should be at bit 4, so data should be 0b00010000 | channel = 0x10
+        assert_eq!(data, 0x10, "OP3 should map to bit 4 (0x10)");
+    }
+
+    #[test]
+    fn test_slot_mask_roundtrip() {
+        // Test that slot masks roundtrip correctly through events
+        let mut values_original = [[0; GRID_WIDTH]; GRID_HEIGHT];
+        
+        // Set a specific pattern: OP1=1, OP2=0, OP3=1, OP4=0
+        values_original[ROW_CH][CH_PARAM_OP1_MASK] = 1;
+        values_original[ROW_CH][CH_PARAM_OP2_MASK] = 0;
+        values_original[ROW_CH][CH_PARAM_OP3_MASK] = 1;
+        values_original[ROW_CH][CH_PARAM_OP4_MASK] = 0;
+        values_original[ROW_CH][CH_PARAM_ALG] = 4;
+        
+        // Convert to events and back
+        let events = to_ym2151_events(&values_original);
+        let values_roundtrip = events_to_tone_data(&events).unwrap();
+        
+        // Verify slot masks are preserved
+        assert_eq!(values_roundtrip[ROW_CH][CH_PARAM_OP1_MASK], 1, "OP1 mask should roundtrip");
+        assert_eq!(values_roundtrip[ROW_CH][CH_PARAM_OP2_MASK], 0, "OP2 mask should roundtrip");
+        assert_eq!(values_roundtrip[ROW_CH][CH_PARAM_OP3_MASK], 1, "OP3 mask should roundtrip");
+        assert_eq!(values_roundtrip[ROW_CH][CH_PARAM_OP4_MASK], 0, "OP4 mask should roundtrip");
     }
 }
