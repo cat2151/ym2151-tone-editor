@@ -78,19 +78,16 @@ Or run the compiled binary directly:
 
 ## Live Audio Feedback (Windows only)
 
-For real-time audio preview of tone changes, start the `ym2151-log-play-server` before running the editor:
+The editor automatically starts the `ym2151-log-play-server` in the background when you run it. You'll hear audio feedback in real-time as you modify tone parameters.
 
 ```bash
-# In a separate terminal, start the server in idle mode
-ym2151-log-play-server --server
-
-# Then run the tone editor
+# Just run the tone editor - the server starts automatically
 cargo run
 ```
 
-The editor will automatically send tone updates to the server via named pipe when you modify parameters. This enables instant audio feedback as you edit.
+The editor uses `send_json_direct` to send tone updates directly via named pipe, providing instant audio feedback with improved response time. This allows sound to play even during key repeat operations.
 
-**Note**: The server must be started separately and will remain in idle state until the editor sends tone data.
+**Note**: If you prefer to manage the server manually, you can start it separately with `ym2151-log-play-server --server` before running the editor.
 
 ## Controls
 

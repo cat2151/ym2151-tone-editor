@@ -172,11 +172,11 @@ impl App {
         };
 
         // Send JSON content string directly to server via named pipe
-        // Using the ym2151-log-play-server client library
-        let _ = ym2151_log_play_server::client::play_file(&json_string);
+        // Using the ym2151-log-play-server client library with send_json_direct
+        // This improves response time and allows sound during key repeat
+        let _ = ym2151_log_play_server::client::send_json_direct(&json_string);
         
-        // Silently ignore errors - server might not be running yet
-        // Start the server manually with: ym2151-log-play-server --server
+        // Silently ignore errors - server should be auto-started at app launch
     }
 }
 
