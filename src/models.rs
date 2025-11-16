@@ -9,9 +9,9 @@ pub const PARAM_NAMES: [&str; GRID_WIDTH] = [
     "DT", "MUL", "TL", "KS", "AR", "D1R", "D1L", "D2R", "RR", "DT2", "AMS"
 ];
 
-// CH row has 6 parameters: ALG, FB, and 4 slot masks
-pub const CH_PARAM_COUNT: usize = 6;
-pub const CH_PARAM_NAMES: [&str; CH_PARAM_COUNT] = ["ALG", "FB", "OP1", "OP2", "OP3", "OP4"];
+// CH row has 7 parameters: ALG, FB, 4 slot masks, and MIDI note number
+pub const CH_PARAM_COUNT: usize = 7;
+pub const CH_PARAM_NAMES: [&str; CH_PARAM_COUNT] = ["ALG", "FB", "OP1", "OP2", "OP3", "OP4", "Note"];
 
 // Maximum values for each parameter (respecting YM2151 bit ranges)
 pub const PARAM_MAX: [u8; GRID_WIDTH] = [
@@ -30,12 +30,13 @@ pub const PARAM_MAX: [u8; GRID_WIDTH] = [
 
 // Maximum values for CH row parameters
 pub const CH_PARAM_MAX: [u8; CH_PARAM_COUNT] = [
-    7,  // ALG: 3 bits (0-7) - Algorithm
-    7,  // FB: 3 bits (0-7) - Feedback
-    1,  // OP1 MASK: 0 or 1
-    1,  // OP2 MASK: 0 or 1
-    1,  // OP3 MASK: 0 or 1
-    1   // OP4 MASK: 0 or 1
+    7,   // ALG: 3 bits (0-7) - Algorithm
+    7,   // FB: 3 bits (0-7) - Feedback
+    1,   // OP1 MASK: 0 or 1
+    1,   // OP2 MASK: 0 or 1
+    1,   // OP3 MASK: 0 or 1
+    1,   // OP4 MASK: 0 or 1
+    127  // MIDI Note Number: 0-127 (60 = middle C)
 ];
 
 // Row names for operators
@@ -63,6 +64,7 @@ pub const CH_PARAM_OP1_MASK: usize = 2;
 pub const CH_PARAM_OP2_MASK: usize = 3;
 pub const CH_PARAM_OP3_MASK: usize = 4;
 pub const CH_PARAM_OP4_MASK: usize = 5;
+pub const CH_PARAM_NOTE: usize = 6;
 
 // Row index for channel settings
 pub const ROW_CH: usize = 4;
