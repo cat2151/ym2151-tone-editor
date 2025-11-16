@@ -17,6 +17,15 @@ use std::io;
 use app::App;
 
 fn main() -> Result<(), io::Error> {
+    // Ensure server is running (Windows only)
+    #[cfg(windows)]
+    {
+        if let Err(e) = ym2151_log_play_server::client::ensure_server_ready("cat-play-mml") {
+            eprintln!("⚠️  Warning: Failed to ensure server is ready: {}", e);
+            eprintln!("   Live audio feedback may not be available.");
+        }
+    }
+
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();

@@ -76,6 +76,19 @@ Or run the compiled binary directly:
 ./target/release/ym2151-tone-editor
 ```
 
+## Live Audio Feedback (Windows only)
+
+The editor automatically ensures the server is ready using the `ensure_server_ready()` function from the ym2151-log-play-server library. This handles server installation, startup, and readiness checks automatically.
+
+```bash
+# Just run the tone editor - the server is automatically set up and started
+cargo run
+```
+
+The editor uses `send_json` to send tone updates via named pipe, which automatically chooses the optimal transmission method based on data size (direct or file-based). This provides instant audio feedback with improved response time, allowing sound to play even during key repeat operations.
+
+**Note**: The library's `ensure_server_ready()` function handles all server management, including installation if needed.
+
 ## Controls
 
 | Key | Action |
