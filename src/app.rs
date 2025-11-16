@@ -176,7 +176,7 @@ impl App {
         let _ = ym2151_log_play_server::client::play_file(&json_string);
         
         // Silently ignore errors - server might not be running yet
-        // The server will auto-start on first call from cat-play-mml application
+        // Start the server manually with: ym2151-log-play-server --server
     }
 }
 

@@ -47,7 +47,7 @@ struct Ym2151Log { event_count: usize, events: Vec<Ym2151Event> }
 - **アルゴリズム図レンダリング**: `cargo test get_algorithm_diagram`
 
 ### リアルタイムテスト
-エディタ実行前に`ym2151-log-play-server`を開始して開発中のライブ音声フィードバックを有効化。
+エディタ実行前に`ym2151-log-play-server --server`を開始して開発中のライブ音声フィードバックを有効化。サーバーは引数なしで起動し、待機状態となる。
 
 ### ファイル管理パターン
 アプリは起動時に最新の`ym2151_tone_*.json`ファイルを自動読込し、終了時にタイムスタンプ付きファイルを生成。編集した音色の自然なバージョン履歴を作成。
