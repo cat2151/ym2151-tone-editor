@@ -48,10 +48,16 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
     // We'll use channel 0 for this example
     let channel = 0;
 
+    // YM2151 hardware operator register order: M1, C1, M2, C2 (not sequential!)
+    // We display as: OP1, OP2, OP3, OP4
+    // Mapping: OP1→M1(slot 0), OP2→M2(slot 2), OP3→C1(slot 1), OP4→C2(slot 3)
+    const OP_TO_SLOT: [usize; 4] = [0, 2, 1, 3];
+    
     // For each of 4 operators (M1, M2, C1, C2 in YM2151 terminology)
     // We map our OP1-OP4 to operators
     for op in 0..4 {
-        let op_offset = op * 8 + channel; // Operator offset in register map
+        let hw_slot = OP_TO_SLOT[op]; // Convert logical op to hardware slot
+        let op_offset = hw_slot * 8 + channel; // Operator offset in register map
         
         // DT1 (bits 6-4) and MUL (bits 3-0) - Register $40-$5F
         let dt = values[op][PARAM_DT];
@@ -168,6 +174,12 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
 pub fn events_to_tone_data(events: &[Ym2151Event]) -> io::Result<ToneData> {
     let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
 
+    // Inverse mapping: hardware slot → logical operator
+    // Hardware slots: M1(0), C1(1), M2(2), C2(3)
+    // Logical ops: OP1(0), OP2(1), OP3(2), OP4(3)
+    // Mapping: slot 0→OP1, slot 1→OP3, slot 2→OP2, slot 3→OP4
+    const SLOT_TO_OP: [usize; 4] = [0, 2, 1, 3];
+
     for event in events {
         // Parse address and data
         let addr = u8::from_str_radix(event.addr.trim_start_matches("0x"), 16)
@@ -179,47 +191,53 @@ pub fn events_to_tone_data(events: &[Ym2151Event]) -> io::Result<ToneData> {
         match addr {
             // DT1/MUL registers (0x40-0x5F)
             0x40..=0x5F => {
-                let op = ((addr - 0x40) / 8) as usize;
-                if op < 4 {
+                let hw_slot = ((addr - 0x40) / 8) as usize;
+                if hw_slot < 4 {
+                    let op = SLOT_TO_OP[hw_slot];
                     values[op][PARAM_DT] = (data >> 4) & 0x07;
                     values[op][PARAM_MUL] = data & 0x0F;
                 }
             }
             // TL registers (0x60-0x7F)
             0x60..=0x7F => {
-                let op = ((addr - 0x60) / 8) as usize;
-                if op < 4 {
+                let hw_slot = ((addr - 0x60) / 8) as usize;
+                if hw_slot < 4 {
+                    let op = SLOT_TO_OP[hw_slot];
                     values[op][PARAM_TL] = data & 0x7F;
                 }
             }
             // KS/AR registers (0x80-0x9F)
             0x80..=0x9F => {
-                let op = ((addr - 0x80) / 8) as usize;
-                if op < 4 {
+                let hw_slot = ((addr - 0x80) / 8) as usize;
+                if hw_slot < 4 {
+                    let op = SLOT_TO_OP[hw_slot];
                     values[op][PARAM_KS] = (data >> 6) & 0x03;
                     values[op][PARAM_AR] = data & 0x1F;
                 }
             }
             // AMS-EN/D1R registers (0xA0-0xBF)
             0xA0..=0xBF => {
-                let op = ((addr - 0xA0) / 8) as usize;
-                if op < 4 {
+                let hw_slot = ((addr - 0xA0) / 8) as usize;
+                if hw_slot < 4 {
+                    let op = SLOT_TO_OP[hw_slot];
                     values[op][PARAM_AMS] = (data >> 6) & 0x03;
                     values[op][PARAM_D1R] = data & 0x1F;
                 }
             }
             // DT2/D2R registers (0xC0-0xDF)
             0xC0..=0xDF => {
-                let op = ((addr - 0xC0) / 8) as usize;
-                if op < 4 {
+                let hw_slot = ((addr - 0xC0) / 8) as usize;
+                if hw_slot < 4 {
+                    let op = SLOT_TO_OP[hw_slot];
                     values[op][PARAM_DT2] = (data >> 6) & 0x03;
                     values[op][PARAM_D2R] = data & 0x0F;
                 }
             }
             // D1L/RR registers (0xE0-0xFF)
             0xE0..=0xFF => {
-                let op = ((addr - 0xE0) / 8) as usize;
-                if op < 4 {
+                let hw_slot = ((addr - 0xE0) / 8) as usize;
+                if hw_slot < 4 {
+                    let op = SLOT_TO_OP[hw_slot];
                     values[op][PARAM_D1L] = (data >> 4) & 0x0F;
                     values[op][PARAM_RR] = data & 0x0F;
                 }
@@ -539,5 +557,72 @@ mod tests {
         assert_eq!(values_roundtrip[ROW_CH][CH_PARAM_OP2_MASK], 0, "OP2 mask should roundtrip");
         assert_eq!(values_roundtrip[ROW_CH][CH_PARAM_OP3_MASK], 1, "OP3 mask should roundtrip");
         assert_eq!(values_roundtrip[ROW_CH][CH_PARAM_OP4_MASK], 0, "OP4 mask should roundtrip");
+    }
+
+    #[test]
+    fn test_operator_register_order() {
+        // Test that operators map to correct hardware slots: OP1→M1(slot0), OP2→M2(slot2), OP3→C1(slot1), OP4→C2(slot3)
+        let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
+        
+        // Set unique MUL values for each operator to identify them
+        values[0][PARAM_MUL] = 1;  // OP1 should go to slot 0 (M1)
+        values[1][PARAM_MUL] = 2;  // OP2 should go to slot 2 (M2)
+        values[2][PARAM_MUL] = 3;  // OP3 should go to slot 1 (C1)
+        values[3][PARAM_MUL] = 4;  // OP4 should go to slot 3 (C2)
+        
+        let events = to_ym2151_events(&values);
+        
+        // Check DT1/MUL registers (0x40-0x5F)
+        // Register 0x40 (slot 0, channel 0) should have OP1's MUL=1
+        let op1_event = events.iter().find(|e| e.addr == "0x40");
+        assert!(op1_event.is_some(), "OP1 register should be present");
+        let data = u8::from_str_radix(op1_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
+        assert_eq!(data & 0x0F, 1, "Register 0x40 (slot 0) should have OP1's MUL=1");
+        
+        // Register 0x48 (slot 1, channel 0) should have OP3's MUL=3
+        let op3_event = events.iter().find(|e| e.addr == "0x48");
+        assert!(op3_event.is_some(), "OP3 register should be present");
+        let data = u8::from_str_radix(op3_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
+        assert_eq!(data & 0x0F, 3, "Register 0x48 (slot 1) should have OP3's MUL=3");
+        
+        // Register 0x50 (slot 2, channel 0) should have OP2's MUL=2
+        let op2_event = events.iter().find(|e| e.addr == "0x50");
+        assert!(op2_event.is_some(), "OP2 register should be present");
+        let data = u8::from_str_radix(op2_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
+        assert_eq!(data & 0x0F, 2, "Register 0x50 (slot 2) should have OP2's MUL=2");
+        
+        // Register 0x58 (slot 3, channel 0) should have OP4's MUL=4
+        let op4_event = events.iter().find(|e| e.addr == "0x58");
+        assert!(op4_event.is_some(), "OP4 register should be present");
+        let data = u8::from_str_radix(op4_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
+        assert_eq!(data & 0x0F, 4, "Register 0x58 (slot 3) should have OP4's MUL=4");
+    }
+
+    #[test]
+    fn test_operator_order_roundtrip() {
+        // Test that operator values roundtrip correctly with the new mapping
+        let mut values_original = [[0; GRID_WIDTH]; GRID_HEIGHT];
+        
+        // Set distinct values for each operator
+        for op in 0..4 {
+            values_original[op][PARAM_MUL] = (op + 1) as u8;
+            values_original[op][PARAM_TL] = (op * 10) as u8;
+            values_original[op][PARAM_AR] = (op * 5) as u8;
+        }
+        values_original[ROW_CH][CH_PARAM_ALG] = 4;
+        
+        // Convert to events and back
+        let events = to_ym2151_events(&values_original);
+        let values_roundtrip = events_to_tone_data(&events).unwrap();
+        
+        // Verify all operator values are preserved
+        for op in 0..4 {
+            assert_eq!(values_roundtrip[op][PARAM_MUL], values_original[op][PARAM_MUL], 
+                "OP{} MUL should roundtrip correctly", op + 1);
+            assert_eq!(values_roundtrip[op][PARAM_TL], values_original[op][PARAM_TL], 
+                "OP{} TL should roundtrip correctly", op + 1);
+            assert_eq!(values_roundtrip[op][PARAM_AR], values_original[op][PARAM_AR], 
+                "OP{} AR should roundtrip correctly", op + 1);
+        }
     }
 }
