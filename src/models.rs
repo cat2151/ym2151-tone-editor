@@ -32,10 +32,10 @@ pub const PARAM_MAX: [u8; GRID_WIDTH] = [
 pub const CH_PARAM_MAX: [u8; CH_PARAM_COUNT] = [
     7,   // ALG: 3 bits (0-7) - Algorithm
     7,   // FB: 3 bits (0-7) - Feedback
-    1,   // OP1 MASK: 0 or 1
-    1,   // OP2 MASK: 0 or 1
-    1,   // OP3 MASK: 0 or 1
-    1,   // OP4 MASK: 0 or 1
+    1,   // M1 MASK: 0 or 1
+    1,   // C1 MASK: 0 or 1
+    1,   // M2 MASK: 0 or 1
+    1,   // C2 MASK: 0 or 1
     127  // MIDI Note Number: 0-127 (60 = middle C)
 ];
 
