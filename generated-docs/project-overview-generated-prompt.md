@@ -1,4 +1,4 @@
-Last updated: 2025-11-17
+Last updated: 2025-11-18
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -202,6 +202,8 @@ The editor uses `send_json` to send tone updates via named pipe, which automatic
   📖 40.md
   📖 41.md
   📖 42.md
+  📖 45.md
+  📖 47.md
 📁 src/
   📄 app.rs
   📄 file_ops.rs
@@ -237,6 +239,8 @@ issue-notes/38.md
 issue-notes/40.md
 issue-notes/41.md
 issue-notes/42.md
+issue-notes/45.md
+issue-notes/47.md
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
 特に以下の点を重視してください：
@@ -248,4 +252,4 @@ issue-notes/42.md
 
 
 ---
-Generated at: 2025-11-17 07:07:45 JST
+Generated at: 2025-11-18 07:08:18 JST

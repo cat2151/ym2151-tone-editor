@@ -1,4 +1,4 @@
-Last updated: 2025-11-17
+Last updated: 2025-11-18
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -221,6 +221,8 @@ Last updated: 2025-11-17
 - issue-notes/40.md
 - issue-notes/41.md
 - issue-notes/42.md
+- issue-notes/45.md
+- issue-notes/47.md
 - src/app.rs
 - src/file_ops.rs
 - src/main.rs
@@ -429,30 +431,32 @@ jobs:
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-ea1d3a2 Merge pull request #44 from cat2151/copilot/fix-slot-mask-issue
-c13b1f9 Fix YM2151 slot mask bit order to OP1, OP3, OP2, OP4
-b4950c2 Initial plan
-8ad199d Merge pull request #43 from cat2151/copilot/add-midi-notenumber-display
-b2cc007 Use smf-to-ym2151log-rust library for MIDI to YM2151 conversion
-c9ab900 Add MIDI note number parameter to CH row with conversion functions
-064e709 Initial plan
-b76f86c Merge pull request #39 from cat2151/copilot/add-value-mix-max-functionality
-4c6e9fe Add issue note for #42 [auto]
-458ba60 Add issue note for #41 [auto]
+b031f38 Merge pull request #48 from cat2151/copilot/update-slot-mask-notation
+d99dde5 Update comments: OP1-OP4 MASK to M1,C1,M2,C2 MASK
+b47f370 Update notation from OP1-OP4 to M1,C1,M2,C2 with correct display order
+18e4e0c Initial plan
+c477ce4 Add issue note for #47 [auto]
+a6cd2f7 Merge pull request #46 from cat2151/copilot/fix-register-order-op1-3-2-4
+3c1aa3e Fix operator register order to match YM2151 hardware (OP1,3,2,4)
+711087e Initial plan
+3f69feb Add issue note for #45 [auto]
+84fbceb Update project summaries (overview & development status) [auto]
 
 ### 変更されたファイル:
 Cargo.lock
 Cargo.toml
-README.md
-issue-notes/38.md
-issue-notes/40.md
-issue-notes/41.md
-issue-notes/42.md
+generated-docs/development-status-generated-prompt.md
+generated-docs/development-status.md
+generated-docs/project-overview-generated-prompt.md
+generated-docs/project-overview.md
+issue-notes/45.md
+issue-notes/47.md
 src/app.rs
+src/file_ops.rs
 src/models.rs
 src/register.rs
 src/ui.rs
 
 
 ---
-Generated at: 2025-11-17 07:07:45 JST
+Generated at: 2025-11-18 07:08:18 JST
