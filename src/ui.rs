@@ -9,49 +9,50 @@ use crate::{models::*, app::App};
 
 /// Get ASCII art diagram for YM2151 algorithm (0-7)
 /// Returns a vector of strings, one per line of the diagram
+/// Uses M1, C1, M2, C2 notation (M=Modulator, C=Carrier)
 pub fn get_algorithm_diagram(alg: u8) -> Vec<&'static str> {
     match alg {
         0 => vec![
-            "ALG 0: 4->3->2->1->OUT",
+            "ALG 0: M1->C1->M2->C2->OUT",
             "       (Pure FM cascade)",
         ],
         1 => vec![
-            "ALG 1: 4->3-+",
-            "       2----+->1->OUT",
+            "ALG 1: M1->C1-+",
+            "       M2-----+->C2->OUT",
             "       (Parallel mod)",
         ],
         2 => vec![
-            "ALG 2: 4-+",
-            "       3-+->2->1->OUT",
+            "ALG 2: M1-+",
+            "       C1-+->M2->C2->OUT",
             "       (Fork cascade)",
         ],
         3 => vec![
-            "ALG 3: 4->3->1->OUT",
-            "       2-------->OUT",
+            "ALG 3: M1->C1->C2->OUT",
+            "       M2--------->OUT",
             "       (Cascade+carrier)",
         ],
         4 => vec![
-            "ALG 4: 4->3->OUT",
-            "       2->1->OUT",
+            "ALG 4: M1->C1->OUT",
+            "       M2->C2->OUT",
             "       (Two FM pairs)",
         ],
         5 => vec![
-            "ALG 5: 4->3->OUT",
-            "       4->2->OUT",
-            "       4->1->OUT",
+            "ALG 5: M1->C1->OUT",
+            "       M1->M2->OUT",
+            "       M1->C2->OUT",
             "       (Fan out)",
         ],
         6 => vec![
-            "ALG 6: 4->3->OUT",
-            "       2------>OUT",
-            "       1------>OUT",
+            "ALG 6: M1->C1->OUT",
+            "       M2------>OUT",
+            "       C2------>OUT",
             "       (Cascade+carriers)",
         ],
         7 => vec![
-            "ALG 7: 4->OUT",
-            "       3->OUT",
-            "       2->OUT",
-            "       1->OUT",
+            "ALG 7: M1->OUT",
+            "       C1->OUT",
+            "       M2->OUT",
+            "       C2->OUT",
             "       (Additive)",
         ],
         _ => vec!["Invalid ALG"],
@@ -94,15 +95,18 @@ pub fn ui(f: &mut Frame, app: &App) {
     }
 
     // Draw grid values with row labels for operators (rows 0-3)
-    for row in 0..4 {
+    // Display order: M1, C1, M2, C2
+    for display_row in 0..4 {
+        let data_row = DISPLAY_ROW_TO_DATA_ROW[display_row];
+        
         // Draw row label (operator name)
         let row_label_area = Rect {
             x: inner.x,
-            y: inner.y + label_offset + row as u16,
+            y: inner.y + label_offset + display_row as u16,
             width: row_label_width,
             height: cell_height,
         };
-        let row_name = ROW_NAMES[row];
+        let row_name = ROW_NAMES[display_row];
         let row_label = Paragraph::new(Span::styled(
             row_name,
             Style::default().fg(Color::Yellow),
@@ -111,9 +115,9 @@ pub fn ui(f: &mut Frame, app: &App) {
 
         // Draw values
         for col in 0..GRID_WIDTH {
-            let value = app.values[row][col];
+            let value = app.values[data_row][col];
             let x = inner.x + row_label_width + (col as u16 * cell_width);
-            let y = inner.y + label_offset + row as u16;
+            let y = inner.y + label_offset + display_row as u16;
 
             let area = Rect {
                 x,
@@ -122,7 +126,7 @@ pub fn ui(f: &mut Frame, app: &App) {
                 height: cell_height,
             };
 
-            let style = if app.cursor_x == col && app.cursor_y == row {
+            let style = if app.cursor_x == col && app.cursor_y == display_row {
                 Style::default()
                     .fg(Color::Black)
                     .bg(Color::White)
@@ -237,11 +241,11 @@ mod tests {
         
         // Test specific algorithms
         let alg0 = get_algorithm_diagram(0);
-        assert!(alg0[0].contains("4->3->2->1->OUT"), "ALG 0 should show cascade");
+        assert!(alg0[0].contains("M1->C1->M2->C2->OUT"), "ALG 0 should show cascade");
         
         let alg7 = get_algorithm_diagram(7);
         assert!(alg7.len() >= 5, "ALG 7 should have at least 5 lines");
-        assert!(alg7[0].contains("4->OUT"), "ALG 7 should show operator 4 to output");
+        assert!(alg7[0].contains("M1->OUT"), "ALG 7 should show M1 to output");
         
         // Test invalid algorithm
         let invalid = get_algorithm_diagram(8);

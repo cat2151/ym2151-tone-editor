@@ -11,7 +11,7 @@ pub const PARAM_NAMES: [&str; GRID_WIDTH] = [
 
 // CH row has 7 parameters: ALG, FB, 4 slot masks, and MIDI note number
 pub const CH_PARAM_COUNT: usize = 7;
-pub const CH_PARAM_NAMES: [&str; CH_PARAM_COUNT] = ["ALG", "FB", "OP1", "OP2", "OP3", "OP4", "Note"];
+pub const CH_PARAM_NAMES: [&str; CH_PARAM_COUNT] = ["ALG", "FB", "M1", "C1", "M2", "C2", "Note"];
 
 // Maximum values for each parameter (respecting YM2151 bit ranges)
 pub const PARAM_MAX: [u8; GRID_WIDTH] = [
@@ -32,17 +32,25 @@ pub const PARAM_MAX: [u8; GRID_WIDTH] = [
 pub const CH_PARAM_MAX: [u8; CH_PARAM_COUNT] = [
     7,   // ALG: 3 bits (0-7) - Algorithm
     7,   // FB: 3 bits (0-7) - Feedback
-    1,   // OP1 MASK: 0 or 1
-    1,   // OP2 MASK: 0 or 1
-    1,   // OP3 MASK: 0 or 1
-    1,   // OP4 MASK: 0 or 1
+    1,   // M1 MASK: 0 or 1
+    1,   // C1 MASK: 0 or 1
+    1,   // M2 MASK: 0 or 1
+    1,   // C2 MASK: 0 or 1
     127  // MIDI Note Number: 0-127 (60 = middle C)
 ];
 
-// Row names for operators
+// Row names for operators (display order: M1, C1, M2, C2)
 pub const ROW_NAMES: [&str; GRID_HEIGHT] = [
-    "OP1", "OP2", "OP3", "OP4", "CH "
+    "M1", "C1", "M2", "C2", "CH"
 ];
+
+// Display row to data row mapping for operators
+// Display shows: M1(row0), C1(row1), M2(row2), C2(row3)
+// Internal data: M1(row0), M2(row1), C1(row2), C2(row3)
+// So: Display row 0→Data row 0, Display row 1→Data row 2, Display row 2→Data row 1, Display row 3→Data row 3
+pub const DISPLAY_ROW_TO_DATA_ROW: [usize; 4] = [0, 2, 1, 3];
+// Inverse mapping: Data row to display row
+pub const DATA_ROW_TO_DISPLAY_ROW: [usize; 4] = [0, 2, 1, 3];
 
 // Parameter column indices for operator rows (matching PARAM_NAMES order)
 pub const PARAM_DT: usize = 0;
@@ -57,13 +65,13 @@ pub const PARAM_RR: usize = 8;
 pub const PARAM_DT2: usize = 9;
 pub const PARAM_AMS: usize = 10;
 
-// Parameter column indices for CH row (matching CH_PARAM_NAMES order)
+// Parameter column indices for CH row (matching CH_PARAM_NAMES order: M1, C1, M2, C2)
 pub const CH_PARAM_ALG: usize = 0;
 pub const CH_PARAM_FB: usize = 1;
-pub const CH_PARAM_OP1_MASK: usize = 2;
-pub const CH_PARAM_OP2_MASK: usize = 3;
-pub const CH_PARAM_OP3_MASK: usize = 4;
-pub const CH_PARAM_OP4_MASK: usize = 5;
+pub const CH_PARAM_M1_MASK: usize = 2;
+pub const CH_PARAM_C1_MASK: usize = 3;
+pub const CH_PARAM_M2_MASK: usize = 4;
+pub const CH_PARAM_C2_MASK: usize = 5;
 pub const CH_PARAM_NOTE: usize = 6;
 
 // Row index for channel settings

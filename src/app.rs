@@ -29,7 +29,7 @@ impl App {
         
         // Channel settings: ALG (algorithm) and FB (feedback) in first 2 positions
         // Default to ALG=4 (simple FM) and FB=0 (no feedback)
-        // Slot masks: OP1, OP2, OP3, OP4 all enabled (1)
+        // Slot masks: M1, C1, M2, C2 all enabled (1)
         // MIDI Note Number: 60 (middle C)
         values[4] = [4, 0, 1, 1, 1, 1, 60, 0, 0, 0, 0];
         
@@ -99,24 +99,37 @@ impl App {
         }
     }
 
+    /// Get the data row index from the current cursor position (display row)
+    /// For operator rows (0-3), maps display row to data row
+    /// For CH row (4), returns ROW_CH
+    fn get_data_row(&self) -> usize {
+        if self.cursor_y < 4 {
+            DISPLAY_ROW_TO_DATA_ROW[self.cursor_y]
+        } else {
+            self.cursor_y
+        }
+    }
+
     pub fn increase_value(&mut self) {
-        let current = self.values[self.cursor_y][self.cursor_x];
+        let data_row = self.get_data_row();
+        let current = self.values[data_row][self.cursor_x];
         let max = if self.cursor_y == ROW_CH && self.cursor_x < CH_PARAM_COUNT {
             CH_PARAM_MAX[self.cursor_x]
         } else {
             PARAM_MAX[self.cursor_x]
         };
         if current < max {
-            self.values[self.cursor_y][self.cursor_x] = current + 1;
+            self.values[data_row][self.cursor_x] = current + 1;
             #[cfg(windows)]
             self.call_cat_play_mml();
         }
     }
 
     pub fn decrease_value(&mut self) {
-        let current = self.values[self.cursor_y][self.cursor_x];
+        let data_row = self.get_data_row();
+        let current = self.values[data_row][self.cursor_x];
         if current > 0 {
-            self.values[self.cursor_y][self.cursor_x] = current - 1;
+            self.values[data_row][self.cursor_x] = current - 1;
             #[cfg(windows)]
             self.call_cat_play_mml();
         }
@@ -164,8 +177,9 @@ impl App {
         };
         
         // Only update and play sound if the value actually changed
-        if self.values[self.cursor_y][self.cursor_x] != new_value {
-            self.values[self.cursor_y][self.cursor_x] = new_value;
+        let data_row = self.get_data_row();
+        if self.values[data_row][self.cursor_x] != new_value {
+            self.values[data_row][self.cursor_x] = new_value;
             #[cfg(windows)]
             self.call_cat_play_mml();
         }

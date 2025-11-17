@@ -79,10 +79,10 @@ mod tests {
         values[0][PARAM_TL] = 20;
         values[ROW_CH][CH_PARAM_ALG] = 4;
         values[ROW_CH][CH_PARAM_FB] = 0;
-        values[ROW_CH][CH_PARAM_OP1_MASK] = 1;
-        values[ROW_CH][CH_PARAM_OP2_MASK] = 1;
-        values[ROW_CH][CH_PARAM_OP3_MASK] = 1;
-        values[ROW_CH][CH_PARAM_OP4_MASK] = 1;
+        values[ROW_CH][CH_PARAM_M1_MASK] = 1;
+        values[ROW_CH][CH_PARAM_C1_MASK] = 1;
+        values[ROW_CH][CH_PARAM_M2_MASK] = 1;
+        values[ROW_CH][CH_PARAM_C2_MASK] = 1;
         
         // Save to JSON
         let result = save_to_json(&values);
