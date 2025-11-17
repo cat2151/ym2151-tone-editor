@@ -135,6 +135,55 @@ impl App {
         }
     }
 
+    pub fn set_value_to_max(&mut self) {
+        let data_row = self.get_data_row();
+        let max = if self.cursor_y == ROW_CH && self.cursor_x < CH_PARAM_COUNT {
+            CH_PARAM_MAX[self.cursor_x]
+        } else {
+            PARAM_MAX[self.cursor_x]
+        };
+        self.values[data_row][self.cursor_x] = max;
+        #[cfg(windows)]
+        self.call_cat_play_mml();
+    }
+
+    pub fn set_value_to_min(&mut self) {
+        let data_row = self.get_data_row();
+        self.values[data_row][self.cursor_x] = 0;
+        #[cfg(windows)]
+        self.call_cat_play_mml();
+    }
+
+    pub fn set_value_to_random(&mut self) {
+        use std::collections::hash_map::RandomState;
+        use std::hash::{BuildHasher, Hash, Hasher};
+        
+        let data_row = self.get_data_row();
+        let max = if self.cursor_y == ROW_CH && self.cursor_x < CH_PARAM_COUNT {
+            CH_PARAM_MAX[self.cursor_x]
+        } else {
+            PARAM_MAX[self.cursor_x]
+        };
+        
+        // Use RandomState to generate a random value
+        // This is a simple approach that doesn't require adding new dependencies
+        let random_state = RandomState::new();
+        let mut hasher = random_state.build_hasher();
+        
+        // Hash current time and position to get variation
+        std::time::SystemTime::now().hash(&mut hasher);
+        self.cursor_x.hash(&mut hasher);
+        self.cursor_y.hash(&mut hasher);
+        data_row.hash(&mut hasher);
+        
+        let hash = hasher.finish();
+        let random_value = (hash % (max as u64 + 1)) as u8;
+        
+        self.values[data_row][self.cursor_x] = random_value;
+        #[cfg(windows)]
+        self.call_cat_play_mml();
+    }
+
     /// Update the parameter value based on mouse X position
     /// Maps mouse X position to parameter value range (0 to PARAM_MAX)
     /// Uses the middle third of the terminal width for full range
@@ -375,6 +424,106 @@ mod tests {
         // Should not crash or change value when terminal_width is 0
         app.update_value_from_mouse_x(50, terminal_width);
         assert_eq!(app.values[0][PARAM_DT], initial_value, "Value should not change when terminal_width is 0");
+    }
+
+    #[test]
+    fn test_set_value_to_max() {
+        let mut app = App::new();
+        
+        // Test with operator row parameter (DT, max = 7)
+        app.cursor_x = PARAM_DT;
+        app.cursor_y = 0;
+        app.values[0][PARAM_DT] = 3;
+        
+        app.set_value_to_max();
+        assert_eq!(app.values[0][PARAM_DT], 7, "DT should be set to max value (7)");
+        
+        // Test with different parameter (MUL, max = 15)
+        app.cursor_x = PARAM_MUL;
+        app.values[0][PARAM_MUL] = 5;
+        
+        app.set_value_to_max();
+        assert_eq!(app.values[0][PARAM_MUL], 15, "MUL should be set to max value (15)");
+        
+        // Test with CH row parameter (ALG, max = 7)
+        app.cursor_y = ROW_CH;
+        app.cursor_x = CH_PARAM_ALG;
+        app.values[ROW_CH][CH_PARAM_ALG] = 2;
+        
+        app.set_value_to_max();
+        assert_eq!(app.values[ROW_CH][CH_PARAM_ALG], 7, "ALG should be set to max value (7)");
+        
+        // Test with CH row FB (max = 7)
+        app.cursor_x = CH_PARAM_FB;
+        app.values[ROW_CH][CH_PARAM_FB] = 1;
+        
+        app.set_value_to_max();
+        assert_eq!(app.values[ROW_CH][CH_PARAM_FB], 7, "FB should be set to max value (7)");
+    }
+
+    #[test]
+    fn test_set_value_to_min() {
+        let mut app = App::new();
+        
+        // Test with operator row parameter
+        app.cursor_x = PARAM_DT;
+        app.cursor_y = 0;
+        app.values[0][PARAM_DT] = 5;
+        
+        app.set_value_to_min();
+        assert_eq!(app.values[0][PARAM_DT], 0, "DT should be set to min value (0)");
+        
+        // Test with different parameter
+        app.cursor_x = PARAM_MUL;
+        app.values[0][PARAM_MUL] = 10;
+        
+        app.set_value_to_min();
+        assert_eq!(app.values[0][PARAM_MUL], 0, "MUL should be set to min value (0)");
+        
+        // Test with CH row parameter
+        app.cursor_y = ROW_CH;
+        app.cursor_x = CH_PARAM_ALG;
+        app.values[ROW_CH][CH_PARAM_ALG] = 5;
+        
+        app.set_value_to_min();
+        assert_eq!(app.values[ROW_CH][CH_PARAM_ALG], 0, "ALG should be set to min value (0)");
+    }
+
+    #[test]
+    fn test_set_value_to_random() {
+        let mut app = App::new();
+        
+        // Test with operator row parameter (DT, max = 7)
+        app.cursor_x = PARAM_DT;
+        app.cursor_y = 0;
+        
+        app.set_value_to_random();
+        let random_value = app.values[0][PARAM_DT];
+        assert!(random_value <= 7, "Random DT value should be <= 7, got {}", random_value);
+        
+        // Test with different parameter (TL, max = 99)
+        app.cursor_x = PARAM_TL;
+        
+        app.set_value_to_random();
+        let random_value = app.values[0][PARAM_TL];
+        assert!(random_value <= 99, "Random TL value should be <= 99, got {}", random_value);
+        
+        // Test with CH row parameter (ALG, max = 7)
+        app.cursor_y = ROW_CH;
+        app.cursor_x = CH_PARAM_ALG;
+        
+        app.set_value_to_random();
+        let random_value = app.values[ROW_CH][CH_PARAM_ALG];
+        assert!(random_value <= 7, "Random ALG value should be <= 7, got {}", random_value);
+        
+        // Test that calling multiple times produces values in valid range
+        for _ in 0..10 {
+            app.cursor_x = PARAM_MUL;
+            app.cursor_y = 0;
+            app.set_value_to_random();
+            let random_value = app.values[0][PARAM_MUL];
+            assert!(random_value <= 15, "Random MUL value should be <= 15, got {}", random_value);
+        }
     }
 
     #[test]

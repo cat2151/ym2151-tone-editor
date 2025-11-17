@@ -19,8 +19,9 @@ A Windows-compatible Rust TUI (Text User Interface) editor for YM2151 (OPM) FM s
 - Edit YM2151 tone parameters with parameter labels
 - Display 11 parameters × 5 rows (4 operators + 1 channel row)
 - Visual parameter names: DT, MUL, TL, KS, AR, D1R, D1L, D2R, RR, DT2, AMS
-- Cursor navigation with `hjkl` (Vim-style) or `wasd` keys
-- Increase/decrease values with `e`/`q` keys (respects parameter max values)
+- Cursor navigation with arrow keys, `hjkl` (Vim-style), or `wasd` keys
+- Increase/decrease values with PageUp/PageDown or `e`/`q` keys (respects parameter max values)
+- Quick value setting with Home (max), End (min), and R (random)
 - Exit with `ESC` key
 - Initialized with a basic FM piano-like tone
 
@@ -93,14 +94,21 @@ The editor uses `send_json` to send tone updates via named pipe, which automatic
 
 | Key | Action |
 |-----|--------|
+| **Cursor Movement** | |
+| Arrow keys (←↓↑→) | Move cursor in respective direction |
 | `h` / `a` | Move cursor left |
 | `j` / `s` | Move cursor down |
 | `k` / `w` | Move cursor up |
 | `l` / `d` | Move cursor right |
-| `q` | Decrease value at cursor |
-| `e` | Increase value at cursor |
+| **Value Modification** | |
+| `PageUp` / `e` | Increase value at cursor |
+| `PageDown` / `q` | Decrease value at cursor |
+| `Home` | Set value to maximum for current parameter |
+| `End` | Set value to minimum (0) |
+| `r` / `R` | Set value to random (within valid range) |
+| **Other** | |
 | `Mouse Move` | Change value at cursor position based on horizontal mouse position (left = 0, middle third = proportional, right = max) |
-| `ESC` | Exit application |
+| `ESC` | Save and exit application |
 
 ## Dependencies
 

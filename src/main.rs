@@ -67,12 +67,19 @@ fn run_app<B: ratatui::backend::Backend>(
                 // actions while still supporting key repeat functionality
                 if key.kind == KeyEventKind::Press || key.kind == KeyEventKind::Repeat {
                     match key.code {
-                        KeyCode::Char('q') => app.decrease_value(),
-                        KeyCode::Char('e') => app.increase_value(),
-                        KeyCode::Char('h') | KeyCode::Char('a') => app.move_cursor_left(),
-                        KeyCode::Char('j') | KeyCode::Char('s') => app.move_cursor_down(),
-                        KeyCode::Char('k') | KeyCode::Char('w') => app.move_cursor_up(),
-                        KeyCode::Char('l') | KeyCode::Char('d') => app.move_cursor_right(),
+                        // Value modification keys
+                        KeyCode::Char('q') | KeyCode::PageDown => app.decrease_value(),
+                        KeyCode::Char('e') | KeyCode::PageUp => app.increase_value(),
+                        KeyCode::Home => app.set_value_to_max(),
+                        KeyCode::End => app.set_value_to_min(),
+                        KeyCode::Char('r') | KeyCode::Char('R') => app.set_value_to_random(),
+                        
+                        // Cursor movement keys (hjkl/aswd + arrow keys)
+                        KeyCode::Char('h') | KeyCode::Char('a') | KeyCode::Left => app.move_cursor_left(),
+                        KeyCode::Char('j') | KeyCode::Char('s') | KeyCode::Down => app.move_cursor_down(),
+                        KeyCode::Char('k') | KeyCode::Char('w') | KeyCode::Up => app.move_cursor_up(),
+                        KeyCode::Char('l') | KeyCode::Char('d') | KeyCode::Right => app.move_cursor_right(),
+                        
                         KeyCode::Esc => {
                             // Save tone data to JSON before exiting
                             app.save_to_json()?;
