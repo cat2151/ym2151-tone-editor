@@ -7,6 +7,17 @@ use ratatui::{
 };
 use crate::{models::*, app::App};
 
+/// Get the color for a parameter based on its column index
+/// Returns the color to use for both the parameter name and value
+fn get_param_color(col: usize) -> Color {
+    match col {
+        PARAM_MUL => Color::Green,                    // MUL: Green
+        PARAM_TL | PARAM_D1L => Color::Cyan,          // TL and D1L: Light Blue (Cyan)
+        PARAM_AR | PARAM_D1R | PARAM_D2R | PARAM_RR => Color::Rgb(255, 165, 0), // Envelope params: Orange
+        _ => Color::White,                            // Others: White
+    }
+}
+
 /// Get ASCII art diagram for YM2151 algorithm (0-7)
 /// Returns a vector of strings, one per line of the diagram
 /// Uses M1, C1, M2, C2 notation (M=Modulator, C=Carrier)
@@ -87,9 +98,10 @@ pub fn ui(f: &mut Frame, app: &App) {
         };
 
         let param_name = PARAM_NAMES[col];
+        let color = get_param_color(col);
         let paragraph = Paragraph::new(Span::styled(
             param_name,
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+            Style::default().fg(color).add_modifier(Modifier::BOLD),
         ));
         f.render_widget(paragraph, area);
     }
@@ -132,7 +144,8 @@ pub fn ui(f: &mut Frame, app: &App) {
                     .bg(Color::White)
                     .add_modifier(Modifier::BOLD)
             } else {
-                Style::default()
+                let color = get_param_color(col);
+                Style::default().fg(color)
             };
 
             let text = format!("{:2}", value);
@@ -156,7 +169,7 @@ pub fn ui(f: &mut Frame, app: &App) {
         let param_name = CH_PARAM_NAMES[col];
         let paragraph = Paragraph::new(Span::styled(
             param_name,
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+            Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
         ));
         f.render_widget(paragraph, area);
     }
@@ -195,7 +208,7 @@ pub fn ui(f: &mut Frame, app: &App) {
                 .bg(Color::White)
                 .add_modifier(Modifier::BOLD)
         } else {
-            Style::default()
+            Style::default().fg(Color::White)
         };
 
         let text = format!("{:2}", value);
@@ -229,6 +242,28 @@ pub fn ui(f: &mut Frame, app: &App) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_get_param_color() {
+        // Test MUL is green
+        assert_eq!(get_param_color(PARAM_MUL), Color::Green);
+        
+        // Test TL and D1L are cyan (light blue)
+        assert_eq!(get_param_color(PARAM_TL), Color::Cyan);
+        assert_eq!(get_param_color(PARAM_D1L), Color::Cyan);
+        
+        // Test envelope parameters are orange
+        assert_eq!(get_param_color(PARAM_AR), Color::Rgb(255, 165, 0));
+        assert_eq!(get_param_color(PARAM_D1R), Color::Rgb(255, 165, 0));
+        assert_eq!(get_param_color(PARAM_D2R), Color::Rgb(255, 165, 0));
+        assert_eq!(get_param_color(PARAM_RR), Color::Rgb(255, 165, 0));
+        
+        // Test other parameters are white
+        assert_eq!(get_param_color(PARAM_DT), Color::White);
+        assert_eq!(get_param_color(PARAM_KS), Color::White);
+        assert_eq!(get_param_color(PARAM_DT2), Color::White);
+        assert_eq!(get_param_color(PARAM_AMS), Color::White);
+    }
 
     #[test]
     fn test_get_algorithm_diagram() {
