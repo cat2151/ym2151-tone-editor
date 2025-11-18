@@ -48,11 +48,11 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
     // We'll use channel 0 for this example
     let channel = 0;
 
-    // YM2151 hardware operator register order: M1, C1, M2, C2 (not sequential!)
-    // We display as: M1, C1, M2, C2 (matching hardware register order)
+    // YM2151 hardware operator register order: M1, M2, C1, C2 (OP1, OP2, OP3, OP4)
+    // We display as: M1, C1, M2, C2 (user-friendly order)
     // Internal data order: M1, M2, C1, C2 (rows 0, 1, 2, 3)
-    // Mapping: Data M1(row0)→slot0, Data M2(row1)→slot2, Data C1(row2)→slot1, Data C2(row3)→slot3
-    const DATA_ROW_TO_SLOT: [usize; 4] = [0, 2, 1, 3];
+    // Mapping: Data M1(row0)→slot0, Data M2(row1)→slot1, Data C1(row2)→slot2, Data C2(row3)→slot3
+    const DATA_ROW_TO_SLOT: [usize; 4] = [0, 1, 2, 3];
     
     // For each of 4 operators in data order (M1, M2, C1, C2)
     for data_row in 0..4 {
@@ -150,17 +150,18 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
     
     // Note On - Register $08 - Key On with operators based on slot masks
     // Bits 0-2: Channel (0-7)
-    // Bits 3-6: Operator enable (M1=bit3, C1=bit4, M2=bit5, C2=bit6)
-    // YM2151 hardware uses non-sequential bit order: M1, C1, M2, C2
+    // Bits 3-6: Operator enable (slot 0-3)
+    // YM2151 hardware slot order: M1=slot0, M2=slot1, C1=slot2, C2=slot3
+    // Key On bit mapping: M1→bit3, M2→bit4, C1→bit5, C2→bit6
     // Use slot masks from operator rows (SM parameter at PARAM_SM)
     let m1_mask = values[0][PARAM_SM];  // M1 is data row 0
     let m2_mask = values[1][PARAM_SM];  // M2 is data row 1
     let c1_mask = values[2][PARAM_SM];  // C1 is data row 2
     let c2_mask = values[3][PARAM_SM];  // C2 is data row 3
     
-    // Correct bit mapping: M1→bit3, C1→bit4, M2→bit5, C2→bit6
-    let key_on_data = ((m1_mask & 1) << 3) | ((c1_mask & 1) << 4) 
-                    | ((m2_mask & 1) << 5) | ((c2_mask & 1) << 6) | (channel as u8);
+    // Correct bit mapping: M1→bit3, M2→bit4, C1→bit5, C2→bit6
+    let key_on_data = ((m1_mask & 1) << 3) | ((m2_mask & 1) << 4) 
+                    | ((c1_mask & 1) << 5) | ((c2_mask & 1) << 6) | (channel as u8);
     events.push(Ym2151Event {
         time: 0,
         addr: "0x08".to_string(),
@@ -175,10 +176,10 @@ pub fn events_to_tone_data(events: &[Ym2151Event]) -> io::Result<ToneData> {
     let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
 
     // Inverse mapping: hardware slot → data row
-    // Hardware slots: M1(0), C1(1), M2(2), C2(3)
+    // Hardware slots: M1(0), M2(1), C1(2), C2(3)
     // Data rows: M1(0), M2(1), C1(2), C2(3)
-    // Mapping: slot 0→row0, slot 1→row2, slot 2→row1, slot 3→row3
-    const SLOT_TO_DATA_ROW: [usize; 4] = [0, 2, 1, 3];
+    // Mapping: slot 0→row0, slot 1→row1, slot 2→row2, slot 3→row3
+    const SLOT_TO_DATA_ROW: [usize; 4] = [0, 1, 2, 3];
 
     for event in events {
         // Parse address and data
@@ -252,12 +253,12 @@ pub fn events_to_tone_data(events: &[Ym2151Event]) -> io::Result<ToneData> {
             // Key On register (0x08)
             0x08 => {
                 // Bits 3-6 contain operator enable flags
-                // YM2151 hardware uses bit order: M1, C1, M2, C2
-                // Bit 3: M1, Bit 4: C1, Bit 5: M2, Bit 6: C2
+                // YM2151 hardware slot order: M1=slot0, M2=slot1, C1=slot2, C2=slot3
+                // Bit 3: M1, Bit 4: M2, Bit 5: C1, Bit 6: C2
                 // Store these in the SM parameter of each operator row
                 values[0][PARAM_SM] = (data >> 3) & 0x01;  // M1 is data row 0
-                values[2][PARAM_SM] = (data >> 4) & 0x01;  // C1 is data row 2
-                values[1][PARAM_SM] = (data >> 5) & 0x01;  // M2 is data row 1
+                values[1][PARAM_SM] = (data >> 4) & 0x01;  // M2 is data row 1
+                values[2][PARAM_SM] = (data >> 5) & 0x01;  // C1 is data row 2
                 values[3][PARAM_SM] = (data >> 6) & 0x01;  // C2 is data row 3
             }
             // KC (Key Code) register (0x28-0x2F)
@@ -502,12 +503,12 @@ mod tests {
 
     #[test]
     fn test_slot_mask_bit_order() {
-        // Test that slot masks use correct YM2151 bit order: M1, C1, M2, C2
+        // Test that slot masks use correct YM2151 bit order: M1, M2, C1, C2
         let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
         
         // Enable only M2
         values[0][PARAM_SM] = 0;  // M1
-        values[1][PARAM_SM] = 1;  // M2 should map to bit 5
+        values[1][PARAM_SM] = 1;  // M2 should map to bit 4
         values[2][PARAM_SM] = 0;  // C1
         values[3][PARAM_SM] = 0;  // C2
         values[ROW_CH][CH_PARAM_ALG] = 4;
@@ -521,20 +522,20 @@ mod tests {
         let key_on_data = key_on_event.unwrap().data.trim_start_matches("0x");
         let data = u8::from_str_radix(key_on_data, 16).unwrap();
         
-        // M2 should be at bit 5, so data should be 0b00100000 | channel = 0x20
-        assert_eq!(data, 0x20, "M2 should map to bit 5 (0x20)");
+        // M2 should be at bit 4, so data should be 0b00010000 | channel = 0x10
+        assert_eq!(data, 0x10, "M2 should map to bit 4 (0x10)");
         
         // Test C1
         values[1][PARAM_SM] = 0;  // M2
-        values[2][PARAM_SM] = 1;  // C1 should map to bit 4
+        values[2][PARAM_SM] = 1;  // C1 should map to bit 5
         
         let events = to_ym2151_events(&values);
         let key_on_event = events.iter().find(|e| e.addr == "0x08");
         let key_on_data = key_on_event.unwrap().data.trim_start_matches("0x");
         let data = u8::from_str_radix(key_on_data, 16).unwrap();
         
-        // C1 should be at bit 4, so data should be 0b00010000 | channel = 0x10
-        assert_eq!(data, 0x10, "C1 should map to bit 4 (0x10)");
+        // C1 should be at bit 5, so data should be 0b00100000 | channel = 0x20
+        assert_eq!(data, 0x20, "C1 should map to bit 5 (0x20)");
     }
 
     #[test]
@@ -563,13 +564,13 @@ mod tests {
     #[test]
     fn test_operator_register_order() {
         // Test that data rows map to correct hardware slots: 
-        // Data row 0 (M1)→slot0, Data row 1 (M2)→slot2, Data row 2 (C1)→slot1, Data row 3 (C2)→slot3
+        // Data row 0 (M1)→slot0, Data row 1 (M2)→slot1, Data row 2 (C1)→slot2, Data row 3 (C2)→slot3
         let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
         
         // Set unique MUL values for each data row to identify them
         values[0][PARAM_MUL] = 1;  // Data row 0 (M1) should go to slot 0
-        values[1][PARAM_MUL] = 2;  // Data row 1 (M2) should go to slot 2
-        values[2][PARAM_MUL] = 3;  // Data row 2 (C1) should go to slot 1
+        values[1][PARAM_MUL] = 2;  // Data row 1 (M2) should go to slot 1
+        values[2][PARAM_MUL] = 3;  // Data row 2 (C1) should go to slot 2
         values[3][PARAM_MUL] = 4;  // Data row 3 (C2) should go to slot 3
         
         let events = to_ym2151_events(&values);
@@ -581,17 +582,17 @@ mod tests {
         let data = u8::from_str_radix(m1_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
         assert_eq!(data & 0x0F, 1, "Register 0x40 (slot 0) should have M1's MUL=1");
         
-        // Register 0x48 (slot 1, channel 0) should have C1's MUL=3
-        let c1_event = events.iter().find(|e| e.addr == "0x48");
-        assert!(c1_event.is_some(), "C1 register should be present");
-        let data = u8::from_str_radix(c1_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
-        assert_eq!(data & 0x0F, 3, "Register 0x48 (slot 1) should have C1's MUL=3");
-        
-        // Register 0x50 (slot 2, channel 0) should have M2's MUL=2
-        let m2_event = events.iter().find(|e| e.addr == "0x50");
+        // Register 0x48 (slot 1, channel 0) should have M2's MUL=2
+        let m2_event = events.iter().find(|e| e.addr == "0x48");
         assert!(m2_event.is_some(), "M2 register should be present");
         let data = u8::from_str_radix(m2_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
-        assert_eq!(data & 0x0F, 2, "Register 0x50 (slot 2) should have M2's MUL=2");
+        assert_eq!(data & 0x0F, 2, "Register 0x48 (slot 1) should have M2's MUL=2");
+        
+        // Register 0x50 (slot 2, channel 0) should have C1's MUL=3
+        let c1_event = events.iter().find(|e| e.addr == "0x50");
+        assert!(c1_event.is_some(), "C1 register should be present");
+        let data = u8::from_str_radix(c1_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
+        assert_eq!(data & 0x0F, 3, "Register 0x50 (slot 2) should have C1's MUL=3");
         
         // Register 0x58 (slot 3, channel 0) should have C2's MUL=4
         let c2_event = events.iter().find(|e| e.addr == "0x58");
@@ -627,5 +628,77 @@ mod tests {
             assert_eq!(values_roundtrip[row][PARAM_AR], values_original[row][PARAM_AR], 
                 "{} AR should roundtrip correctly", row_names[row]);
         }
+    }
+
+    #[test]
+    fn test_issue_59_alg4_operator_order() {
+        // Issue #59: In ALG4, rows 2 and 3 (M2 and C2) were swapped
+        // This test verifies that the operators are correctly mapped to hardware slots
+        // ALG4: M1->C1->OUT, M2->C2->OUT (two independent FM pairs)
+        
+        let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
+        
+        // Set algorithm to 4
+        values[ROW_CH][CH_PARAM_ALG] = 4;
+        
+        // Set distinct MUL values for each operator to track them
+        // MUL is 4 bits (0-15), so use values in that range
+        values[0][PARAM_MUL] = 1;   // M1 (data row 0)
+        values[1][PARAM_MUL] = 2;   // M2 (data row 1)  
+        values[2][PARAM_MUL] = 3;   // C1 (data row 2)
+        values[3][PARAM_MUL] = 4;   // C2 (data row 3)
+        
+        // Enable all operators via slot masks
+        values[0][PARAM_SM] = 1;
+        values[1][PARAM_SM] = 1;
+        values[2][PARAM_SM] = 1;
+        values[3][PARAM_SM] = 1;
+        
+        let events = to_ym2151_events(&values);
+        
+        // Verify correct hardware slot mapping:
+        // M1 (data row 0) should map to hardware slot 0 (register 0x40)
+        let m1_event = events.iter().find(|e| e.addr == "0x40");
+        assert!(m1_event.is_some());
+        let m1_data = u8::from_str_radix(m1_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
+        assert_eq!(m1_data & 0x0F, 1, "M1 should be at slot 0 with MUL=1");
+        
+        // M2 (data row 1) should map to hardware slot 1 (register 0x48)
+        // This was incorrectly mapped to slot 2 (0x50) before the fix
+        let m2_event = events.iter().find(|e| e.addr == "0x48");
+        assert!(m2_event.is_some());
+        let m2_data = u8::from_str_radix(m2_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
+        assert_eq!(m2_data & 0x0F, 2, "M2 should be at slot 1 with MUL=2");
+        
+        // C1 (data row 2) should map to hardware slot 2 (register 0x50)
+        // This was incorrectly mapped to slot 1 (0x48) before the fix
+        let c1_event = events.iter().find(|e| e.addr == "0x50");
+        assert!(c1_event.is_some());
+        let c1_data = u8::from_str_radix(c1_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
+        assert_eq!(c1_data & 0x0F, 3, "C1 should be at slot 2 with MUL=3");
+        
+        // C2 (data row 3) should map to hardware slot 3 (register 0x58)
+        let c2_event = events.iter().find(|e| e.addr == "0x58");
+        assert!(c2_event.is_some());
+        let c2_data = u8::from_str_radix(c2_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
+        assert_eq!(c2_data & 0x0F, 4, "C2 should be at slot 3 with MUL=4");
+        
+        // Verify slot masks are correctly set
+        // Key On register (0x08) should have all operators enabled
+        // Bits: M1=bit3, M2=bit4, C1=bit5, C2=bit6
+        let key_on_event = events.iter().find(|e| e.addr == "0x08");
+        assert!(key_on_event.is_some());
+        let key_on_data = u8::from_str_radix(key_on_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
+        
+        // Extract operator enable bits
+        let m1_enabled = (key_on_data >> 3) & 1;
+        let m2_enabled = (key_on_data >> 4) & 1;
+        let c1_enabled = (key_on_data >> 5) & 1;
+        let c2_enabled = (key_on_data >> 6) & 1;
+        
+        assert_eq!(m1_enabled, 1, "M1 should be enabled (bit 3)");
+        assert_eq!(m2_enabled, 1, "M2 should be enabled (bit 4)");
+        assert_eq!(c1_enabled, 1, "C1 should be enabled (bit 5)");
+        assert_eq!(c2_enabled, 1, "C2 should be enabled (bit 6)");
     }
 }
