@@ -132,9 +132,18 @@ To enable interactive mode:
 | `Home` | Set to maximum value for current parameter |
 | `End` | Set to minimum value (0) |
 | `r` / `R` | Set to random value (within valid range) |
+| **Mouse** | |
+| `Mouse Wheel Up` | Move cursor to mouse position and increase value |
+| `Mouse Wheel Down` | Move cursor to mouse position and decrease value |
 | **Other** | |
-| `Mouse Movement` | Change value at cursor position based on horizontal mouse position (left=0, middle=proportional, right=max) |
 | `ESC` | Save and exit application |
+
+## Command-Line Options
+
+| Option | Description |
+|--------|-------------|
+| `--use-client-interactive-mode-access` | Use interactive mode for more efficient audio feedback (continuously streams audio and sends only register changes) |
+| `--value-by-mouse-move` | Enable legacy mouse behavior (horizontal mouse movement changes value at cursor position) |
 
 ## Dependencies
 
