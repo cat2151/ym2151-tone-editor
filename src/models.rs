@@ -48,8 +48,6 @@ pub const ROW_NAMES: [&str; GRID_HEIGHT] = [
 // Internal data: M1(row0), M2(row1), C1(row2), C2(row3)
 // So: Display row 0→Data row 0, Display row 1→Data row 2, Display row 2→Data row 1, Display row 3→Data row 3
 pub const DISPLAY_ROW_TO_DATA_ROW: [usize; 4] = [0, 2, 1, 3];
-// Inverse mapping: Data row to display row
-pub const DATA_ROW_TO_DISPLAY_ROW: [usize; 4] = [0, 2, 1, 3];
 
 // Parameter column indices for operator rows (matching PARAM_NAMES order)
 // New order: SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS

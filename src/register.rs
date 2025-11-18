@@ -48,11 +48,11 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
     // We'll use channel 0 for this example
     let channel = 0;
 
-    // YM2151 hardware operator register order: M1, C1, M2, C2 (not sequential!)
-    // We display as: M1, C1, M2, C2 (matching hardware register order)
+    // YM2151 hardware operator register order: M1, M2, C1, C2 (sequential slots 0, 1, 2, 3)
+    // We display as: M1, C1, M2, C2 (reordered for user-friendly layout)
     // Internal data order: M1, M2, C1, C2 (rows 0, 1, 2, 3)
-    // Mapping: Data M1(row0)→slot0, Data M2(row1)→slot2, Data C1(row2)→slot1, Data C2(row3)→slot3
-    const DATA_ROW_TO_SLOT: [usize; 4] = [0, 2, 1, 3];
+    // Mapping: Data M1(row0)→slot0, Data M2(row1)→slot1, Data C1(row2)→slot2, Data C2(row3)→slot3
+    const DATA_ROW_TO_SLOT: [usize; 4] = [0, 1, 2, 3];
     
     // For each of 4 operators in data order (M1, M2, C1, C2)
     for data_row in 0..4 {
@@ -175,10 +175,10 @@ pub fn events_to_tone_data(events: &[Ym2151Event]) -> io::Result<ToneData> {
     let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
 
     // Inverse mapping: hardware slot → data row
-    // Hardware slots: M1(0), C1(1), M2(2), C2(3)
+    // Hardware slots: M1(0), M2(1), C1(2), C2(3)
     // Data rows: M1(0), M2(1), C1(2), C2(3)
-    // Mapping: slot 0→row0, slot 1→row2, slot 2→row1, slot 3→row3
-    const SLOT_TO_DATA_ROW: [usize; 4] = [0, 2, 1, 3];
+    // Mapping: slot 0→row0, slot 1→row1, slot 2→row2, slot 3→row3
+    const SLOT_TO_DATA_ROW: [usize; 4] = [0, 1, 2, 3];
 
     for event in events {
         // Parse address and data
@@ -561,15 +561,57 @@ mod tests {
     }
 
     #[test]
+    fn test_alg4_carrier_mapping() {
+        // Verify that for Algorithm 4, C1 (data row 2) and C2 (data row 3) act as carriers
+        // and M1 (data row 0) and M2 (data row 1) act as modulators
+        // This test ensures that the fix for issue #57 is correct
+        let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
+        
+        // Set ALG=4 (two FM pairs: M1->C1->OUT and M2->C2->OUT)
+        values[ROW_CH][CH_PARAM_ALG] = 4;
+        
+        // Set unique MUL values to identify operators
+        values[0][PARAM_MUL] = 1;  // M1 (data row 0) - modulator
+        values[1][PARAM_MUL] = 2;  // M2 (data row 1) - modulator
+        values[2][PARAM_MUL] = 3;  // C1 (data row 2) - carrier
+        values[3][PARAM_MUL] = 4;  // C2 (data row 3) - carrier
+        
+        let events = to_ym2151_events(&values);
+        
+        // Verify hardware slot mapping (YM2151 hardware: M1=slot0, M2=slot1, C1=slot2, C2=slot3)
+        // For ALG4, slots 2 (C1) and 3 (C2) should be carriers
+        
+        // Check that M1 (data row 0) maps to slot 0
+        let m1_event = events.iter().find(|e| e.addr == "0x40").unwrap();
+        let m1_data = u8::from_str_radix(m1_event.data.trim_start_matches("0x"), 16).unwrap();
+        assert_eq!(m1_data & 0x0F, 1, "M1 should have MUL=1 at slot 0");
+        
+        // Check that M2 (data row 1) maps to slot 1
+        let m2_event = events.iter().find(|e| e.addr == "0x48").unwrap();
+        let m2_data = u8::from_str_radix(m2_event.data.trim_start_matches("0x"), 16).unwrap();
+        assert_eq!(m2_data & 0x0F, 2, "M2 should have MUL=2 at slot 1");
+        
+        // Check that C1 (data row 2) maps to slot 2 - this is a carrier in ALG4
+        let c1_event = events.iter().find(|e| e.addr == "0x50").unwrap();
+        let c1_data = u8::from_str_radix(c1_event.data.trim_start_matches("0x"), 16).unwrap();
+        assert_eq!(c1_data & 0x0F, 3, "C1 (carrier) should have MUL=3 at slot 2");
+        
+        // Check that C2 (data row 3) maps to slot 3 - this is a carrier in ALG4
+        let c2_event = events.iter().find(|e| e.addr == "0x58").unwrap();
+        let c2_data = u8::from_str_radix(c2_event.data.trim_start_matches("0x"), 16).unwrap();
+        assert_eq!(c2_data & 0x0F, 4, "C2 (carrier) should have MUL=4 at slot 3");
+    }
+
+    #[test]
     fn test_operator_register_order() {
         // Test that data rows map to correct hardware slots: 
-        // Data row 0 (M1)→slot0, Data row 1 (M2)→slot2, Data row 2 (C1)→slot1, Data row 3 (C2)→slot3
+        // Data row 0 (M1)→slot0, Data row 1 (M2)→slot1, Data row 2 (C1)→slot2, Data row 3 (C2)→slot3
         let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
         
         // Set unique MUL values for each data row to identify them
         values[0][PARAM_MUL] = 1;  // Data row 0 (M1) should go to slot 0
-        values[1][PARAM_MUL] = 2;  // Data row 1 (M2) should go to slot 2
-        values[2][PARAM_MUL] = 3;  // Data row 2 (C1) should go to slot 1
+        values[1][PARAM_MUL] = 2;  // Data row 1 (M2) should go to slot 1
+        values[2][PARAM_MUL] = 3;  // Data row 2 (C1) should go to slot 2
         values[3][PARAM_MUL] = 4;  // Data row 3 (C2) should go to slot 3
         
         let events = to_ym2151_events(&values);
@@ -581,17 +623,17 @@ mod tests {
         let data = u8::from_str_radix(m1_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
         assert_eq!(data & 0x0F, 1, "Register 0x40 (slot 0) should have M1's MUL=1");
         
-        // Register 0x48 (slot 1, channel 0) should have C1's MUL=3
-        let c1_event = events.iter().find(|e| e.addr == "0x48");
-        assert!(c1_event.is_some(), "C1 register should be present");
-        let data = u8::from_str_radix(c1_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
-        assert_eq!(data & 0x0F, 3, "Register 0x48 (slot 1) should have C1's MUL=3");
-        
-        // Register 0x50 (slot 2, channel 0) should have M2's MUL=2
-        let m2_event = events.iter().find(|e| e.addr == "0x50");
+        // Register 0x48 (slot 1, channel 0) should have M2's MUL=2
+        let m2_event = events.iter().find(|e| e.addr == "0x48");
         assert!(m2_event.is_some(), "M2 register should be present");
         let data = u8::from_str_radix(m2_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
-        assert_eq!(data & 0x0F, 2, "Register 0x50 (slot 2) should have M2's MUL=2");
+        assert_eq!(data & 0x0F, 2, "Register 0x48 (slot 1) should have M2's MUL=2");
+        
+        // Register 0x50 (slot 2, channel 0) should have C1's MUL=3
+        let c1_event = events.iter().find(|e| e.addr == "0x50");
+        assert!(c1_event.is_some(), "C1 register should be present");
+        let data = u8::from_str_radix(c1_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
+        assert_eq!(data & 0x0F, 3, "Register 0x50 (slot 2) should have C1's MUL=3");
         
         // Register 0x58 (slot 3, channel 0) should have C2's MUL=4
         let c2_event = events.iter().find(|e| e.addr == "0x58");
