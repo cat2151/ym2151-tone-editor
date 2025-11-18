@@ -65,7 +65,8 @@ pub const PARAM_RR: usize = 8;
 pub const PARAM_DT2: usize = 9;
 pub const PARAM_AMS: usize = 10;
 
-// Parameter column indices for CH row (matching CH_PARAM_NAMES order: M1, C1, M2, C2)
+// Parameter column indices for CH row (matching CH_PARAM_NAMES order)
+// CH_PARAM_NAMES: ALG, FB, M1-mask, C1-mask, M2-mask, C2-mask, Note
 pub const CH_PARAM_ALG: usize = 0;
 pub const CH_PARAM_FB: usize = 1;
 pub const CH_PARAM_M1_MASK: usize = 2;

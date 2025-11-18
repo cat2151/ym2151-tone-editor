@@ -174,7 +174,7 @@ pub fn ui(f: &mut Frame, app: &App) {
         f.render_widget(paragraph, area);
     }
 
-    // Draw CH row (row 4) with ALG, FB, and slot masks
+    // Draw CH row (row 4) with ALG, FB, slot masks (M1,C1,M2,C2), and MIDI note number
     let ch_row_y = inner.y + label_offset + 5;
     
     // Draw row label (CH)
@@ -190,7 +190,7 @@ pub fn ui(f: &mut Frame, app: &App) {
     ));
     f.render_widget(row_label, row_label_area);
 
-    // Draw all CH row values (ALG, FB, 4 slot masks, and MIDI note number)
+    // Draw all CH row values (ALG, FB, 4 slot masks in M1,C1,M2,C2 order, and MIDI note number)
     for col in 0..CH_PARAM_COUNT {
         let value = app.values[ROW_CH][col];
         let x = inner.x + row_label_width + (col as u16 * cell_width);
