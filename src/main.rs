@@ -14,9 +14,14 @@ use ratatui::{
     Terminal,
 };
 use std::io;
+use std::env;
 use app::App;
 
 fn main() -> Result<(), io::Error> {
+    // Parse command-line arguments
+    let args: Vec<String> = env::args().collect();
+    let use_interactive_mode = args.iter().any(|arg| arg == "--use-client-interactive-mode-access");
+
     // Ensure server is running (Windows only)
     #[cfg(windows)]
     {
@@ -33,8 +38,8 @@ fn main() -> Result<(), io::Error> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // Create app state
-    let mut app = App::new();
+    // Create app state with interactive mode flag
+    let mut app = App::new(use_interactive_mode);
 
     // Main loop
     let res = run_app(&mut terminal, &mut app);
@@ -83,6 +88,9 @@ fn run_app<B: ratatui::backend::Backend>(
                         KeyCode::Esc => {
                             // Save tone data to JSON before exiting
                             app.save_to_json()?;
+                            // Stop interactive mode if active (Windows only)
+                            #[cfg(windows)]
+                            app.cleanup();
                             return Ok(());
                         }
                         _ => {}
