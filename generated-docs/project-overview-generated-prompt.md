@@ -1,4 +1,4 @@
-Last updated: 2025-11-18
+Last updated: 2025-11-19
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -63,33 +63,36 @@ Last updated: 2025-11-18
 名前: 
 説明: # ym2151-tone-editor
 
-A Windows-compatible Rust TUI (Text User Interface) editor for YM2151 (OPM) FM synthesis tone parameters.
+<p align="left">
+  <a href="README.ja.md"><img src="https://img.shields.io/badge/🇯🇵-Japanese-red.svg" alt="Japanese"></a>
+  <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸-English-blue.svg" alt="English"></a>
+</p>
+
+YM2151（OPM）FM音源音色エディタ。Windows用。Rust TUI（テキストユーザーインターフェース）エディタ。
 
 ## 状況
 
-開発中です。現在の進捗率は1%ざっくり
+開発中です。現在の進捗率は50%ざっくり
 
 - 今後の展望
-- ※すべて検証用の仮仕様であり、そのあと破壊的変更をします
-- now : ESCで保存するとき、jsonにして保存。内部音色データ to YM2151-log-JSON
-- 起動時、jsonがあれば、それを内部音色データに変換して読み込み
-- 数値を増減したとき、都度、内部音色データをjson化して、ym2151-log-play-serverライブラリ経由で名前付きパイプで直接送信し演奏（高速処理により、キーリピート時も無音にならずスムーズに鳴らせます）
-- 上記までの間に、音が鳴らない等の致命的な不具合が多数予想されるので、進め方をissueにできるだけノウハウとして残しつつ進めるつもり
-- これで最低限、音色づくりの機能ができたので、ドッグフーディング
+    - ※すべて検証用の仮仕様であり、頻繁に破壊的変更をします
+    - 音色保存とGitHub管理に適したフォーマット。音色データ本体を1行100文字程度で記述。後述。
+    - 大幅なkeybind変更。後述。
 
-## Features
+## 機能
 
-- Edit YM2151 tone parameters with parameter labels
-- Display 11 parameters × 5 rows (4 operators + 1 channel row)
-- Visual parameter names: DT, MUL, TL, KS, AR, D1R, D1L, D2R, RR, DT2, AMS
-- Cursor navigation with `hjkl` (Vim-style) or `wasd` keys
-- Increase/decrease values with `e`/`q` keys (respects parameter max values)
-- Exit with `ESC` key
-- Initialized with a basic FM piano-like tone
+- パラメータラベル付きでYM2151音色パラメータを編集
+- 11パラメータ × 5行（4オペレータ + 1チャンネル行）で表示
+- 視覚的なパラメータ名：DT、MUL、TL、KS、AR、D1R、D1L、D2R、RR、DT2、AMS
+- 矢印キー、`hjkl`（Vimスタイル）、または`wasd`キーでカーソルナビゲーション
+- PageUp/PageDownまたは`e`/`q`キーで値の増減（パラメータ最大値を尊重）
+- Home（最大）、End（最小）、R（ランダム）での高速値設定
+- `ESC`キーで終了
+- 終了時に音色をjson保存し、次の起動時に最新jsonを読み込み
 
-## YM2151 Tone Data Format
+## YM2151音色データ形式
 
-This editor uses a provisional tone data format based on the YM2151 register map:
+このエディタは、YM2151レジスタマップに基づく暫定的な音色データ形式を使用します：
 
 ### Parameters (11 columns)
 
@@ -107,68 +110,218 @@ This editor uses a provisional tone data format based on the YM2151 register map
 | DT2 | Detune 2 | 0-3 | Coarse frequency detuning (2 bits) |
 | AMS | AM Sensitivity | 0-3 | Amplitude modulation sensitivity (2 bits) |
 
-### Rows (5 operators/channels)
+## 動作要件
 
-- **OP1**: Operator 1 (typically carrier in most algorithms)
-- **OP2**: Operator 2 (modulator/carrier)
-- **OP3**: Operator 3 (modulator/carrier)
-- **OP4**: Operator 4 (modulator/carrier)
-- **CH**: Channel settings (can be used for feedback, LFO, etc.)
+- Rust 1.70 以降
 
-This format allows creating basic YM2151 tones compatible with ym2151-log-play-server samples.
-
-## Requirements
-
-- Rust 1.70 or later
-
-## Building
+## ビルド
 
 ```bash
 cargo build --release
 ```
 
-## Running
+## 実行
 
 ```bash
 cargo run
 ```
 
-Or run the compiled binary directly:
+または、コンパイルされたバイナリを直接実行：
 
 ```bash
 ./target/release/ym2151-tone-editor
 ```
 
-## Live Audio Feedback (Windows only)
+## リアルタイム音声フィードバック（Windows限定）
 
-The editor automatically ensures the server is ready using the `ensure_server_ready()` function from the ym2151-log-play-server library. This handles server installation, startup, and readiness checks automatically.
+エディタは、ym2151-log-play-serverライブラリの`ensure_server_ready()`関数を使用して、サーバーの準備を自動的に確保します。これにより、サーバーのインストール、起動、準備状況チェックが自動的に処理されます。
 
 ```bash
-# Just run the tone editor - the server is automatically set up and started
+# 音色エディタを実行するだけ - サーバーは自動的にセットアップ・起動されます
 cargo run
 ```
 
-The editor uses `send_json` to send tone updates via named pipe, which automatically chooses the optimal transmission method based on data size (direct or file-based). This provides instant audio feedback with improved response time, allowing sound to play even during key repeat operations.
+エディタは`send_json`を使用して名前付きパイプ経由で演奏データを送信します。これにより、編集してすぐに演奏が提供されます。
 
-**Note**: The library's `ensure_server_ready()` function handles all server management, including installation if needed.
+**注意**: ライブラリの`ensure_server_ready()`関数は、必要に応じたインストールを含むすべてのサーバー管理を処理します。
 
-## Controls
+## 操作方法
 
-| Key | Action |
+※今後、破壊的変更されます。検証のためです
+
+| キー | 動作 |
 |-----|--------|
-| `h` / `a` | Move cursor left |
-| `j` / `s` | Move cursor down |
-| `k` / `w` | Move cursor up |
-| `l` / `d` | Move cursor right |
-| `q` | Decrease value at cursor |
-| `e` | Increase value at cursor |
-| `Mouse Move` | Change value at cursor position based on horizontal mouse position (left = 0, middle third = proportional, right = max) |
-| `ESC` | Exit application |
+| **カーソル移動** | |
+| 矢印キー（←↓↑→） | それぞれの方向にカーソルを移動 |
+| `h` / `a` | カーソルを左に移動 |
+| `j` / `s` | カーソルを下に移動 |
+| `k` / `w` | カーソルを上に移動 |
+| `l` / `d` | カーソルを右に移動 |
+| **値の変更** | |
+| `PageUp` / `e` | カーソル位置の値を増加 |
+| `PageDown` / `q` | カーソル位置の値を減少 |
+| `Home` | 現在のパラメータの最大値に設定 |
+| `End` | 最小値（0）に設定 |
+| `r` / `R` | ランダム値に設定（有効範囲内） |
+| **その他** | |
+| `マウス移動` | 水平マウス位置に基づいてカーソル位置の値を変更（左=0、中央=比例、右=最大） |
+| `ESC` | 保存してアプリケーション終了 |
 
-## Dependencies
+## 依存関係
 
-- `ratatui` 0.28 - Terminal UI framework
-- `crossterm` 0.28 - Cross-platform terminal manipulation library
+- `ratatui` 0.28 - ターミナルUIフレームワーク
+- `crossterm` 0.28 - クロスプラットフォームターミナル操作ライブラリ
+
+## コンセプト
+- 100msで起動、100msで音が鳴る ※数値は雑。1秒よりは大幅に短い程度のイメージ
+- キーを押せば音が鳴るし音色も変化する
+    - 「触っても鳴らないし編集できない、よくわからない」を優先して対策する
+- カラフルに可視化
+- シンプル
+- 最低限の編集だけならとっつきやすい操作（カーソル、マウス）
+
+## スコープ外、目指さないこと
+- 高機能エディタ
+    - 初心者から超上級者まで全員が満足する完璧な万能エディタ
+    - 無制限のインテリジェントなUNDO
+    - 各種インテリジェントでフルオート、わかりやすくミスなく使えて柔軟で高度な編集機能
+- インタラクティブ
+    - 仮想MIDIキーボードによる高度にインタラクティブな演奏、サーバも共有メモリを使った低レイテンシの高度なリアルタイム処理に変更
+    - レスポンスのよい高度にインタラクティブな演奏全般
+- GUI
+    - グラフィカルな音色の可視化。専用ターミナルエミュレータによるエンベロープや波形のビジュアライズ、16msecで表示更新する高性能オシロスコープ
+- 高機能なライブラリアン
+    - すべての音色に柔軟な操作でわかりやすく素早くアクセス、プレビュー、選択、編集、高度にインテリジェントな版管理
+    - 既存楽曲からのフルオートあるいはインタラクティブで高度な音色抽出、その成功率100%
+    - 全てのYM2151音色フォーマットを自動判別して読み込み、自動判別成功率100%
+    - 全てのFM音色フォーマットを自動判別と自動変換して読み込み、その成功率100%
+- 高度な拡張性
+    - オートメーションを利用した高度な音色作り
+    - 8channelすべて、さらには複数YM2151を利用した高度な音色づくり
+    - YM2151の枠組みを超えすべてのFM音源に対応
+    - DAWやオーディオプラグインすべてに対応して、それぞれを演奏可能、それぞれのFM音源の音色のインポートとエクスポート
+
+## 音色保存用のフォーマットを検討する
+- これまでの課題
+    - ym2151-logフォーマット
+        - 行数の多いJSONデータ。
+        - 1ファイルに複数音色バリエーションを入れることができない。
+        - これをこのままGeneral MIDI用にGitHubでメンテするのはあまり現実的でない。
+        - サーバ送信用として今後も使う。だが音色管理用のフォーマットとしては、もっと適切なものが必要という感触。
+### 対策案
+- 運用
+    - 配置
+        - `tones/general_midi/000_AcousticGrand.json`
+        - メリット
+            - 自己記述性
+                - ディレクトリ階層とファイル名で、用途と音色がわかりやすい
+    - commit
+        - ym2151-tone-editor リポジトリに、1日0回～1回の頻度でcommit
+- ファイルフォーマット
+```
+{
+  "description": "GM:000 Acoustic Grand Piano family",
+  "variations": [
+    { "description": "GM:000 Bright Piano", "mml": "t120 o5 l4 cdefgab", "registers": "204F204C364037808003812D" },
+    { "description": "GM:000 Soft Piano", "note_number": 60, "registers": "204F204C364037808001812D" }
+  ]
+}
+```
+- JSONファイルフォーマット説明
+    - 本体はregisters。必須項目。
+    - mml,note_number,descriptionは任意項目。
+    - mmlとnote_numberは省略すると何が鳴るかはアプリ任せ、例えば中央ド
+    - mmlとnote_numberを両方書いた場合にどちらが鳴るかもアプリ任せ、例えばnote_number、mml、の順番で交互に鳴る
+- データフォーマット説明
+    - アドレスとデータ
+        - アドレス2文字、データ2文字、のペア、の繰り返し。
+    - メリット
+        - 構造化
+            - jsonであり、自然言語のような曖昧さがなく、シンプルなcodeで読み書きが可能
+        - 柔軟性
+            - もし特定レジスタのみに絞り、それを特定の記述方法に固定するフォーマットの場合、以下のような問題がありうるが、それぞれを回避できる
+                - 例、このフォーマットでは、必要な情報が不足
+                - 例、どこまで記録すれば十分なフォーマットになるか、フォーマット検討コストがかかる
+                - 例、あとからフォーマット変更したために、パーサや出力のcodeの変更や、マイグレーションが必要になる
+                    - フォーマット変更とは、記述方法の変更や、対象レジスタの増減など
+        - 自己記述性
+            - descriptionで、可読性と自己記述性を担保、それはdir名とfilenameも同様
+                - jsonであることも同様
+        - バリエーション
+            - 実用上、GM000でも多数のバリエーションがありうるので、
+                - そこはjson内に配列で保持することで対処
+        - 可読性
+            - 1行で書き、description先頭なら可読性が高い。音色バリエーション名のlistとして扱える想定
+        - 移植性
+            - 移植性が高いフォーマット、このレベルなら楽に相互変換codeを書ける想定
+        - 一意性
+            - registersをunique IDとして利用することで、ある程度の一意性の恩恵がある想定
+                - メリット。重複検知ができるので、過剰な音色ライブラリ肥大を多少防止できる可能性がある
+                - メリット。ある音色を一意に識別したいとき、IDとして利用できる。
+                    - descriptionが変更されていても検索できる。
+                    - いろいろ取り扱いが楽になる可能性がある。
+                - メリット。registersを使って検索すれば、「YM2151音色で、誰それのリポジトリにあるデータだ」がわかる。データに自己記述性がある。
+                    - このためregistersは区切り文字を使わないフォーマットを保持することが必要。
+                    - 前提として、GitHub管理で登録されていること、登録場所が自己記述的であること、はある。
+                - 注意、あくまで、ある程度レベル。ほぼ同じ音色でも1bit違えば別IDなので
+    - 補足
+        - slot mask
+            - registersにnote onを含むことで、slot maskを表現できる。アプリはそこからslot maskを抽出できる。ym2151-tone-editorが実装済み。
+            - slot maskの用途は、編集しやすい2op音色edit体験の提供など。
+        - 全256bytesのレジスタ情報すべてをjson保存、は推奨しない。アプリが想定外の動作となるリスクがある想定。
+            - そこの精査や検討は、後回しにする。YAGNI。あとからアプリ側で対処できる想定。
+- 課題と対策
+    - 課題、128個は手間
+    - 対策、それ用に簡易的なcodeを書いて対処すれば十分対応可能な想定
+        - 例えば音色名のlist128行を用意し、簡易codeを用意すれば、json filename生成や、descriptionの生成も楽な想定
+
+## keybindsを検討する
+- ※それぞれ切り分けて個別のissueにする。安全優先。混乱防止。
+- ※ym2151-tone-editor.toml のkeybinds欄で設定可能にする想定
+- コンセプト
+    - カーソルキーとPage Up/Downだけで基本操作は完結する
+    - 補足
+        - ショートカットキーで素早い編集と、高機能、を補足する
+        - mouse左クリックでカーソル移動、ホイールで値が増減、もスタンダードなので実装する
+            - TUIで右クリックはわかりづらいので回避がよい
+        - なお、終了など一部の機能はESCのみでいい、それはスタンダードである、という考え。
+- +と-で値の増減。広く知られて伝わりやすいため、導入のUX改善となる考え。
+- CTRL hjklでカーソル移動。CTRL npfbもカーソル移動。
+    - カーソルキーなしの移動は、ほかのショートカットキーで実現できてはいるが、これらも使えるとUXがよい、という可能性がある、特に導入時。
+- Pとspaceで演奏。今の音のまま連打できるのはUXがよいので。
+- FでFB増加、SHIFT+FでFB減少とする。カーソルもFBに移動する。
+    - 他の類似の操作も、カーソルジャンプと値の増減をセットで行う、それが素早い想定。検証する。
+- Tで今の行のTL増加、SHIFT+Tで減少。
+- Mで今の行のMUL増加、SHIFT+Mで減少。
+    - 備忘、もしMがほかが優先なら、X。multipleならxは意味が近いというイメージ。
+- A,D,S,Rで今の行のAR,D1R,D2R,RR増加、SHIFT+で減少。
+    - 補足。WASDによるカーソル移動をやめる。この用途だとミスが多く、メリットを感じられなかった。左手を常時ホームポジションから左に1つずらす必要がある点でミスが多かった想定。
+- LでD1L増加、SHIFT+Lで減少。
+    - D1LのL。見出しでの説明がわかりやすい。
+- 1,2,3,4でM1,C1,M2,C2の行に直接移動しつつ、カーソルのある列の値をup。
+    - SHIFTキーを押しながらだとdown。
+    - 用途は、OPを横断的に値の増減するとき、素早くやれる用。
+        - 例、OP1やっててOP4upしたいとき、カーソルキー3回とpage upに対して、
+            - 4なら1回なので、4倍高速になる。
+    - 注意、数字は比較的タッチタイピングしづらいので、aliasでhjklも検証する。
+- 5,6,7,8でOP1～4のSlotMaskのトグル。
+    - SHIFTを押しながらだとsoloモードのトグル。
+        - modulatorであっても、soloモード中は強制ALG7で鳴らすことで、
+            - エンベロープ等を確認する用。そして強制SlotMaskが当該行だけonとなる。
+                - このときのALGとSMは、特殊な色あるいは背景色にしてわかりやすく。
+        - カーソルのある行が常にsoloモードとなる、つまりSMはカーソル移動で動的に変化する。
+        - トグル解除すると、トグルonになる直前に保持していたALGに戻る。
+            - SHIFT+5,6,7,8いずれでもトグル解除とする、まずシンプル仕様。
+                - つまり2つのopのsoloはしない。まずシンプル優先。
+- Kでmouseマルチカーソルlockのトグル。loc`K`で表示説明しやすい。
+    - lockしたときは、Fキーなどを押しても、カーソル移動しない。
+        - lock対象は複数可。それぞれmouseによる数値増減の対象になる。
+        - 用途の想定は、エンベロープをまとめて増減しながらプレビューする用。
+    - lockしていないときは、mouseの挙動は、
+        - 左クリックした場所にカーソル移動して値up、
+        - 右クリックした場所にカーソル移動して値down、とする
+- `,.`で、Noteのdownとupとする。中央ドを中心にしたCイオニアンスケールとする。
+    - ただし値の増減としても有力なので、今後keybind変更も想定する。
 
 
 依存関係:
@@ -179,31 +332,15 @@ The editor uses `send_json` to send tone updates via named pipe, which automatic
 📄 Cargo.lock
 📄 Cargo.toml
 📄 LICENSE
-📖 NOTE_ON_VISUALIZATION.md
+📖 README.ja.md
 📖 README.md
 📄 _config.yml
 📁 generated-docs/
 📁 issue-notes/
-  📖 10.md
-  📖 11.md
-  📖 14.md
-  📖 16.md
-  📖 18.md
-  📖 20.md
-  📖 21.md
-  📖 22.md
-  📖 23.md
-  📖 24.md
-  📖 30.md
-  📖 32.md
-  📖 34.md
-  📖 36.md
-  📖 38.md
-  📖 40.md
-  📖 41.md
-  📖 42.md
-  📖 45.md
-  📖 47.md
+  📖 55.md
+  📖 57.md
+  📖 59.md
+  📖 61.md
 📁 src/
   📄 app.rs
   📄 file_ops.rs
@@ -219,28 +356,12 @@ The editor uses `send_json` to send tone updates via named pipe, which automatic
 関数呼び出し階層を分析できませんでした
 
 ## プロジェクト構造（ファイル一覧）
-NOTE_ON_VISUALIZATION.md
+README.ja.md
 README.md
-issue-notes/10.md
-issue-notes/11.md
-issue-notes/14.md
-issue-notes/16.md
-issue-notes/18.md
-issue-notes/20.md
-issue-notes/21.md
-issue-notes/22.md
-issue-notes/23.md
-issue-notes/24.md
-issue-notes/30.md
-issue-notes/32.md
-issue-notes/34.md
-issue-notes/36.md
-issue-notes/38.md
-issue-notes/40.md
-issue-notes/41.md
-issue-notes/42.md
-issue-notes/45.md
-issue-notes/47.md
+issue-notes/55.md
+issue-notes/57.md
+issue-notes/59.md
+issue-notes/61.md
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
 特に以下の点を重視してください：
@@ -252,4 +373,4 @@ issue-notes/47.md
 
 
 ---
-Generated at: 2025-11-18 07:08:18 JST
+Generated at: 2025-11-19 07:08:19 JST

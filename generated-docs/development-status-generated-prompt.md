@@ -1,4 +1,4 @@
-Last updated: 2025-11-18
+Last updated: 2025-11-19
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -199,30 +199,14 @@ Last updated: 2025-11-18
 - Cargo.lock
 - Cargo.toml
 - LICENSE
-- NOTE_ON_VISUALIZATION.md
+- README.ja.md
 - README.md
 - _config.yml
 - generated-docs/project-overview-generated-prompt.md
-- issue-notes/10.md
-- issue-notes/11.md
-- issue-notes/14.md
-- issue-notes/16.md
-- issue-notes/18.md
-- issue-notes/20.md
-- issue-notes/21.md
-- issue-notes/22.md
-- issue-notes/23.md
-- issue-notes/24.md
-- issue-notes/30.md
-- issue-notes/32.md
-- issue-notes/34.md
-- issue-notes/36.md
-- issue-notes/38.md
-- issue-notes/40.md
-- issue-notes/41.md
-- issue-notes/42.md
-- issue-notes/45.md
-- issue-notes/47.md
+- issue-notes/55.md
+- issue-notes/57.md
+- issue-notes/59.md
+- issue-notes/61.md
 - src/app.rs
 - src/file_ops.rs
 - src/main.rs
@@ -231,6 +215,21 @@ Last updated: 2025-11-18
 - src/ui.rs
 
 ## 現在のオープンIssues
+## [Issue #61](../issue-notes/61.md): ym2151-log-play-serverがインタラクティブモードを実装したので、ym2151-tone-editorも --use-client-interactive-mode-access を実装する。従来版も比較検証用に使える状態で残しておく
+[issue-notes/61.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/61.md)
+
+...
+ラベル: 
+--- issue-notes/61.md の内容 ---
+
+```markdown
+# issue ym2151-log-play-serverがインタラクティブモードを実装したので、ym2151-tone-editorも --use-client-interactive-mode-access を実装する。従来版も比較検証用に使える状態で残しておく #61
+[issues #61](https://github.com/cat2151/ym2151-tone-editor/issues/61)
+
+
+
+```
+
 ## [Issue #42](../issue-notes/42.md): ESCでアプリ終了したときのjsonのファイル名を仕様変更する（日付と時刻を、ファイル名から取り除く）。意図せず大量に残って不便なので。
 [issue-notes/42.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/42.md)
 
@@ -239,10 +238,6 @@ Last updated: 2025-11-18
 --- issue-notes/42.md の内容 ---
 
 ```markdown
-# issue ESCでアプリ終了したときのjsonのファイル名を仕様変更する（日付と時刻を、ファイル名から取り除く）。意図せず大量に残って不便なので。 #42
-[issues #42](https://github.com/cat2151/ym2151-tone-editor/issues/42)
-
-
 
 ```
 
@@ -420,10 +415,10 @@ jobs:
 
 ```
 
-### issue-notes/42.md
+### issue-notes/61.md
 ```md
-# issue ESCでアプリ終了したときのjsonのファイル名を仕様変更する（日付と時刻を、ファイル名から取り除く）。意図せず大量に残って不便なので。 #42
-[issues #42](https://github.com/cat2151/ym2151-tone-editor/issues/42)
+# issue ym2151-log-play-serverがインタラクティブモードを実装したので、ym2151-tone-editorも --use-client-interactive-mode-access を実装する。従来版も比較検証用に使える状態で残しておく #61
+[issues #61](https://github.com/cat2151/ym2151-tone-editor/issues/61)
 
 
 
@@ -431,26 +426,23 @@ jobs:
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-b031f38 Merge pull request #48 from cat2151/copilot/update-slot-mask-notation
-d99dde5 Update comments: OP1-OP4 MASK to M1,C1,M2,C2 MASK
-b47f370 Update notation from OP1-OP4 to M1,C1,M2,C2 with correct display order
-18e4e0c Initial plan
-c477ce4 Add issue note for #47 [auto]
-a6cd2f7 Merge pull request #46 from cat2151/copilot/fix-register-order-op1-3-2-4
-3c1aa3e Fix operator register order to match YM2151 hardware (OP1,3,2,4)
-711087e Initial plan
-3f69feb Add issue note for #45 [auto]
-84fbceb Update project summaries (overview & development status) [auto]
+95bc97b Add issue note for #61 [auto]
+d985476 Auto-translate README.ja.md to README.md [auto]
+701958c 先頭にlink追加
+5877242 Merge pull request #58 from cat2151/copilot/fix-mul-order-issue
+1ff1330 Fix operator slot mapping for YM2151 hardware
+871fc4b Add issue note for #59 [auto]
+8f7703e Initial plan
+0a0aead Add issue note for #57 [auto]
+dfb2c5d Merge pull request #54 from cat2151/copilot/update-slotmask-position
+dca931f Add issue note for #55 [auto]
 
 ### 変更されたファイル:
-Cargo.lock
-Cargo.toml
-generated-docs/development-status-generated-prompt.md
-generated-docs/development-status.md
-generated-docs/project-overview-generated-prompt.md
-generated-docs/project-overview.md
-issue-notes/45.md
-issue-notes/47.md
+README.ja.md
+README.md
+issue-notes/57.md
+issue-notes/59.md
+issue-notes/61.md
 src/app.rs
 src/file_ops.rs
 src/models.rs
@@ -459,4 +451,4 @@ src/ui.rs
 
 
 ---
-Generated at: 2025-11-18 07:08:18 JST
+Generated at: 2025-11-19 07:08:20 JST
