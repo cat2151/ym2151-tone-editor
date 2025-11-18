@@ -1,5 +1,10 @@
 # ym2151-tone-editor
 
+<p align="left">
+  <a href="README.ja.md"><img src="https://img.shields.io/badge/🇯🇵-Japanese-red.svg" alt="Japanese"></a>
+  <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸-English-blue.svg" alt="English"></a>
+</p>
+
 YM2151（OPM）FM音源音色エディタ。Windows用。Rust TUI（テキストユーザーインターフェース）エディタ。
 
 ## 状況
