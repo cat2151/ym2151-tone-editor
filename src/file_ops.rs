@@ -2,8 +2,17 @@ use std::{fs, io};
 use crate::models::*;
 use crate::register;
 
-/// Find the newest JSON file in the current directory matching the pattern ym2151_tone_*.json
+/// Find the newest JSON file in the current directory matching the pattern ym2151_tone*.json
+/// Prioritizes the fixed filename "ym2151_tone.json" if it exists, otherwise falls back to
+/// timestamped files (ym2151_tone_*.json) for backwards compatibility
 pub fn find_newest_json_file() -> io::Result<String> {
+    // First, check if the fixed filename exists
+    let fixed_filename = "ym2151_tone.json";
+    if fs::metadata(fixed_filename).is_ok() {
+        return Ok(fixed_filename.to_string());
+    }
+    
+    // Fall back to finding timestamped files
     let entries = fs::read_dir(".")?;
     
     let mut json_files: Vec<_> = entries
@@ -55,12 +64,8 @@ pub fn save_to_json(values: &ToneData) -> io::Result<()> {
     let json_string = register::to_json_string(values)
         .map_err(io::Error::other)?;
 
-    // Generate filename with timestamp
-    let timestamp = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-    let filename = format!("ym2151_tone_{}.json", timestamp);
+    // Use fixed filename without timestamp
+    let filename = "ym2151_tone.json";
 
     fs::write(&filename, json_string)?;
     Ok(())
@@ -73,15 +78,7 @@ mod tests {
     #[test]
     fn test_save_to_json_creates_valid_file() {
         // Clean up any leftover test files first
-        if let Ok(entries) = std::fs::read_dir(".") {
-            for entry in entries.filter_map(|e| e.ok()) {
-                if let Some(name) = entry.path().file_name().and_then(|n| n.to_str()) {
-                    if name.starts_with("ym2151_tone_") && name.ends_with(".json") {
-                        let _ = std::fs::remove_file(entry.path());
-                    }
-                }
-            }
-        }
+        let _ = std::fs::remove_file("ym2151_tone.json");
         
         let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
         
@@ -99,27 +96,12 @@ mod tests {
         let result = save_to_json(&values);
         assert!(result.is_ok());
         
-        // Find the generated JSON file
-        let entries = std::fs::read_dir(".").unwrap();
-        let mut json_files: Vec<_> = entries
-            .filter_map(|e| e.ok())
-            .filter(|e| {
-                e.path()
-                    .file_name()
-                    .and_then(|n| n.to_str())
-                    .map(|s| s.starts_with("ym2151_tone_") && s.ends_with(".json"))
-                    .unwrap_or(false)
-            })
-            .collect();
-        
-        assert!(!json_files.is_empty(), "No JSON file was created");
-        
-        // Get the most recent file
-        json_files.sort_by_key(|e| e.metadata().unwrap().modified().unwrap());
-        let json_file = json_files.last().unwrap();
+        // Check that the fixed filename was created
+        let filename = "ym2151_tone.json";
+        assert!(std::fs::metadata(filename).is_ok(), "JSON file was not created");
         
         // Read and parse the JSON
-        let content = std::fs::read_to_string(json_file.path()).unwrap();
+        let content = std::fs::read_to_string(filename).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&content).unwrap();
         
         // Verify structure
@@ -129,7 +111,7 @@ mod tests {
         assert_eq!(parsed["event_count"].as_u64().unwrap(), 28);
         
         // Clean up
-        std::fs::remove_file(json_file.path()).ok();
+        std::fs::remove_file(filename).ok();
     }
 
     #[test]
@@ -165,7 +147,17 @@ mod tests {
 
     #[test]
     fn test_find_newest_json_file() {
-        // Create multiple test JSON files with different timestamps
+        // Clean up any test files first
+        let _ = std::fs::remove_file("ym2151_tone.json");
+        
+        // Test 1: If fixed filename exists, it should be returned
+        std::fs::write("ym2151_tone.json", "{}").unwrap();
+        let result = find_newest_json_file();
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), "ym2151_tone.json");
+        std::fs::remove_file("ym2151_tone.json").ok();
+        
+        // Test 2: If fixed filename doesn't exist, fall back to timestamped files
         let base_time = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
@@ -181,7 +173,7 @@ mod tests {
         std::thread::sleep(std::time::Duration::from_millis(10));
         std::fs::write(&file3, "{}").unwrap();
         
-        // Find newest file
+        // Find newest file (should be file3)
         let result = find_newest_json_file();
         assert!(result.is_ok());
         
