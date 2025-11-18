@@ -78,9 +78,41 @@ The editor automatically ensures the server is ready by using the `ensure_server
 cargo run
 ```
 
-The editor sends performance data via a named pipe using `send_json`. This provides immediate playback after editing.
+### Operation Modes
+
+The editor operates in two modes:
+
+#### Legacy Mode (Default)
+
+By default, the editor uses `send_json` to send complete tone data in JSON format via a named pipe. Each time a parameter changes, a new complete JSON is sent.
+
+```bash
+cargo run
+```
+
+#### Interactive Mode (New Feature)
+
+In interactive mode, the server continuously streams audio and only register write commands are sent when parameters change. This provides more efficient and smoother audio feedback.
+
+```bash
+cargo run -- --use-client-interactive-mode-access
+```
+
+To enable interactive mode:
+- The editor calls `start_interactive()` at startup to begin continuous audio streaming on the server
+- Uses `write_register()` to update only the affected YM2151 registers when parameters change
+- Calls `stop_interactive()` on exit to stop audio streaming
 
 **Note**: The library's `ensure_server_ready()` function handles all server management, including installation if necessary.
+
+### Mode Comparison
+
+| Feature | Legacy Mode | Interactive Mode |
+|---------|-------------|------------------|
+| Data Transmission | Complete JSON | Register writes only |
+| Efficiency | Low (sends all data each time) | High (sends only changes) |
+| Audio Continuity | Restarts on parameter change | Continuous streaming |
+| Use Case | Comparison and verification | Normal editing work |
 
 ## How to Use
 
