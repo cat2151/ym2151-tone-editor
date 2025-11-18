@@ -72,17 +72,28 @@ mod tests {
 
     #[test]
     fn test_save_to_json_creates_valid_file() {
+        // Clean up any leftover test files first
+        if let Ok(entries) = std::fs::read_dir(".") {
+            for entry in entries.filter_map(|e| e.ok()) {
+                if let Some(name) = entry.path().file_name().and_then(|n| n.to_str()) {
+                    if name.starts_with("ym2151_tone_") && name.ends_with(".json") {
+                        let _ = std::fs::remove_file(entry.path());
+                    }
+                }
+            }
+        }
+        
         let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
         
         // Initialize with test values
         values[0][PARAM_MUL] = 1;
         values[0][PARAM_TL] = 20;
+        values[0][PARAM_SM] = 1;
+        values[1][PARAM_SM] = 1;
+        values[2][PARAM_SM] = 1;
+        values[3][PARAM_SM] = 1;
         values[ROW_CH][CH_PARAM_ALG] = 4;
         values[ROW_CH][CH_PARAM_FB] = 0;
-        values[ROW_CH][CH_PARAM_M1_MASK] = 1;
-        values[ROW_CH][CH_PARAM_C1_MASK] = 1;
-        values[ROW_CH][CH_PARAM_M2_MASK] = 1;
-        values[ROW_CH][CH_PARAM_C2_MASK] = 1;
         
         // Save to JSON
         let result = save_to_json(&values);
