@@ -15,23 +15,23 @@ impl App {
         // Based on typical YM2151 patch settings
         let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
         
-        // Operator 1 (Carrier): DT, MUL, TL, KS, AR, D1R, D1L, D2R, RR, DT2, AMS
-        values[0] = [0, 1, 20, 0, 31, 10, 5, 5, 7, 0, 0];
+        // New parameter order: SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS
+        // Operator 1 (M1): SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS
+        values[0] = [1, 20, 1, 31, 10, 5, 5, 7, 0, 0, 0, 0];
         
-        // Operator 2 (Modulator): softer attack
-        values[1] = [0, 1, 30, 0, 25, 8, 6, 4, 6, 0, 0];
+        // Operator 2 (M2): softer attack
+        values[1] = [1, 30, 1, 25, 8, 6, 4, 6, 0, 0, 0, 0];
         
-        // Operator 3 (Modulator): even softer
-        values[2] = [0, 2, 40, 0, 20, 6, 7, 3, 5, 0, 0];
+        // Operator 3 (C1): even softer
+        values[2] = [1, 40, 2, 20, 6, 7, 3, 5, 0, 0, 0, 0];
         
-        // Operator 4 (Modulator): gentle
-        values[3] = [0, 1, 35, 0, 22, 7, 6, 4, 6, 0, 0];
+        // Operator 4 (C2): gentle
+        values[3] = [1, 35, 1, 22, 7, 6, 4, 6, 0, 0, 0, 0];
         
-        // Channel settings: ALG (algorithm) and FB (feedback) in first 2 positions
+        // Channel settings: ALG (algorithm), FB (feedback), and MIDI Note Number
         // Default to ALG=4 (simple FM) and FB=0 (no feedback)
-        // Slot masks: M1, C1, M2, C2 all enabled (1)
         // MIDI Note Number: 60 (middle C)
-        values[4] = [4, 0, 1, 1, 1, 1, 60, 0, 0, 0, 0];
+        values[4] = [4, 0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         
         let mut app = App {
             values,
@@ -321,27 +321,30 @@ mod tests {
     fn test_increase_decrease_value() {
         let mut app = App::new();
         
+        // Move cursor to a parameter with a wider range (e.g., TL at index 1)
+        app.cursor_x = PARAM_TL;
+        
         // Store initial value
-        let initial_value = app.values[0][0];
+        let initial_value = app.values[0][PARAM_TL];
         
         // Increase value
         app.increase_value();
-        assert_eq!(app.values[0][0], initial_value + 1);
+        assert_eq!(app.values[0][PARAM_TL], initial_value + 1);
         
         // Decrease value
         app.decrease_value();
-        assert_eq!(app.values[0][0], initial_value);
+        assert_eq!(app.values[0][PARAM_TL], initial_value);
         
         // Test boundary: decrease at 0 should not go negative
-        app.values[0][0] = 0;
+        app.values[0][PARAM_TL] = 0;
         app.decrease_value();
-        assert_eq!(app.values[0][0], 0);
+        assert_eq!(app.values[0][PARAM_TL], 0);
         
         // Test boundary: increase at max should not exceed
-        app.cursor_x = 0; // DT parameter
-        app.values[0][0] = PARAM_MAX[0]; // Set to max (7)
+        app.cursor_x = PARAM_SM; // SM parameter
+        app.values[0][PARAM_SM] = PARAM_MAX[PARAM_SM]; // Set to max (1)
         app.increase_value();
-        assert_eq!(app.values[0][0], PARAM_MAX[0]);
+        assert_eq!(app.values[0][PARAM_SM], PARAM_MAX[PARAM_SM]);
     }
 
     #[test]

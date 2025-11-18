@@ -152,11 +152,11 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
     // Bits 0-2: Channel (0-7)
     // Bits 3-6: Operator enable (M1=bit3, C1=bit4, M2=bit5, C2=bit6)
     // YM2151 hardware uses non-sequential bit order: M1, C1, M2, C2
-    // Use slot masks from CH row to determine which operators to enable
-    let m1_mask = values[ROW_CH][CH_PARAM_M1_MASK];
-    let c1_mask = values[ROW_CH][CH_PARAM_C1_MASK];
-    let m2_mask = values[ROW_CH][CH_PARAM_M2_MASK];
-    let c2_mask = values[ROW_CH][CH_PARAM_C2_MASK];
+    // Use slot masks from operator rows (SM parameter at PARAM_SM)
+    let m1_mask = values[0][PARAM_SM];  // M1 is data row 0
+    let m2_mask = values[1][PARAM_SM];  // M2 is data row 1
+    let c1_mask = values[2][PARAM_SM];  // C1 is data row 2
+    let c2_mask = values[3][PARAM_SM];  // C2 is data row 3
     
     // Correct bit mapping: M1→bit3, C1→bit4, M2→bit5, C2→bit6
     let key_on_data = ((m1_mask & 1) << 3) | ((c1_mask & 1) << 4) 
@@ -254,10 +254,11 @@ pub fn events_to_tone_data(events: &[Ym2151Event]) -> io::Result<ToneData> {
                 // Bits 3-6 contain operator enable flags
                 // YM2151 hardware uses bit order: M1, C1, M2, C2
                 // Bit 3: M1, Bit 4: C1, Bit 5: M2, Bit 6: C2
-                values[ROW_CH][CH_PARAM_M1_MASK] = (data >> 3) & 0x01;
-                values[ROW_CH][CH_PARAM_C1_MASK] = (data >> 4) & 0x01;
-                values[ROW_CH][CH_PARAM_M2_MASK] = (data >> 5) & 0x01;
-                values[ROW_CH][CH_PARAM_C2_MASK] = (data >> 6) & 0x01;
+                // Store these in the SM parameter of each operator row
+                values[0][PARAM_SM] = (data >> 3) & 0x01;  // M1 is data row 0
+                values[2][PARAM_SM] = (data >> 4) & 0x01;  // C1 is data row 2
+                values[1][PARAM_SM] = (data >> 5) & 0x01;  // M2 is data row 1
+                values[3][PARAM_SM] = (data >> 6) & 0x01;  // C2 is data row 3
             }
             // KC (Key Code) register (0x28-0x2F)
             0x28..=0x2F => {
@@ -292,12 +293,12 @@ mod tests {
         // Set some test values
         values[0][PARAM_MUL] = 1;
         values[0][PARAM_TL] = 20;
+        values[0][PARAM_SM] = 1;
+        values[1][PARAM_SM] = 1;
+        values[2][PARAM_SM] = 1;
+        values[3][PARAM_SM] = 1;
         values[ROW_CH][CH_PARAM_ALG] = 4;
         values[ROW_CH][CH_PARAM_FB] = 0;
-        values[ROW_CH][CH_PARAM_M1_MASK] = 1;
-        values[ROW_CH][CH_PARAM_C1_MASK] = 1;
-        values[ROW_CH][CH_PARAM_M2_MASK] = 1;
-        values[ROW_CH][CH_PARAM_C2_MASK] = 1;
         
         let events = to_ym2151_events(&values);
         
@@ -460,10 +461,10 @@ mod tests {
         // Set MIDI note to 72 (C5)
         values[ROW_CH][CH_PARAM_NOTE] = 72;
         values[ROW_CH][CH_PARAM_ALG] = 4;
-        values[ROW_CH][CH_PARAM_M1_MASK] = 1;
-        values[ROW_CH][CH_PARAM_C1_MASK] = 1;
-        values[ROW_CH][CH_PARAM_M2_MASK] = 1;
-        values[ROW_CH][CH_PARAM_C2_MASK] = 1;
+        values[0][PARAM_SM] = 1;
+        values[1][PARAM_SM] = 1;
+        values[2][PARAM_SM] = 1;
+        values[3][PARAM_SM] = 1;
         
         let events = to_ym2151_events(&values);
         
@@ -505,10 +506,10 @@ mod tests {
         let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
         
         // Enable only M2
-        values[ROW_CH][CH_PARAM_M1_MASK] = 0;
-        values[ROW_CH][CH_PARAM_C1_MASK] = 0;
-        values[ROW_CH][CH_PARAM_M2_MASK] = 1;  // M2 should map to bit 5
-        values[ROW_CH][CH_PARAM_C2_MASK] = 0;
+        values[0][PARAM_SM] = 0;  // M1
+        values[1][PARAM_SM] = 1;  // M2 should map to bit 5
+        values[2][PARAM_SM] = 0;  // C1
+        values[3][PARAM_SM] = 0;  // C2
         values[ROW_CH][CH_PARAM_ALG] = 4;
         
         let events = to_ym2151_events(&values);
@@ -524,8 +525,8 @@ mod tests {
         assert_eq!(data, 0x20, "M2 should map to bit 5 (0x20)");
         
         // Test C1
-        values[ROW_CH][CH_PARAM_M2_MASK] = 0;
-        values[ROW_CH][CH_PARAM_C1_MASK] = 1;  // C1 should map to bit 4
+        values[1][PARAM_SM] = 0;  // M2
+        values[2][PARAM_SM] = 1;  // C1 should map to bit 4
         
         let events = to_ym2151_events(&values);
         let key_on_event = events.iter().find(|e| e.addr == "0x08");
@@ -542,10 +543,10 @@ mod tests {
         let mut values_original = [[0; GRID_WIDTH]; GRID_HEIGHT];
         
         // Set a specific pattern: M1=1, C1=1, M2=0, C2=0
-        values_original[ROW_CH][CH_PARAM_M1_MASK] = 1;
-        values_original[ROW_CH][CH_PARAM_C1_MASK] = 1;
-        values_original[ROW_CH][CH_PARAM_M2_MASK] = 0;
-        values_original[ROW_CH][CH_PARAM_C2_MASK] = 0;
+        values_original[0][PARAM_SM] = 1;  // M1
+        values_original[1][PARAM_SM] = 0;  // M2
+        values_original[2][PARAM_SM] = 1;  // C1
+        values_original[3][PARAM_SM] = 0;  // C2
         values_original[ROW_CH][CH_PARAM_ALG] = 4;
         
         // Convert to events and back
@@ -553,10 +554,10 @@ mod tests {
         let values_roundtrip = events_to_tone_data(&events).unwrap();
         
         // Verify slot masks are preserved
-        assert_eq!(values_roundtrip[ROW_CH][CH_PARAM_M1_MASK], 1, "M1 mask should roundtrip");
-        assert_eq!(values_roundtrip[ROW_CH][CH_PARAM_C1_MASK], 1, "C1 mask should roundtrip");
-        assert_eq!(values_roundtrip[ROW_CH][CH_PARAM_M2_MASK], 0, "M2 mask should roundtrip");
-        assert_eq!(values_roundtrip[ROW_CH][CH_PARAM_C2_MASK], 0, "C2 mask should roundtrip");
+        assert_eq!(values_roundtrip[0][PARAM_SM], 1, "M1 mask should roundtrip");
+        assert_eq!(values_roundtrip[2][PARAM_SM], 1, "C1 mask should roundtrip");
+        assert_eq!(values_roundtrip[1][PARAM_SM], 0, "M2 mask should roundtrip");
+        assert_eq!(values_roundtrip[3][PARAM_SM], 0, "C2 mask should roundtrip");
     }
 
     #[test]

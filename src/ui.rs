@@ -7,14 +7,23 @@ use ratatui::{
 };
 use crate::{models::*, app::App};
 
-/// Get the color for a parameter based on its column index
+/// Get the color for a parameter based on its column index and row
 /// Returns the color to use for both the parameter name and value
-fn get_param_color(col: usize) -> Color {
-    match col {
-        PARAM_MUL => Color::Green,                    // MUL: Green
-        PARAM_TL | PARAM_D1L => Color::Cyan,          // TL and D1L: Light Blue (Cyan)
-        PARAM_AR | PARAM_D1R | PARAM_D2R | PARAM_RR => Color::Rgb(255, 165, 0), // Envelope params: Orange
-        _ => Color::White,                            // Others: White
+fn get_param_color(col: usize, is_ch_row: bool) -> Color {
+    if is_ch_row {
+        // CH row colors
+        match col {
+            CH_PARAM_ALG | CH_PARAM_FB => Color::Green,  // ALG and FB: Green (same as MUL)
+            _ => Color::White,
+        }
+    } else {
+        // Operator row colors
+        match col {
+            PARAM_MUL => Color::Green,                    // MUL: Green
+            PARAM_TL | PARAM_D1L => Color::Cyan,          // TL and D1L: Light Blue (Cyan)
+            PARAM_AR | PARAM_D1R | PARAM_D2R | PARAM_RR => Color::Rgb(255, 165, 0), // Envelope params: Orange
+            _ => Color::White,                            // Others: White
+        }
     }
 }
 
@@ -98,7 +107,7 @@ pub fn ui(f: &mut Frame, app: &App) {
         };
 
         let param_name = PARAM_NAMES[col];
-        let color = get_param_color(col);
+        let color = get_param_color(col, false);
         let paragraph = Paragraph::new(Span::styled(
             param_name,
             Style::default().fg(color).add_modifier(Modifier::BOLD),
@@ -111,6 +120,9 @@ pub fn ui(f: &mut Frame, app: &App) {
     for display_row in 0..4 {
         let data_row = DISPLAY_ROW_TO_DATA_ROW[display_row];
         
+        // Check if this row's slot mask is enabled (SM is at index PARAM_SM)
+        let slot_mask_enabled = app.values[data_row][PARAM_SM] != 0;
+        
         // Draw row label (operator name)
         let row_label_area = Rect {
             x: inner.x,
@@ -119,9 +131,10 @@ pub fn ui(f: &mut Frame, app: &App) {
             height: cell_height,
         };
         let row_name = ROW_NAMES[display_row];
+        let row_label_color = if slot_mask_enabled { Color::Yellow } else { Color::DarkGray };
         let row_label = Paragraph::new(Span::styled(
             row_name,
-            Style::default().fg(Color::Yellow),
+            Style::default().fg(row_label_color),
         ));
         f.render_widget(row_label, row_label_area);
 
@@ -144,7 +157,11 @@ pub fn ui(f: &mut Frame, app: &App) {
                     .bg(Color::White)
                     .add_modifier(Modifier::BOLD)
             } else {
-                let color = get_param_color(col);
+                let color = if slot_mask_enabled {
+                    get_param_color(col, false)
+                } else {
+                    Color::DarkGray  // Gray out disabled rows
+                };
                 Style::default().fg(color)
             };
 
@@ -167,14 +184,15 @@ pub fn ui(f: &mut Frame, app: &App) {
         };
 
         let param_name = CH_PARAM_NAMES[col];
+        let color = get_param_color(col, true);
         let paragraph = Paragraph::new(Span::styled(
             param_name,
-            Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+            Style::default().fg(color).add_modifier(Modifier::BOLD),
         ));
         f.render_widget(paragraph, area);
     }
 
-    // Draw CH row (row 4) with ALG, FB, and slot masks
+    // Draw CH row (row 4) with ALG, FB, and MIDI note number
     let ch_row_y = inner.y + label_offset + 5;
     
     // Draw row label (CH)
@@ -190,7 +208,7 @@ pub fn ui(f: &mut Frame, app: &App) {
     ));
     f.render_widget(row_label, row_label_area);
 
-    // Draw all CH row values (ALG, FB, 4 slot masks, and MIDI note number)
+    // Draw all CH row values (ALG, FB, and MIDI note number)
     for col in 0..CH_PARAM_COUNT {
         let value = app.values[ROW_CH][col];
         let x = inner.x + row_label_width + (col as u16 * cell_width);
@@ -208,7 +226,8 @@ pub fn ui(f: &mut Frame, app: &App) {
                 .bg(Color::White)
                 .add_modifier(Modifier::BOLD)
         } else {
-            Style::default().fg(Color::White)
+            let color = get_param_color(col, true);
+            Style::default().fg(color)
         };
 
         let text = format!("{:2}", value);
@@ -245,24 +264,30 @@ mod tests {
 
     #[test]
     fn test_get_param_color() {
-        // Test MUL is green
-        assert_eq!(get_param_color(PARAM_MUL), Color::Green);
+        // Test operator row colors
+        assert_eq!(get_param_color(PARAM_MUL, false), Color::Green);
         
         // Test TL and D1L are cyan (light blue)
-        assert_eq!(get_param_color(PARAM_TL), Color::Cyan);
-        assert_eq!(get_param_color(PARAM_D1L), Color::Cyan);
+        assert_eq!(get_param_color(PARAM_TL, false), Color::Cyan);
+        assert_eq!(get_param_color(PARAM_D1L, false), Color::Cyan);
         
         // Test envelope parameters are orange
-        assert_eq!(get_param_color(PARAM_AR), Color::Rgb(255, 165, 0));
-        assert_eq!(get_param_color(PARAM_D1R), Color::Rgb(255, 165, 0));
-        assert_eq!(get_param_color(PARAM_D2R), Color::Rgb(255, 165, 0));
-        assert_eq!(get_param_color(PARAM_RR), Color::Rgb(255, 165, 0));
+        assert_eq!(get_param_color(PARAM_AR, false), Color::Rgb(255, 165, 0));
+        assert_eq!(get_param_color(PARAM_D1R, false), Color::Rgb(255, 165, 0));
+        assert_eq!(get_param_color(PARAM_D2R, false), Color::Rgb(255, 165, 0));
+        assert_eq!(get_param_color(PARAM_RR, false), Color::Rgb(255, 165, 0));
         
         // Test other parameters are white
-        assert_eq!(get_param_color(PARAM_DT), Color::White);
-        assert_eq!(get_param_color(PARAM_KS), Color::White);
-        assert_eq!(get_param_color(PARAM_DT2), Color::White);
-        assert_eq!(get_param_color(PARAM_AMS), Color::White);
+        assert_eq!(get_param_color(PARAM_DT, false), Color::White);
+        assert_eq!(get_param_color(PARAM_KS, false), Color::White);
+        assert_eq!(get_param_color(PARAM_DT2, false), Color::White);
+        assert_eq!(get_param_color(PARAM_AMS, false), Color::White);
+        assert_eq!(get_param_color(PARAM_SM, false), Color::White);
+        
+        // Test CH row colors - ALG and FB should be green
+        assert_eq!(get_param_color(CH_PARAM_ALG, true), Color::Green);
+        assert_eq!(get_param_color(CH_PARAM_FB, true), Color::Green);
+        assert_eq!(get_param_color(CH_PARAM_NOTE, true), Color::White);
     }
 
     #[test]
