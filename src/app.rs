@@ -154,6 +154,43 @@ impl App {
         }
     }
 
+    /// Increase the current parameter value by a specified amount
+    /// Used for number key shortcuts (1-9 for +1 to +9, 0 for +10)
+    pub fn increase_value_by(&mut self, amount: u8) {
+        let data_row = self.get_data_row();
+        let current = self.values[data_row][self.cursor_x];
+        let max = if self.cursor_y == ROW_CH && self.cursor_x < CH_PARAM_COUNT {
+            CH_PARAM_MAX[self.cursor_x]
+        } else {
+            PARAM_MAX[self.cursor_x]
+        };
+        
+        // Calculate new value, clamping to max
+        let new_value = current.saturating_add(amount).min(max);
+        
+        if new_value != current {
+            self.values[data_row][self.cursor_x] = new_value;
+            #[cfg(windows)]
+            audio::play_tone(&self.values, self.use_interactive_mode, self.cursor_x, self.cursor_y);
+        }
+    }
+
+    /// Decrease the current parameter value by a specified amount
+    /// Used for SHIFT + number key shortcuts (SHIFT+1-9 for -1 to -9, SHIFT+0 for -10)
+    pub fn decrease_value_by(&mut self, amount: u8) {
+        let data_row = self.get_data_row();
+        let current = self.values[data_row][self.cursor_x];
+        
+        // Calculate new value, clamping to 0
+        let new_value = current.saturating_sub(amount);
+        
+        if new_value != current {
+            self.values[data_row][self.cursor_x] = new_value;
+            #[cfg(windows)]
+            audio::play_tone(&self.values, self.use_interactive_mode, self.cursor_x, self.cursor_y);
+        }
+    }
+
     pub fn set_value_to_max(&mut self) {
         let data_row = self.get_data_row();
         let max = if self.cursor_y == ROW_CH && self.cursor_x < CH_PARAM_COUNT {
