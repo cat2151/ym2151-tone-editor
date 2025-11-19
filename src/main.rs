@@ -85,6 +85,9 @@ fn run_app<B: ratatui::backend::Backend>(
                         KeyCode::End => app.set_value_to_min(),
                         KeyCode::Char('r') | KeyCode::Char('R') => app.set_value_to_random(),
                         
+                        // Play current tone without parameter changes
+                        KeyCode::Char('p') | KeyCode::Char('P') | KeyCode::Char(' ') => app.play_current_tone(),
+                        
                         // Cursor movement keys (hjkl/aswd + arrow keys)
                         KeyCode::Char('h') | KeyCode::Char('a') | KeyCode::Left => app.move_cursor_left(),
                         KeyCode::Char('j') | KeyCode::Char('s') | KeyCode::Down => app.move_cursor_down(),

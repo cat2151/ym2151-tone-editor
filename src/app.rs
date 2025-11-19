@@ -319,6 +319,13 @@ impl App {
         Ok(())
     }
 
+    /// Play the current tone without modifying any parameters
+    /// This is triggered by 'P' or 'SPACE' key
+    pub fn play_current_tone(&self) {
+        #[cfg(windows)]
+        audio::play_tone(&self.values, self.use_interactive_mode, self.cursor_x, self.cursor_y);
+    }
+
     /// Cleanup - stop interactive mode if active
     #[cfg(windows)]
     pub fn cleanup(&self) {
