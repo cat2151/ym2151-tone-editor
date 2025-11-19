@@ -69,7 +69,7 @@ fn send_all_registers(values: &ToneData) {
             u8::from_str_radix(event.data.trim_start_matches("0x"), 16)
         ) {
             // Send register write with 0ms offset (immediate)
-            let _ = ym2151_log_play_server::client::write_register(0, addr, data);
+            let _ = ym2151_log_play_server::client::write_register(0.0, addr, data);
         }
     }
 }
@@ -77,7 +77,7 @@ fn send_all_registers(values: &ToneData) {
 /// Send interactive update for a single parameter change
 /// Only sends the register writes affected by the current parameter
 #[cfg(windows)]
-fn send_interactive_update(values: &ToneData, cursor_x: usize, cursor_y: usize) {
+fn send_interactive_update(values: &ToneData, _cursor_x: usize, cursor_y: usize) {
     // We need to send the register(s) affected by the current parameter
     // For simplicity, we'll send all registers for the current operator/channel
     // A more optimized version could send only the affected register
@@ -105,35 +105,35 @@ fn send_operator_registers(values: &ToneData, data_row: usize) {
     let dt = values[data_row][PARAM_DT];
     let mul = values[data_row][PARAM_MUL];
     let dt_mul = ((dt & 0x07) << 4) | (mul & 0x0F);
-    let _ = ym2151_log_play_server::client::write_register(0, 0x40 + op_offset as u8, dt_mul);
+    let _ = ym2151_log_play_server::client::write_register(0.0, 0x40 + op_offset as u8, dt_mul);
     
     // TL - Register $60-$7F
     let tl = values[data_row][PARAM_TL];
-    let _ = ym2151_log_play_server::client::write_register(0, 0x60 + op_offset as u8, tl & 0x7F);
+    let _ = ym2151_log_play_server::client::write_register(0.0, 0x60 + op_offset as u8, tl & 0x7F);
     
     // KS and AR - Register $80-$9F
     let ks = values[data_row][PARAM_KS];
     let ar = values[data_row][PARAM_AR];
     let ks_ar = ((ks & 0x03) << 6) | (ar & 0x1F);
-    let _ = ym2151_log_play_server::client::write_register(0, 0x80 + op_offset as u8, ks_ar);
+    let _ = ym2151_log_play_server::client::write_register(0.0, 0x80 + op_offset as u8, ks_ar);
     
     // AMS and D1R - Register $A0-$BF
     let ams = values[data_row][PARAM_AMS];
     let d1r = values[data_row][PARAM_D1R];
     let ams_d1r = ((ams & 0x03) << 6) | (d1r & 0x1F);
-    let _ = ym2151_log_play_server::client::write_register(0, 0xA0 + op_offset as u8, ams_d1r);
+    let _ = ym2151_log_play_server::client::write_register(0.0, 0xA0 + op_offset as u8, ams_d1r);
     
     // DT2 and D2R - Register $C0-$DF
     let dt2 = values[data_row][PARAM_DT2];
     let d2r = values[data_row][PARAM_D2R];
     let dt2_d2r = ((dt2 & 0x03) << 6) | (d2r & 0x1F);
-    let _ = ym2151_log_play_server::client::write_register(0, 0xC0 + op_offset as u8, dt2_d2r);
+    let _ = ym2151_log_play_server::client::write_register(0.0, 0xC0 + op_offset as u8, dt2_d2r);
     
     // D1L and RR - Register $E0-$FF
     let d1l = values[data_row][PARAM_D1L];
     let rr = values[data_row][PARAM_RR];
     let d1l_rr = ((d1l & 0x0F) << 4) | (rr & 0x0F);
-    let _ = ym2151_log_play_server::client::write_register(0, 0xE0 + op_offset as u8, d1l_rr);
+    let _ = ym2151_log_play_server::client::write_register(0.0, 0xE0 + op_offset as u8, d1l_rr);
 }
 
 /// Send channel registers
@@ -145,17 +145,17 @@ fn send_channel_registers(values: &ToneData) {
     let alg = values[ROW_CH][CH_PARAM_ALG];
     let fb = values[ROW_CH][CH_PARAM_FB];
     let rl_fb_con = 0xC0 | ((fb & 0x07) << 3) | (alg & 0x07);
-    let _ = ym2151_log_play_server::client::write_register(0, 0x20 + channel as u8, rl_fb_con);
+    let _ = ym2151_log_play_server::client::write_register(0.0, 0x20 + channel as u8, rl_fb_con);
     
     // MIDI note to KC/KF
-    let midi_note = values[ROW_CH][CH_PARAM_MIDI_NOTE];
+    let midi_note = values[ROW_CH][CH_PARAM_NOTE];
     let (kc, kf) = midi_to_kc_kf(midi_note);
     
     // KC - Register $28-$2F
-    let _ = ym2151_log_play_server::client::write_register(0, 0x28 + channel as u8, kc);
+    let _ = ym2151_log_play_server::client::write_register(0.0, 0x28 + channel as u8, kc);
     
     // KF - Register $30-$37
-    let _ = ym2151_log_play_server::client::write_register(0, 0x30 + channel as u8, kf);
+    let _ = ym2151_log_play_server::client::write_register(0.0, 0x30 + channel as u8, kf);
     
     // Key on/off - Register $08
     // Calculate slot mask based on which operators are enabled
@@ -170,7 +170,7 @@ fn send_channel_registers(values: &ToneData) {
         | if sm3 != 0 { 0x40 } else { 0 };
     
     let key_on = slot_mask | channel as u8;
-    let _ = ym2151_log_play_server::client::write_register(0, 0x08, key_on);
+    let _ = ym2151_log_play_server::client::write_register(0.0, 0x08, key_on);
 }
 
 /// Cleanup - stop interactive mode if active

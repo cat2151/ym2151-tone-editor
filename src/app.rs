@@ -140,7 +140,7 @@ impl App {
         if current < max {
             self.values[data_row][self.cursor_x] = current + 1;
             #[cfg(windows)]
-            self.call_cat_play_mml();
+            audio::play_tone(&self.values, self.use_interactive_mode, self.cursor_x, self.cursor_y);
         }
     }
 
@@ -150,7 +150,7 @@ impl App {
         if current > 0 {
             self.values[data_row][self.cursor_x] = current - 1;
             #[cfg(windows)]
-            self.call_cat_play_mml();
+            audio::play_tone(&self.values, self.use_interactive_mode, self.cursor_x, self.cursor_y);
         }
     }
 
@@ -163,14 +163,14 @@ impl App {
         };
         self.values[data_row][self.cursor_x] = max;
         #[cfg(windows)]
-        self.call_cat_play_mml();
+        audio::play_tone(&self.values, self.use_interactive_mode, self.cursor_x, self.cursor_y);
     }
 
     pub fn set_value_to_min(&mut self) {
         let data_row = self.get_data_row();
         self.values[data_row][self.cursor_x] = 0;
         #[cfg(windows)]
-        self.call_cat_play_mml();
+        audio::play_tone(&self.values, self.use_interactive_mode, self.cursor_x, self.cursor_y);
     }
 
     pub fn set_value_to_random(&mut self) {
@@ -200,7 +200,7 @@ impl App {
         
         self.values[data_row][self.cursor_x] = random_value;
         #[cfg(windows)]
-        self.call_cat_play_mml();
+        audio::play_tone(&self.values, self.use_interactive_mode, self.cursor_x, self.cursor_y);
     }
 
     /// Move cursor to a specific mouse position
