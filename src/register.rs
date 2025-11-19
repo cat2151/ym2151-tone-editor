@@ -282,6 +282,65 @@ pub fn to_json_string(values: &ToneData) -> Result<String, serde_json::Error> {
     serde_json::to_string_pretty(&log)
 }
 
+/// Convert tone data to registers hex string format
+/// Format: pairs of address (2 hex chars) + data (2 hex chars)
+/// Example: "204F204C364037808003812D" represents 3 register writes:
+/// - Register 0x20 = 0x4F
+/// - Register 0x20 = 0x4C (this example shows duplicate addresses are allowed)
+/// - Register 0x36 = 0x40
+/// etc.
+pub fn tone_data_to_registers(values: &ToneData) -> String {
+    let events = to_ym2151_events(values);
+    let mut result = String::new();
+    
+    for event in events {
+        // Remove "0x" prefix from addr and data
+        let addr_hex = event.addr.trim_start_matches("0x");
+        let data_hex = event.data.trim_start_matches("0x");
+        result.push_str(addr_hex);
+        result.push_str(data_hex);
+    }
+    
+    result
+}
+
+/// Convert registers hex string to tone data
+/// Format: pairs of address (2 hex chars) + data (2 hex chars)
+/// Example: "204F204C364037808003812D"
+pub fn registers_to_tone_data(registers: &str) -> io::Result<ToneData> {
+    // Parse hex string into events
+    let mut events = Vec::new();
+    
+    // Process pairs of address+data (4 characters each)
+    let chars: Vec<char> = registers.chars().collect();
+    if chars.len() % 4 != 0 {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "Registers string length must be a multiple of 4"
+        ));
+    }
+    
+    for chunk in chars.chunks(4) {
+        let addr_str: String = chunk[0..2].iter().collect();
+        let data_str: String = chunk[2..4].iter().collect();
+        
+        // Parse hex values
+        let addr = u8::from_str_radix(&addr_str, 16)
+            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("Invalid address hex: {}", e)))?;
+        let data = u8::from_str_radix(&data_str, 16)
+            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("Invalid data hex: {}", e)))?;
+        
+        events.push(Ym2151Event {
+            time: 0,
+            addr: format!("0x{:02X}", addr),
+            data: format!("0x{:02X}", data),
+        });
+    }
+    
+    // Convert events to tone data using existing function
+    events_to_tone_data(&events)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -669,5 +728,98 @@ mod tests {
             assert_eq!(values_roundtrip[row][PARAM_AR], values_original[row][PARAM_AR], 
                 "{} AR should roundtrip correctly", row_names[row]);
         }
+    }
+
+    #[test]
+    fn test_tone_data_to_registers() {
+        let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
+        
+        // Set some test values
+        values[0][PARAM_MUL] = 1;
+        values[0][PARAM_TL] = 20;
+        values[0][PARAM_SM] = 1;
+        values[1][PARAM_SM] = 1;
+        values[2][PARAM_SM] = 1;
+        values[3][PARAM_SM] = 1;
+        values[ROW_CH][CH_PARAM_ALG] = 4;
+        values[ROW_CH][CH_PARAM_FB] = 0;
+        
+        let registers = tone_data_to_registers(&values);
+        
+        // Should be a hex string with pairs of address+data (4 chars per register write)
+        // We have 28 events, so 28 * 4 = 112 characters
+        assert_eq!(registers.len(), 112, "Registers string should have 112 characters (28 events * 4 chars)");
+        
+        // All characters should be valid hex
+        assert!(registers.chars().all(|c| c.is_ascii_hexdigit()), "All characters should be hex digits");
+    }
+
+    #[test]
+    fn test_registers_to_tone_data() {
+        // Create a simple test case
+        let mut values_original = [[0; GRID_WIDTH]; GRID_HEIGHT];
+        values_original[0][PARAM_MUL] = 5;
+        values_original[0][PARAM_TL] = 30;
+        values_original[ROW_CH][CH_PARAM_ALG] = 3;
+        values_original[ROW_CH][CH_PARAM_FB] = 2;
+        
+        // Convert to registers string
+        let registers = tone_data_to_registers(&values_original);
+        
+        // Convert back to tone data
+        let values_result = registers_to_tone_data(&registers).unwrap();
+        
+        // Verify key values are preserved
+        assert_eq!(values_result[0][PARAM_MUL], values_original[0][PARAM_MUL], "MUL should roundtrip correctly");
+        assert_eq!(values_result[0][PARAM_TL], values_original[0][PARAM_TL], "TL should roundtrip correctly");
+        assert_eq!(values_result[ROW_CH][CH_PARAM_ALG], values_original[ROW_CH][CH_PARAM_ALG], "ALG should roundtrip correctly");
+        assert_eq!(values_result[ROW_CH][CH_PARAM_FB], values_original[ROW_CH][CH_PARAM_FB], "FB should roundtrip correctly");
+    }
+
+    #[test]
+    fn test_registers_to_tone_data_roundtrip() {
+        // Test a more complete roundtrip with various parameter values
+        let mut values_original = [[0; GRID_WIDTH]; GRID_HEIGHT];
+        
+        // Set different values for each operator
+        for row in 0..4 {
+            values_original[row][PARAM_SM] = 1;
+            values_original[row][PARAM_MUL] = (row + 1) as u8;
+            values_original[row][PARAM_TL] = (row * 10) as u8;
+            values_original[row][PARAM_AR] = (row * 5) as u8;
+            values_original[row][PARAM_D1R] = (row * 3) as u8;
+            values_original[row][PARAM_D1L] = (row * 2) as u8;
+        }
+        values_original[ROW_CH][CH_PARAM_ALG] = 5;
+        values_original[ROW_CH][CH_PARAM_FB] = 3;
+        
+        // Convert to registers and back
+        let registers = tone_data_to_registers(&values_original);
+        let values_roundtrip = registers_to_tone_data(&registers).unwrap();
+        
+        // Verify all important values are preserved
+        for row in 0..4 {
+            assert_eq!(values_roundtrip[row][PARAM_MUL], values_original[row][PARAM_MUL], "Row {} MUL should roundtrip", row);
+            assert_eq!(values_roundtrip[row][PARAM_TL], values_original[row][PARAM_TL], "Row {} TL should roundtrip", row);
+            assert_eq!(values_roundtrip[row][PARAM_AR], values_original[row][PARAM_AR], "Row {} AR should roundtrip", row);
+            assert_eq!(values_roundtrip[row][PARAM_D1R], values_original[row][PARAM_D1R], "Row {} D1R should roundtrip", row);
+            assert_eq!(values_roundtrip[row][PARAM_D1L], values_original[row][PARAM_D1L], "Row {} D1L should roundtrip", row);
+        }
+        assert_eq!(values_roundtrip[ROW_CH][CH_PARAM_ALG], values_original[ROW_CH][CH_PARAM_ALG], "ALG should roundtrip");
+        assert_eq!(values_roundtrip[ROW_CH][CH_PARAM_FB], values_original[ROW_CH][CH_PARAM_FB], "FB should roundtrip");
+    }
+
+    #[test]
+    fn test_registers_invalid_length() {
+        // Test with invalid length (not a multiple of 4)
+        let result = registers_to_tone_data("204F2");
+        assert!(result.is_err(), "Should error on invalid length");
+    }
+
+    #[test]
+    fn test_registers_invalid_hex() {
+        // Test with invalid hex characters
+        let result = registers_to_tone_data("GGGG");
+        assert!(result.is_err(), "Should error on invalid hex characters");
     }
 }

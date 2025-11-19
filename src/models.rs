@@ -89,3 +89,23 @@ pub struct Ym2151Log {
     pub event_count: usize,
     pub events: Vec<Ym2151Event>,
 }
+
+/// Tone variation structure for General MIDI tone files
+/// Represents a single tone variation with optional MML or note number for playback
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ToneVariation {
+    pub description: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mml: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub note_number: Option<u8>,
+    pub registers: String,
+}
+
+/// Tone file structure for General MIDI tone files
+/// Contains a description and array of tone variations
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ToneFile {
+    pub description: String,
+    pub variations: Vec<ToneVariation>,
+}
