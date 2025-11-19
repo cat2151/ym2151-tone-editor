@@ -9,6 +9,40 @@ mod audio;
 #[cfg(test)]
 mod tests;
 
+use std::sync::Mutex;
+use std::fs::OpenOptions;
+use std::io::Write;
+
+/// Global verbose logging flag
+static VERBOSE_LOGGING: Mutex<bool> = Mutex::new(false);
+
+/// Log a message to ym2151-tone-editor.log if verbose logging is enabled
+pub fn log_verbose(message: &str) {
+    if let Ok(enabled) = VERBOSE_LOGGING.lock() {
+        if *enabled {
+            drop(enabled); // Release lock before file I/O
+            if let Ok(mut file) = OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open("ym2151-tone-editor.log")
+            {
+                let timestamp = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0);
+                let _ = writeln!(file, "[{}] {}", timestamp, message);
+            }
+        }
+    }
+}
+
+/// Enable verbose logging
+pub fn enable_verbose_logging() {
+    if let Ok(mut enabled) = VERBOSE_LOGGING.lock() {
+        *enabled = true;
+    }
+}
+
 use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind, MouseEventKind, EnableMouseCapture, DisableMouseCapture},
     execute,
@@ -27,6 +61,13 @@ fn main() -> Result<(), io::Error> {
     let args: Vec<String> = env::args().collect();
     let use_interactive_mode = args.iter().any(|arg| arg == "--use-client-interactive-mode-access");
     let value_by_mouse_move = args.iter().any(|arg| arg == "--value-by-mouse-move");
+    let verbose = args.iter().any(|arg| arg == "--verbose");
+    
+    // Enable verbose logging if requested
+    if verbose {
+        enable_verbose_logging();
+        log_verbose("Verbose logging enabled");
+    }
 
     // Ensure server is running (Windows only)
     #[cfg(windows)]
