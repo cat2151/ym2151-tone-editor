@@ -1,8 +1,11 @@
 mod models;
+mod midi_conversion;
 mod register;
 mod file_ops;
 mod ui;
 mod app;
+#[cfg(windows)]
+mod audio;
 
 use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind, MouseEventKind, EnableMouseCapture, DisableMouseCapture},

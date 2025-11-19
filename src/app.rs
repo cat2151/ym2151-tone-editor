@@ -1,7 +1,7 @@
 use crate::models::*;
 use crate::file_ops;
 #[cfg(windows)]
-use crate::register;
+use crate::audio;
 
 pub struct App {
     pub values: ToneData,
@@ -58,7 +58,9 @@ impl App {
         // Initialize interactive mode if enabled (Windows only)
         #[cfg(windows)]
         if use_interactive_mode {
-            app.init_interactive_mode();
+            if let Err(e) = audio::init_interactive_mode(&app.values) {
+                eprintln!("⚠️  Warning: Failed to start interactive mode: {}", e);
+            }
         }
 
         app
@@ -300,7 +302,7 @@ impl App {
         if self.values[data_row][self.cursor_x] != new_value {
             self.values[data_row][self.cursor_x] = new_value;
             #[cfg(windows)]
-            self.call_cat_play_mml();
+            audio::play_tone(&self.values, self.use_interactive_mode, self.cursor_x, self.cursor_y);
         }
     }
 
@@ -317,175 +319,11 @@ impl App {
         Ok(())
     }
 
-    /// Call ym2151-log-play-server client with current tone data as JSON string
-    /// This function sends JSON content via named pipe to the server
-    /// Windows-only functionality
-    #[cfg(windows)]
-    fn call_cat_play_mml(&self) {
-        // Use interactive mode if enabled, otherwise use legacy JSON mode
-        if self.use_interactive_mode {
-            self.send_interactive_update();
-        } else {
-            self.send_json_update();
-        }
-    }
-
-    /// Send full JSON update (legacy mode)
-    #[cfg(windows)]
-    fn send_json_update(&self) {
-        // Get JSON string of current tone data
-        let json_string = match register::to_json_string(&self.values) {
-            Ok(json) => json,
-            Err(_) => return, // Silently fail if JSON conversion fails
-        };
-
-        // Send JSON content to server via named pipe
-        // Using the ym2151-log-play-server client library with send_json
-        // Automatically chooses optimal method (direct or file-based) based on size
-        let _ = ym2151_log_play_server::client::send_json(&json_string);
-        
-        // Silently ignore errors - server should be auto-started at app launch
-    }
-
-    /// Initialize interactive mode
-    /// Starts continuous audio streaming on the server
-    #[cfg(windows)]
-    fn init_interactive_mode(&self) {
-        // Start interactive mode on the server
-        if let Err(e) = ym2151_log_play_server::client::start_interactive() {
-            eprintln!("⚠️  Warning: Failed to start interactive mode: {}", e);
-            return;
-        }
-
-        // Send all current register values to initialize the tone
-        self.send_all_registers();
-    }
-
-    /// Send all register values in interactive mode
-    /// This initializes the YM2151 chip with the current tone data
-    #[cfg(windows)]
-    fn send_all_registers(&self) {
-        // Get all YM2151 events for the current tone
-        let events = register::to_ym2151_events(&self.values);
-        
-        // Send each register write via interactive mode
-        for event in events {
-            // Parse address and data from hex strings
-            if let (Ok(addr), Ok(data)) = (
-                u8::from_str_radix(event.addr.trim_start_matches("0x"), 16),
-                u8::from_str_radix(event.data.trim_start_matches("0x"), 16)
-            ) {
-                // Send register write with 0ms offset (immediate)
-                let _ = ym2151_log_play_server::client::write_register(0, addr, data);
-            }
-        }
-    }
-
-    /// Send interactive update for a single parameter change
-    /// Only sends the register writes affected by the current parameter
-    #[cfg(windows)]
-    fn send_interactive_update(&self) {
-        // Get the data row index
-        let data_row = self.get_data_row();
-        
-        // We need to send the register(s) affected by the current parameter
-        // For simplicity, we'll send all registers for the current operator/channel
-        // A more optimized version could send only the affected register
-        
-        if self.cursor_y == ROW_CH {
-            // Channel parameter changed - send channel registers
-            self.send_channel_registers();
-        } else {
-            // Operator parameter changed - send operator registers
-            self.send_operator_registers(data_row);
-        }
-    }
-
-    /// Send all operator registers for a specific operator
-    #[cfg(windows)]
-    fn send_operator_registers(&self, data_row: usize) {
-        let channel = 0; // We use channel 0
-        const DATA_ROW_TO_SLOT: [usize; 4] = [0, 1, 2, 3];
-        let hw_slot = DATA_ROW_TO_SLOT[data_row];
-        let op_offset = hw_slot * 8 + channel;
-        
-        // DT1 and MUL - Register $40-$5F
-        let dt = self.values[data_row][PARAM_DT];
-        let mul = self.values[data_row][PARAM_MUL];
-        let dt_mul = ((dt & 0x07) << 4) | (mul & 0x0F);
-        let _ = ym2151_log_play_server::client::write_register(0, 0x40 + op_offset as u8, dt_mul);
-        
-        // TL - Register $60-$7F
-        let tl = self.values[data_row][PARAM_TL];
-        let _ = ym2151_log_play_server::client::write_register(0, 0x60 + op_offset as u8, tl & 0x7F);
-        
-        // KS and AR - Register $80-$9F
-        let ks = self.values[data_row][PARAM_KS];
-        let ar = self.values[data_row][PARAM_AR];
-        let ks_ar = ((ks & 0x03) << 6) | (ar & 0x1F);
-        let _ = ym2151_log_play_server::client::write_register(0, 0x80 + op_offset as u8, ks_ar);
-        
-        // AMS and D1R - Register $A0-$BF
-        let ams = self.values[data_row][PARAM_AMS];
-        let d1r = self.values[data_row][PARAM_D1R];
-        let ams_d1r = ((ams & 0x03) << 6) | (d1r & 0x1F);
-        let _ = ym2151_log_play_server::client::write_register(0, 0xA0 + op_offset as u8, ams_d1r);
-        
-        // DT2 and D2R - Register $C0-$DF
-        let dt2 = self.values[data_row][PARAM_DT2];
-        let d2r = self.values[data_row][PARAM_D2R];
-        let dt2_d2r = ((dt2 & 0x03) << 6) | (d2r & 0x1F);
-        let _ = ym2151_log_play_server::client::write_register(0, 0xC0 + op_offset as u8, dt2_d2r);
-        
-        // D1L and RR - Register $E0-$FF
-        let d1l = self.values[data_row][PARAM_D1L];
-        let rr = self.values[data_row][PARAM_RR];
-        let d1l_rr = ((d1l & 0x0F) << 4) | (rr & 0x0F);
-        let _ = ym2151_log_play_server::client::write_register(0, 0xE0 + op_offset as u8, d1l_rr);
-    }
-
-    /// Send channel registers
-    #[cfg(windows)]
-    fn send_channel_registers(&self) {
-        let channel = 0; // We use channel 0
-        
-        // RL, FB, CON (Algorithm) - Register $20-$27
-        let alg = self.values[ROW_CH][CH_PARAM_ALG];
-        let fb = self.values[ROW_CH][CH_PARAM_FB];
-        let rl_fb_con = 0xC0 | ((fb & 0x07) << 3) | (alg & 0x07);
-        let _ = ym2151_log_play_server::client::write_register(0, 0x20 + channel as u8, rl_fb_con);
-        
-        // MIDI note to KC/KF
-        let midi_note = self.values[ROW_CH][CH_PARAM_MIDI_NOTE];
-        let (kc, kf) = register::midi_to_kc_kf(midi_note);
-        
-        // KC - Register $28-$2F
-        let _ = ym2151_log_play_server::client::write_register(0, 0x28 + channel as u8, kc);
-        
-        // KF - Register $30-$37
-        let _ = ym2151_log_play_server::client::write_register(0, 0x30 + channel as u8, kf);
-        
-        // Key on/off - Register $08
-        // Calculate slot mask based on which operators are enabled
-        let sm0 = self.values[0][PARAM_SM];
-        let sm1 = self.values[1][PARAM_SM];
-        let sm2 = self.values[2][PARAM_SM];
-        let sm3 = self.values[3][PARAM_SM];
-        
-        let slot_mask = if sm0 != 0 { 0x08 } else { 0 }
-            | if sm1 != 0 { 0x10 } else { 0 }
-            | if sm2 != 0 { 0x20 } else { 0 }
-            | if sm3 != 0 { 0x40 } else { 0 };
-        
-        let key_on = slot_mask | channel as u8;
-        let _ = ym2151_log_play_server::client::write_register(0, 0x08, key_on);
-    }
-
     /// Cleanup - stop interactive mode if active
     #[cfg(windows)]
     pub fn cleanup(&self) {
         if self.use_interactive_mode {
-            let _ = ym2151_log_play_server::client::stop_interactive();
+            audio::cleanup_interactive_mode();
         }
     }
 }
