@@ -44,7 +44,7 @@ pub fn enable_verbose_logging() {
 }
 
 use crossterm::{
-    event::{self, Event, KeyCode, KeyEventKind, MouseEventKind, EnableMouseCapture, DisableMouseCapture},
+    event::{self, Event, KeyCode, KeyEventKind, KeyModifiers, MouseEventKind, EnableMouseCapture, DisableMouseCapture},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -128,6 +128,15 @@ fn run_app<B: ratatui::backend::Backend>(
                         
                         // Play current tone without parameter changes
                         KeyCode::Char('p') | KeyCode::Char('P') | KeyCode::Char(' ') => app.play_current_tone(),
+                        
+                        // FB (Feedback) shortcuts
+                        KeyCode::Char('f') | KeyCode::Char('F') => {
+                            if key.modifiers.contains(KeyModifiers::SHIFT) {
+                                app.decrease_fb();
+                            } else {
+                                app.increase_fb();
+                            }
+                        }
                         
                         // Cursor movement keys (hjkl/aswd + arrow keys)
                         KeyCode::Char('h') | KeyCode::Char('a') | KeyCode::Left => app.move_cursor_left(),

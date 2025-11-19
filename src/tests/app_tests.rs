@@ -407,3 +407,109 @@ use crate::models::*;
         assert_eq!(app.values[0][PARAM_MUL], 5, "MUL should remain unchanged");
         assert_eq!(app.values[0][PARAM_TL], 20, "TL should remain unchanged");
     }
+
+    #[test]
+    fn test_increase_fb() {
+        let mut app = App::new(false, false);
+        
+        // Set initial cursor position somewhere else
+        app.cursor_x = 0;
+        app.cursor_y = 0;
+        
+        // Set initial FB value
+        app.values[ROW_CH][CH_PARAM_FB] = 3;
+        
+        // Call increase_fb
+        app.increase_fb();
+        
+        // Verify cursor moved to FB position
+        assert_eq!(app.cursor_x, CH_PARAM_FB, "Cursor X should move to FB column");
+        assert_eq!(app.cursor_y, ROW_CH, "Cursor Y should move to CH row");
+        
+        // Verify FB value increased
+        assert_eq!(app.values[ROW_CH][CH_PARAM_FB], 4, "FB should increase from 3 to 4");
+        
+        // Test boundary: increase at max should not exceed
+        app.values[ROW_CH][CH_PARAM_FB] = CH_PARAM_MAX[CH_PARAM_FB]; // Set to max (7)
+        app.increase_fb();
+        assert_eq!(app.values[ROW_CH][CH_PARAM_FB], CH_PARAM_MAX[CH_PARAM_FB], "FB should not exceed max value (7)");
+        
+        // Verify cursor still at FB position
+        assert_eq!(app.cursor_x, CH_PARAM_FB, "Cursor X should remain at FB column");
+        assert_eq!(app.cursor_y, ROW_CH, "Cursor Y should remain at CH row");
+    }
+
+    #[test]
+    fn test_decrease_fb() {
+        let mut app = App::new(false, false);
+        
+        // Set initial cursor position somewhere else
+        app.cursor_x = 5;
+        app.cursor_y = 2;
+        
+        // Set initial FB value
+        app.values[ROW_CH][CH_PARAM_FB] = 5;
+        
+        // Call decrease_fb
+        app.decrease_fb();
+        
+        // Verify cursor moved to FB position
+        assert_eq!(app.cursor_x, CH_PARAM_FB, "Cursor X should move to FB column");
+        assert_eq!(app.cursor_y, ROW_CH, "Cursor Y should move to CH row");
+        
+        // Verify FB value decreased
+        assert_eq!(app.values[ROW_CH][CH_PARAM_FB], 4, "FB should decrease from 5 to 4");
+        
+        // Test boundary: decrease at 0 should not go negative
+        app.values[ROW_CH][CH_PARAM_FB] = 0;
+        app.decrease_fb();
+        assert_eq!(app.values[ROW_CH][CH_PARAM_FB], 0, "FB should not go below 0");
+        
+        // Verify cursor still at FB position
+        assert_eq!(app.cursor_x, CH_PARAM_FB, "Cursor X should remain at FB column");
+        assert_eq!(app.cursor_y, ROW_CH, "Cursor Y should remain at CH row");
+    }
+
+    #[test]
+    fn test_increase_fb_moves_cursor_from_operator_row() {
+        let mut app = App::new(false, false);
+        
+        // Start with cursor on operator row
+        app.cursor_x = PARAM_MUL;
+        app.cursor_y = 1; // C1 row
+        
+        // Set initial FB value
+        app.values[ROW_CH][CH_PARAM_FB] = 2;
+        
+        // Call increase_fb
+        app.increase_fb();
+        
+        // Verify cursor moved to FB position
+        assert_eq!(app.cursor_x, CH_PARAM_FB, "Cursor X should move to FB column from operator row");
+        assert_eq!(app.cursor_y, ROW_CH, "Cursor Y should move to CH row from operator row");
+        
+        // Verify FB value increased
+        assert_eq!(app.values[ROW_CH][CH_PARAM_FB], 3, "FB should increase from 2 to 3");
+    }
+
+    #[test]
+    fn test_decrease_fb_moves_cursor_from_operator_row() {
+        let mut app = App::new(false, false);
+        
+        // Start with cursor on operator row
+        app.cursor_x = PARAM_AR;
+        app.cursor_y = 3; // C2 row
+        
+        // Set initial FB value
+        app.values[ROW_CH][CH_PARAM_FB] = 6;
+        
+        // Call decrease_fb
+        app.decrease_fb();
+        
+        // Verify cursor moved to FB position
+        assert_eq!(app.cursor_x, CH_PARAM_FB, "Cursor X should move to FB column from operator row");
+        assert_eq!(app.cursor_y, ROW_CH, "Cursor Y should move to CH row from operator row");
+        
+        // Verify FB value decreased
+        assert_eq!(app.values[ROW_CH][CH_PARAM_FB], 5, "FB should decrease from 6 to 5");
+    }
