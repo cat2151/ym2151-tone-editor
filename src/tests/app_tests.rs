@@ -377,3 +377,33 @@ use crate::models::*;
         assert_eq!(app.cursor_x, prev_x, "Cursor should not move when clicking on CH header row");
         assert_eq!(app.cursor_y, prev_y, "Cursor should not move when clicking on CH header row");
     }
+
+    #[test]
+    fn test_play_current_tone_does_not_modify_values() {
+        let mut app = App::new(false, false);
+        
+        // Set specific values
+        app.cursor_x = PARAM_DT;
+        app.cursor_y = 0;
+        app.values[0][PARAM_DT] = 3;
+        app.values[0][PARAM_MUL] = 5;
+        app.values[0][PARAM_TL] = 20;
+        
+        // Store all values before playing
+        let values_before = app.values;
+        let cursor_x_before = app.cursor_x;
+        let cursor_y_before = app.cursor_y;
+        
+        // Play current tone
+        app.play_current_tone();
+        
+        // Verify that no values were modified
+        assert_eq!(app.values, values_before, "Values should not be modified by play_current_tone");
+        assert_eq!(app.cursor_x, cursor_x_before, "Cursor X should not be modified by play_current_tone");
+        assert_eq!(app.cursor_y, cursor_y_before, "Cursor Y should not be modified by play_current_tone");
+        
+        // Verify specific values are unchanged
+        assert_eq!(app.values[0][PARAM_DT], 3, "DT should remain unchanged");
+        assert_eq!(app.values[0][PARAM_MUL], 5, "MUL should remain unchanged");
+        assert_eq!(app.values[0][PARAM_TL], 20, "TL should remain unchanged");
+    }

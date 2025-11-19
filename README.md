@@ -24,6 +24,7 @@ Under development. Current progress is roughly 50%.
 - Cursor navigation with arrow keys, `hjkl` (Vim style), or `wasd` keys
 - Increase/decrease values with PageUp/PageDown or `e`/`q` keys (respects parameter maximums)
 - Fast value setting with Home (max), End (min), R (random)
+- Play current tone with `P` or `SPACE` key (without modifying parameter values)
 - Exit with `ESC` key
 - Save tone to JSON on exit and load the latest JSON on next startup
 
