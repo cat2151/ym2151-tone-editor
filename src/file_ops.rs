@@ -115,8 +115,8 @@ pub fn save_to_gm_file(filename: &str, values: &ToneData, description: &str) -> 
         variations: vec![variation],
     };
     
-    // Serialize to JSON
-    let json_string = serde_json::to_string_pretty(&tone_file)
+    // Serialize to JSON with minified variations
+    let json_string = serialize_tone_file_with_minified_variations(&tone_file)
         .map_err(io::Error::other)?;
     
     // Ensure directory exists
@@ -127,4 +127,39 @@ pub fn save_to_gm_file(filename: &str, values: &ToneData, description: &str) -> 
     // Write to file
     fs::write(filename, json_string)?;
     Ok(())
+}
+
+/// Serialize ToneFile with minified variations (one line per variation)
+/// The outer structure is pretty-printed, but each variation is on a single line
+fn serialize_tone_file_with_minified_variations(tone_file: &crate::models::ToneFile) -> Result<String, serde_json::Error> {
+    // Serialize each variation as a minified string
+    let variation_strings: Result<Vec<String>, _> = tone_file.variations
+        .iter()
+        .map(|v| serde_json::to_string(v))
+        .collect();
+    
+    let variation_strings = variation_strings?;
+    
+    // Build the JSON manually with proper formatting
+    let mut result = String::from("{\n");
+    
+    // Add description field
+    result.push_str("  \"description\": ");
+    result.push_str(&serde_json::to_string(&tone_file.description)?);
+    result.push_str(",\n");
+    
+    // Add variations array with each element on a single line
+    result.push_str("  \"variations\": [\n");
+    for (i, var_str) in variation_strings.iter().enumerate() {
+        result.push_str("    ");
+        result.push_str(var_str);
+        if i < variation_strings.len() - 1 {
+            result.push(',');
+        }
+        result.push('\n');
+    }
+    result.push_str("  ]\n");
+    result.push('}');
+    
+    Ok(result)
 }

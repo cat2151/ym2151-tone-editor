@@ -208,3 +208,62 @@ fn test_load_gm_file_empty_variations() {
     // Clean up
     std::fs::remove_file(test_filename).ok();
 }
+
+#[test]
+fn test_gm_file_minified_variations_format() {
+    let test_filename = "test_minified_format.json";
+    
+    // Create test tone data
+    let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
+    values[0][PARAM_MUL] = 5;
+    values[0][PARAM_TL] = 30;
+    values[ROW_CH][CH_PARAM_ALG] = 3;
+    values[ROW_CH][CH_PARAM_FB] = 2;
+    values[ROW_CH][CH_PARAM_NOTE] = 60;
+    
+    // Save to GM file format
+    let result = save_to_gm_file(test_filename, &values, "Test Piano");
+    assert!(result.is_ok(), "Failed to save GM file: {:?}", result.err());
+    
+    // Read the file content
+    let content = std::fs::read_to_string(test_filename).unwrap();
+    
+    // Verify the format
+    // 1. Should contain "description" on a separate line
+    assert!(content.contains("\"description\":"), "Should contain description field");
+    
+    // 2. Should contain "variations" array
+    assert!(content.contains("\"variations\":"), "Should contain variations array");
+    
+    // 3. Each variation should be on a single line (not spread across multiple lines)
+    // Count the lines in the variations array
+    let lines: Vec<&str> = content.lines().collect();
+    
+    // Find the variations array
+    let mut in_variations = false;
+    let mut variation_lines = 0;
+    for line in &lines {
+        if line.contains("\"variations\":") {
+            in_variations = true;
+            continue;
+        }
+        if in_variations {
+            if line.trim().starts_with("{") {
+                // This line should contain a complete variation object
+                variation_lines += 1;
+                // Verify it's a complete object on one line
+                assert!(line.contains("\"description\""), "Variation line should contain description");
+                assert!(line.contains("\"registers\""), "Variation line should contain registers");
+                assert!(line.contains("}"), "Variation line should end with closing brace");
+            }
+            if line.trim().starts_with("]") {
+                break;
+            }
+        }
+    }
+    
+    assert!(variation_lines > 0, "Should have at least one variation on a single line");
+    
+    // Clean up
+    std::fs::remove_file(test_filename).ok();
+}
