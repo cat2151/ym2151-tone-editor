@@ -17,3 +17,6 @@ mod register_tests;
 
 #[cfg(test)]
 mod ui_tests;
+
+#[cfg(test)]
+mod verbose_logging_tests;
