@@ -45,8 +45,13 @@ impl App {
             use_interactive_mode,
         };
 
-        // Try to load the newest JSON file from current directory
-        if let Ok(loaded_values) = file_ops::load_newest_json() {
+        // Try to load from GM file format first, then fall back to legacy format
+        const GM_FILE_PATH: &str = "tones/general_midi/000_AcousticGrand.json";
+        
+        if let Ok(loaded_values) = file_ops::load_from_gm_file(GM_FILE_PATH) {
+            app.values = loaded_values;
+        } else if let Ok(loaded_values) = file_ops::load_newest_json() {
+            // Fall back to loading from legacy format
             app.values = loaded_values;
         }
 
@@ -301,7 +306,15 @@ impl App {
 
     /// Save tone data to JSON file
     pub fn save_to_json(&self) -> std::io::Result<()> {
-        file_ops::save_to_json(&self.values)
+        const GM_FILE_PATH: &str = "tones/general_midi/000_AcousticGrand.json";
+        
+        // Save to GM format
+        file_ops::save_to_gm_file(GM_FILE_PATH, &self.values, "Edited Tone")?;
+        
+        // Also save to legacy format for backward compatibility
+        file_ops::save_to_json(&self.values)?;
+        
+        Ok(())
     }
 
     /// Call ym2151-log-play-server client with current tone data as JSON string

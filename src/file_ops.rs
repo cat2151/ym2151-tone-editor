@@ -71,6 +71,64 @@ pub fn save_to_json(values: &ToneData) -> io::Result<()> {
     Ok(())
 }
 
+/// Load tone data from General MIDI tone file format
+/// Reads from tones/general_midi/000_AcousticGrand.json
+/// Returns the first variation's tone data
+pub fn load_from_gm_file(filename: &str) -> io::Result<ToneData> {
+    let json_string = fs::read_to_string(filename)?;
+    let tone_file: crate::models::ToneFile = serde_json::from_str(&json_string)
+        .map_err(io::Error::other)?;
+    
+    // Load the first variation
+    if tone_file.variations.is_empty() {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "No variations found in tone file"
+        ));
+    }
+    
+    let variation = &tone_file.variations[0];
+    register::registers_to_tone_data(&variation.registers)
+}
+
+/// Save tone data to General MIDI tone file format
+/// Writes to tones/general_midi/000_AcousticGrand.json
+/// Creates a single variation with the current tone data
+pub fn save_to_gm_file(filename: &str, values: &ToneData, description: &str) -> io::Result<()> {
+    // Convert tone data to registers hex string
+    let registers = register::tone_data_to_registers(values);
+    
+    // Get the current MIDI note from the tone data
+    let note_number = values[crate::models::ROW_CH][crate::models::CH_PARAM_NOTE];
+    
+    // Create a single variation
+    let variation = crate::models::ToneVariation {
+        description: description.to_string(),
+        mml: None,
+        note_number: Some(note_number),
+        registers,
+    };
+    
+    // Create the tone file structure
+    let tone_file = crate::models::ToneFile {
+        description: "Acoustic Grand Piano".to_string(),
+        variations: vec![variation],
+    };
+    
+    // Serialize to JSON
+    let json_string = serde_json::to_string_pretty(&tone_file)
+        .map_err(io::Error::other)?;
+    
+    // Ensure directory exists
+    if let Some(parent) = std::path::Path::new(filename).parent() {
+        fs::create_dir_all(parent)?;
+    }
+    
+    // Write to file
+    fs::write(filename, json_string)?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -184,5 +242,99 @@ mod tests {
         std::fs::remove_file(&file1).ok();
         std::fs::remove_file(&file2).ok();
         std::fs::remove_file(&file3).ok();
+    }
+
+    #[test]
+    fn test_save_and_load_gm_file() {
+        use std::path::Path;
+        
+        let test_filename = "test_gm_tone.json";
+        
+        // Create test tone data
+        let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
+        values[0][PARAM_MUL] = 5;
+        values[0][PARAM_TL] = 30;
+        values[ROW_CH][CH_PARAM_ALG] = 3;
+        values[ROW_CH][CH_PARAM_FB] = 2;
+        values[ROW_CH][CH_PARAM_NOTE] = 60;
+        
+        // Save to GM file format
+        let result = save_to_gm_file(test_filename, &values, "Test Piano");
+        assert!(result.is_ok(), "Failed to save GM file: {:?}", result.err());
+        
+        // Verify file exists
+        assert!(Path::new(test_filename).exists(), "GM file was not created");
+        
+        // Load from GM file format
+        let loaded_result = load_from_gm_file(test_filename);
+        assert!(loaded_result.is_ok(), "Failed to load GM file: {:?}", loaded_result.err());
+        
+        let loaded_values = loaded_result.unwrap();
+        
+        // Verify key values match
+        assert_eq!(loaded_values[0][PARAM_MUL], values[0][PARAM_MUL], "MUL should match");
+        assert_eq!(loaded_values[0][PARAM_TL], values[0][PARAM_TL], "TL should match");
+        assert_eq!(loaded_values[ROW_CH][CH_PARAM_ALG], values[ROW_CH][CH_PARAM_ALG], "ALG should match");
+        assert_eq!(loaded_values[ROW_CH][CH_PARAM_FB], values[ROW_CH][CH_PARAM_FB], "FB should match");
+        
+        // Clean up
+        std::fs::remove_file(test_filename).ok();
+    }
+
+    #[test]
+    fn test_load_gm_file_format() {
+        let test_filename = "test_gm_format.json";
+        
+        // Create test tone data to generate a valid registers string
+        let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
+        values[0][PARAM_MUL] = 1;
+        values[0][PARAM_SM] = 1;
+        values[1][PARAM_SM] = 1;
+        values[2][PARAM_SM] = 1;
+        values[3][PARAM_SM] = 1;
+        
+        // Generate a valid registers string
+        let registers = crate::register::tone_data_to_registers(&values);
+        
+        // Create a GM file manually with the valid registers string
+        let json_content = format!(r#"{{
+  "description": "GM:000 Acoustic Grand Piano family",
+  "variations": [
+    {{
+      "description": "Test Tone",
+      "note_number": 60,
+      "registers": "{}"
+    }}
+  ]
+}}"#, registers);
+        
+        std::fs::write(test_filename, json_content).unwrap();
+        
+        // Load the file
+        let result = load_from_gm_file(test_filename);
+        assert!(result.is_ok(), "Failed to load GM file: {:?}", result.err());
+        
+        // Clean up
+        std::fs::remove_file(test_filename).ok();
+    }
+
+    #[test]
+    fn test_load_gm_file_empty_variations() {
+        let test_filename = "test_empty_variations.json";
+        
+        // Create a GM file with no variations
+        let json_content = r#"{
+  "description": "Empty file",
+  "variations": []
+}"#;
+        
+        std::fs::write(test_filename, json_content).unwrap();
+        
+        // Try to load - should fail
+        let result = load_from_gm_file(test_filename);
+        assert!(result.is_err(), "Should fail when no variations present");
+        
+        // Clean up
+        std::fs::remove_file(test_filename).ok();
     }
 }
