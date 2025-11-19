@@ -326,6 +326,39 @@ impl App {
         audio::play_tone(&self.values, self.use_interactive_mode, self.cursor_x, self.cursor_y);
     }
 
+    /// Move cursor to FB parameter and increase its value
+    /// This is triggered by 'F' key
+    pub fn increase_fb(&mut self) {
+        // Move cursor to FB position (row 4, column 1)
+        self.cursor_y = ROW_CH;
+        self.cursor_x = CH_PARAM_FB;
+        
+        // Increase FB value
+        let current = self.values[ROW_CH][CH_PARAM_FB];
+        let max = CH_PARAM_MAX[CH_PARAM_FB];
+        if current < max {
+            self.values[ROW_CH][CH_PARAM_FB] = current + 1;
+            #[cfg(windows)]
+            audio::play_tone(&self.values, self.use_interactive_mode, self.cursor_x, self.cursor_y);
+        }
+    }
+
+    /// Move cursor to FB parameter and decrease its value
+    /// This is triggered by 'Shift+F' key
+    pub fn decrease_fb(&mut self) {
+        // Move cursor to FB position (row 4, column 1)
+        self.cursor_y = ROW_CH;
+        self.cursor_x = CH_PARAM_FB;
+        
+        // Decrease FB value
+        let current = self.values[ROW_CH][CH_PARAM_FB];
+        if current > 0 {
+            self.values[ROW_CH][CH_PARAM_FB] = current - 1;
+            #[cfg(windows)]
+            audio::play_tone(&self.values, self.use_interactive_mode, self.cursor_x, self.cursor_y);
+        }
+    }
+
     /// Cleanup - stop interactive mode if active
     #[cfg(windows)]
     pub fn cleanup(&self) {
