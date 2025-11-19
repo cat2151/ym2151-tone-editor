@@ -7,12 +7,13 @@ pub struct App {
     pub values: ToneData,
     pub cursor_x: usize,
     pub cursor_y: usize,
+    pub value_by_mouse_move: bool,
     #[cfg(windows)]
     pub use_interactive_mode: bool,
 }
 
 impl App {
-    pub fn new(#[allow(unused_variables)] use_interactive_mode: bool) -> App {
+    pub fn new(#[allow(unused_variables)] use_interactive_mode: bool, value_by_mouse_move: bool) -> App {
         // Initialize with a basic FM piano-like tone
         // Based on typical YM2151 patch settings
         let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
@@ -39,6 +40,7 @@ impl App {
             values,
             cursor_x: 0,
             cursor_y: 0,
+            value_by_mouse_move,
             #[cfg(windows)]
             use_interactive_mode,
         };
@@ -192,6 +194,59 @@ impl App {
         self.values[data_row][self.cursor_x] = random_value;
         #[cfg(windows)]
         self.call_cat_play_mml();
+    }
+
+    /// Move cursor to a specific mouse position
+    /// Maps mouse x,y coordinates to cursor position in the grid
+    /// Based on the UI layout from ui.rs
+    pub fn move_cursor_to_mouse_position(&mut self, mouse_x: u16, mouse_y: u16) {
+        // UI layout constants (from ui.rs)
+        const ROW_LABEL_WIDTH: u16 = 4;
+        const CELL_WIDTH: u16 = 4;
+        const LABEL_OFFSET: u16 = 1;
+        const INNER_X: u16 = 1; // Border takes 1 character
+        const INNER_Y: u16 = 1; // Border takes 1 character
+        
+        // Check if mouse is within the grid area (after row labels)
+        if mouse_x < INNER_X + ROW_LABEL_WIDTH {
+            return; // Mouse is in row label area
+        }
+        
+        // Calculate column from mouse X position
+        let relative_x = mouse_x - INNER_X - ROW_LABEL_WIDTH;
+        let col = (relative_x / CELL_WIDTH) as usize;
+        
+        // Calculate row from mouse Y position
+        // Operator rows: y = INNER_Y + LABEL_OFFSET + row (1-4)
+        // CH row header: y = INNER_Y + LABEL_OFFSET + 4 (5)
+        // CH row values: y = INNER_Y + LABEL_OFFSET + 5 (6)
+        if mouse_y < INNER_Y + LABEL_OFFSET {
+            return; // Mouse is in header area
+        }
+        
+        let relative_y = mouse_y - INNER_Y - LABEL_OFFSET;
+        
+        // Determine which row the mouse is on
+        let new_cursor_y = match relative_y {
+            0..=3 => relative_y as usize, // Operator rows (M1, C1, M2, C2)
+            5 => ROW_CH,                  // CH row (skip row 4 which is CH header)
+            _ => return,                  // Outside valid rows
+        };
+        
+        // Validate column bounds
+        let max_x = if new_cursor_y == ROW_CH {
+            CH_PARAM_COUNT - 1
+        } else {
+            GRID_WIDTH - 1
+        };
+        
+        if col > max_x {
+            return; // Column out of bounds
+        }
+        
+        // Update cursor position
+        self.cursor_x = col;
+        self.cursor_y = new_cursor_y;
     }
 
     /// Update the parameter value based on mouse X position
@@ -428,7 +483,7 @@ mod tests {
 
     #[test]
     fn test_cursor_movement() {
-        let mut app = App::new(false);
+        let mut app = App::new(false, false);
         
         // Test initial position
         assert_eq!(app.cursor_x, 0);
@@ -482,7 +537,7 @@ mod tests {
 
     #[test]
     fn test_increase_decrease_value() {
-        let mut app = App::new(false);
+        let mut app = App::new(false, false);
         
         // Move cursor to a parameter with a wider range (e.g., TL at index 1)
         app.cursor_x = PARAM_TL;
@@ -512,7 +567,7 @@ mod tests {
 
     #[test]
     fn test_ch_row_cursor_restriction() {
-        let mut app = App::new(false);
+        let mut app = App::new(false, false);
         
         // Start on an operator row, move to the right edge
         app.cursor_y = 0;
@@ -542,7 +597,7 @@ mod tests {
 
     #[test]
     fn test_update_value_from_mouse_x() {
-        let mut app = App::new(false);
+        let mut app = App::new(false, false);
         let terminal_width = 120;
         app.cursor_x = PARAM_DT; // DT has max value of 7
         app.cursor_y = 0;
@@ -580,7 +635,7 @@ mod tests {
 
     #[test]
     fn test_update_value_from_mouse_x_zero_width() {
-        let mut app = App::new(false);
+        let mut app = App::new(false, false);
         let terminal_width = 0;
         app.cursor_x = PARAM_DT;
         app.cursor_y = 0;
@@ -594,7 +649,7 @@ mod tests {
 
     #[test]
     fn test_set_value_to_max() {
-        let mut app = App::new(false);
+        let mut app = App::new(false, false);
         
         // Test with operator row parameter (DT, max = 7)
         app.cursor_x = PARAM_DT;
@@ -629,7 +684,7 @@ mod tests {
 
     #[test]
     fn test_set_value_to_min() {
-        let mut app = App::new(false);
+        let mut app = App::new(false, false);
         
         // Test with operator row parameter
         app.cursor_x = PARAM_DT;
@@ -657,7 +712,7 @@ mod tests {
 
     #[test]
     fn test_set_value_to_random() {
-        let mut app = App::new(false);
+        let mut app = App::new(false, false);
         
         // Test with operator row parameter (DT, max = 7)
         app.cursor_x = PARAM_DT;
@@ -694,7 +749,7 @@ mod tests {
 
     #[test]
     fn test_update_value_from_mouse_x_left_right_edges() {
-        let mut app = App::new(false);
+        let mut app = App::new(false, false);
         let terminal_width = 120;
         
         // Test with DT parameter (max value = 7)
@@ -739,5 +794,65 @@ mod tests {
         // Far right should set to max (7)
         app.update_value_from_mouse_x(119, terminal_width);
         assert_eq!(app.values[ROW_CH][CH_PARAM_ALG], 7, "Far right should set to max value (7) for CH ALG");
+    }
+
+    #[test]
+    fn test_move_cursor_to_mouse_position() {
+        let mut app = App::new(false, false);
+        
+        // Test moving cursor to operator row (M1, row 0)
+        // UI layout: row_label_width=4, cell_width=4, inner_x=1, inner_y=1, label_offset=1
+        // First cell starts at x=5 (1+4), operator rows start at y=2 (1+1+0)
+        app.move_cursor_to_mouse_position(5, 2); // M1, column 0
+        assert_eq!(app.cursor_x, 0);
+        assert_eq!(app.cursor_y, 0);
+        
+        // Test moving cursor to different column
+        app.move_cursor_to_mouse_position(9, 2); // M1, column 1
+        assert_eq!(app.cursor_x, 1);
+        assert_eq!(app.cursor_y, 0);
+        
+        // Test moving cursor to C1 row (display row 1, y=3)
+        app.move_cursor_to_mouse_position(5, 3); // C1, column 0
+        assert_eq!(app.cursor_x, 0);
+        assert_eq!(app.cursor_y, 1);
+        
+        // Test moving cursor to CH row (y=7: 1+1+5)
+        app.move_cursor_to_mouse_position(5, 7); // CH row, column 0
+        assert_eq!(app.cursor_x, 0);
+        assert_eq!(app.cursor_y, ROW_CH);
+        
+        // Test moving cursor to CH row, column 1
+        app.move_cursor_to_mouse_position(9, 7); // CH row, column 1
+        assert_eq!(app.cursor_x, 1);
+        assert_eq!(app.cursor_y, ROW_CH);
+        
+        // Test clicking outside valid columns for CH row (should be ignored)
+        let prev_x = app.cursor_x;
+        let prev_y = app.cursor_y;
+        app.move_cursor_to_mouse_position(25, 7); // CH row, column 5 (out of bounds, CH has only 3 columns)
+        assert_eq!(app.cursor_x, prev_x, "Cursor X should not change when clicking outside valid CH columns");
+        assert_eq!(app.cursor_y, prev_y, "Cursor Y should not change when clicking outside valid CH columns");
+        
+        // Test clicking in row label area (should be ignored)
+        let prev_x = app.cursor_x;
+        let prev_y = app.cursor_y;
+        app.move_cursor_to_mouse_position(3, 2); // In row label area
+        assert_eq!(app.cursor_x, prev_x, "Cursor should not move when clicking in row label area");
+        assert_eq!(app.cursor_y, prev_y, "Cursor should not move when clicking in row label area");
+        
+        // Test clicking in header area (should be ignored)
+        let prev_x = app.cursor_x;
+        let prev_y = app.cursor_y;
+        app.move_cursor_to_mouse_position(5, 1); // In header area
+        assert_eq!(app.cursor_x, prev_x, "Cursor should not move when clicking in header area");
+        assert_eq!(app.cursor_y, prev_y, "Cursor should not move when clicking in header area");
+        
+        // Test clicking on CH header row (y=6, should be ignored)
+        let prev_x = app.cursor_x;
+        let prev_y = app.cursor_y;
+        app.move_cursor_to_mouse_position(5, 6); // CH header row
+        assert_eq!(app.cursor_x, prev_x, "Cursor should not move when clicking on CH header row");
+        assert_eq!(app.cursor_y, prev_y, "Cursor should not move when clicking on CH header row");
     }
 }

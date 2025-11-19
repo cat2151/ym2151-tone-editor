@@ -83,7 +83,7 @@ pub fn ui(f: &mut Frame, app: &App) {
     let size = f.area();
 
     let block = Block::default()
-        .title("YM2151 Tone Editor (hjkl/wasd:move, q/e:dec/inc, mouse:move to change value, ESC:quit)")
+        .title("YM2151 Tone Editor (hjkl/wasd:move, q/e:dec/inc, mouse wheel:change value, ESC:quit)")
         .borders(Borders::ALL);
     let inner = block.inner(size);
     f.render_widget(block, size);

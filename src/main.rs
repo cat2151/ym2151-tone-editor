@@ -21,6 +21,7 @@ fn main() -> Result<(), io::Error> {
     // Parse command-line arguments
     let args: Vec<String> = env::args().collect();
     let use_interactive_mode = args.iter().any(|arg| arg == "--use-client-interactive-mode-access");
+    let value_by_mouse_move = args.iter().any(|arg| arg == "--value-by-mouse-move");
 
     // Ensure server is running (Windows only)
     #[cfg(windows)]
@@ -38,8 +39,8 @@ fn main() -> Result<(), io::Error> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // Create app state with interactive mode flag
-    let mut app = App::new(use_interactive_mode);
+    // Create app state with interactive mode flag and mouse mode flag
+    let mut app = App::new(use_interactive_mode, value_by_mouse_move);
 
     // Main loop
     let res = run_app(&mut terminal, &mut app);
@@ -98,12 +99,29 @@ fn run_app<B: ratatui::backend::Backend>(
                 }
             }
             Event::Mouse(mouse) => {
-                // Handle mouse movement to update parameter value
-                // Only responds to mouse movement within the terminal
-                if mouse.kind == MouseEventKind::Moved {
-                    // Get terminal width from the current frame
-                    let terminal_width = terminal.size().map(|size| size.width).unwrap_or(80);
-                    app.update_value_from_mouse_x(mouse.column, terminal_width);
+                if app.value_by_mouse_move {
+                    // Legacy mode: Handle mouse movement to update parameter value
+                    // Only responds to mouse movement within the terminal
+                    if mouse.kind == MouseEventKind::Moved {
+                        // Get terminal width from the current frame
+                        let terminal_width = terminal.size().map(|size| size.width).unwrap_or(80);
+                        app.update_value_from_mouse_x(mouse.column, terminal_width);
+                    }
+                } else {
+                    // Default mode: Handle mouse wheel events at mouse pointer position
+                    match mouse.kind {
+                        MouseEventKind::ScrollUp => {
+                            // Move cursor to mouse position and increase value
+                            app.move_cursor_to_mouse_position(mouse.column, mouse.row);
+                            app.increase_value();
+                        }
+                        MouseEventKind::ScrollDown => {
+                            // Move cursor to mouse position and decrease value
+                            app.move_cursor_to_mouse_position(mouse.column, mouse.row);
+                            app.decrease_value();
+                        }
+                        _ => {}
+                    }
                 }
             }
             _ => {}
