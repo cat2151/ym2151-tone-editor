@@ -6,6 +6,8 @@ mod ui;
 mod app;
 #[cfg(windows)]
 mod audio;
+#[cfg(test)]
+mod tests;
 
 use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind, MouseEventKind, EnableMouseCapture, DisableMouseCapture},
