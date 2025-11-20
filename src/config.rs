@@ -47,6 +47,14 @@ pub enum Action {
     JumpToOp2AndDecrease,
     JumpToOp3AndDecrease,
     JumpToOp4AndDecrease,
+    JumpToArAndIncrease,
+    JumpToD1rAndIncrease,
+    JumpToD2rAndIncrease,
+    JumpToRrAndIncrease,
+    JumpToArAndDecrease,
+    JumpToD1rAndDecrease,
+    JumpToD2rAndDecrease,
+    JumpToRrAndDecrease,
     Exit,
 }
 
@@ -121,16 +129,12 @@ impl Default for KeybindsConfig {
         
         // Cursor movement
         keybinds.insert("h".to_string(), Action::MoveCursorLeft);
-        keybinds.insert("a".to_string(), Action::MoveCursorLeft);
         keybinds.insert("Left".to_string(), Action::MoveCursorLeft);
         keybinds.insert("j".to_string(), Action::MoveCursorDown);
-        keybinds.insert("s".to_string(), Action::MoveCursorDown);
         keybinds.insert("Down".to_string(), Action::MoveCursorDown);
         keybinds.insert("k".to_string(), Action::MoveCursorUp);
-        keybinds.insert("w".to_string(), Action::MoveCursorUp);
         keybinds.insert("Up".to_string(), Action::MoveCursorUp);
         keybinds.insert("l".to_string(), Action::MoveCursorRight);
-        keybinds.insert("d".to_string(), Action::MoveCursorRight);
         keybinds.insert("Right".to_string(), Action::MoveCursorRight);
         
         // Jump to operator row and increase value
@@ -144,6 +148,16 @@ impl Default for KeybindsConfig {
         keybinds.insert("Ctrl+Shift+2".to_string(), Action::JumpToOp2AndDecrease);
         keybinds.insert("Ctrl+Shift+3".to_string(), Action::JumpToOp3AndDecrease);
         keybinds.insert("Ctrl+Shift+4".to_string(), Action::JumpToOp4AndDecrease);
+        
+        // ADSR envelope shortcuts (jump to current row's AR, D1R, D2R, RR parameters)
+        keybinds.insert("a".to_string(), Action::JumpToArAndIncrease);
+        keybinds.insert("d".to_string(), Action::JumpToD1rAndIncrease);
+        keybinds.insert("s".to_string(), Action::JumpToD2rAndIncrease);
+        keybinds.insert("r".to_string(), Action::JumpToRrAndIncrease);
+        keybinds.insert("A".to_string(), Action::JumpToArAndDecrease);
+        keybinds.insert("D".to_string(), Action::JumpToD1rAndDecrease);
+        keybinds.insert("S".to_string(), Action::JumpToD2rAndDecrease);
+        keybinds.insert("R".to_string(), Action::JumpToRrAndDecrease);
 
         
         // Exit

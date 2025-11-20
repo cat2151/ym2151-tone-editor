@@ -23,6 +23,8 @@
 # - move_cursor_left, move_cursor_right, move_cursor_up, move_cursor_down
 # - jump_to_op1_and_increase, jump_to_op2_and_increase, jump_to_op3_and_increase, jump_to_op4_and_increase
 # - jump_to_op1_and_decrease, jump_to_op2_and_decrease, jump_to_op3_and_decrease, jump_to_op4_and_decrease
+# - jump_to_ar_and_increase, jump_to_d1r_and_increase, jump_to_d2r_and_increase, jump_to_rr_and_increase
+# - jump_to_ar_and_decrease, jump_to_d1r_and_decrease, jump_to_d2r_and_decrease, jump_to_rr_and_decrease
 # - exit
 
 [keybinds]
@@ -86,12 +88,6 @@
 "k" = "move_cursor_up"
 "l" = "move_cursor_right"
 
-# Cursor movement (WASD)
-"a" = "move_cursor_left"
-"s" = "move_cursor_down"
-"w" = "move_cursor_up"
-"d" = "move_cursor_right"
-
 # Cursor movement (arrow keys)
 "Left" = "move_cursor_left"
 "Down" = "move_cursor_down"
@@ -110,6 +106,19 @@
 "Ctrl+Shift+2" = "jump_to_op2_and_decrease"
 "Ctrl+Shift+3" = "jump_to_op3_and_decrease"
 "Ctrl+Shift+4" = "jump_to_op4_and_decrease"
+
+# ADSR envelope shortcuts
+# A,D,S,R keys jump to AR, D1R, D2R, RR parameters on current row and increase
+"a" = "jump_to_ar_and_increase"
+"d" = "jump_to_d1r_and_increase"
+"s" = "jump_to_d2r_and_increase"
+"r" = "jump_to_rr_and_increase"
+
+# SHIFT+A,D,S,R keys jump to AR, D1R, D2R, RR parameters on current row and decrease
+"A" = "jump_to_ar_and_decrease"
+"D" = "jump_to_d1r_and_decrease"
+"S" = "jump_to_d2r_and_decrease"
+"R" = "jump_to_rr_and_decrease"
 
 # Exit
 "Esc" = "exit"
