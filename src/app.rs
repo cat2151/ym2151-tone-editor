@@ -396,6 +396,50 @@ impl App {
         }
     }
 
+    /// Jump to operator row and increase value at current column
+    /// operator_row: 0=M1, 1=C1, 2=M2, 3=C2 (display row indices, not data row)
+    pub fn jump_to_operator_and_increase(&mut self, operator_row: usize) {
+        if operator_row >= 4 {
+            return; // Invalid operator row
+        }
+        
+        // Move cursor to operator row (display row), preserving column
+        // Note: cursor_y is always a display row. The increase_value() function
+        // will use get_data_row() to map to the correct internal data row.
+        self.cursor_y = operator_row;
+        
+        // Clamp cursor_x to valid range for operator rows
+        let max_x = GRID_WIDTH - 1;
+        if self.cursor_x > max_x {
+            self.cursor_x = max_x;
+        }
+        
+        // Increase value at current position
+        self.increase_value();
+    }
+
+    /// Jump to operator row and decrease value at current column
+    /// operator_row: 0=M1, 1=C1, 2=M2, 3=C2 (display row indices, not data row)
+    pub fn jump_to_operator_and_decrease(&mut self, operator_row: usize) {
+        if operator_row >= 4 {
+            return; // Invalid operator row
+        }
+        
+        // Move cursor to operator row (display row), preserving column
+        // Note: cursor_y is always a display row. The decrease_value() function
+        // will use get_data_row() to map to the correct internal data row.
+        self.cursor_y = operator_row;
+        
+        // Clamp cursor_x to valid range for operator rows
+        let max_x = GRID_WIDTH - 1;
+        if self.cursor_x > max_x {
+            self.cursor_x = max_x;
+        }
+        
+        // Decrease value at current position
+        self.decrease_value();
+    }
+
     /// Cleanup - stop interactive mode if active
     #[cfg(windows)]
     pub fn cleanup(&self) {

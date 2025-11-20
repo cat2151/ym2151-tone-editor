@@ -11,6 +11,7 @@
 # - Other special chars: "+", "-", "_", "=", ".", ",", "<", ">", "/", "?"
 # - Arrow keys: "Left", "Right", "Up", "Down"
 # - Special keys: "Home", "End", "PageUp", "PageDown", "Esc", "Space"
+# - Modifier combinations: "Ctrl+1", "Ctrl+Shift+1", etc.
 #
 # Available actions:
 # - decrease_value, increase_value
@@ -20,6 +21,8 @@
 # - play_current_tone
 # - increase_fb, decrease_fb
 # - move_cursor_left, move_cursor_right, move_cursor_up, move_cursor_down
+# - jump_to_op1_and_increase, jump_to_op2_and_increase, jump_to_op3_and_increase, jump_to_op4_and_increase
+# - jump_to_op1_and_decrease, jump_to_op2_and_decrease, jump_to_op3_and_decrease, jump_to_op4_and_decrease
 # - exit
 
 [keybinds]
@@ -94,6 +97,19 @@
 "Down" = "move_cursor_down"
 "Up" = "move_cursor_up"
 "Right" = "move_cursor_right"
+
+# Jump to operator rows and adjust values
+# CTRL+1,2,3,4 jumps to M1,C1,M2,C2 respectively and increases value
+"Ctrl+1" = "jump_to_op1_and_increase"
+"Ctrl+2" = "jump_to_op2_and_increase"
+"Ctrl+3" = "jump_to_op3_and_increase"
+"Ctrl+4" = "jump_to_op4_and_increase"
+
+# CTRL+SHIFT+1,2,3,4 jumps to M1,C1,M2,C2 respectively and decreases value
+"Ctrl+Shift+1" = "jump_to_op1_and_decrease"
+"Ctrl+Shift+2" = "jump_to_op2_and_decrease"
+"Ctrl+Shift+3" = "jump_to_op3_and_decrease"
+"Ctrl+Shift+4" = "jump_to_op4_and_decrease"
 
 # Exit
 "Esc" = "exit"
