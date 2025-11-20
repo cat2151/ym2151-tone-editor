@@ -26,3 +26,6 @@ ym2151_tone_*.json
 ym2151_temp.json
 test_load
 *.log
+
+# User's custom keybinds configuration
+ym2151-tone-editor.toml

@@ -4,6 +4,7 @@ mod register;
 mod file_ops;
 mod ui;
 mod app;
+mod config;
 #[cfg(windows)]
 mod audio;
 #[cfg(test)]
@@ -55,6 +56,32 @@ use ratatui::{
 use std::io;
 use std::env;
 use app::App;
+use config::KeybindsConfig;
+
+/// Convert KeyCode and KeyModifiers to a key string for config lookup
+fn key_to_string(code: KeyCode, modifiers: KeyModifiers) -> Option<String> {
+    match code {
+        KeyCode::Char(c) => {
+            // Handle SHIFT modifier for special characters
+            if modifiers.contains(KeyModifiers::SHIFT) {
+                // For shifted characters, return the character as-is
+                Some(c.to_string())
+            } else {
+                Some(c.to_string())
+            }
+        }
+        KeyCode::Left => Some("Left".to_string()),
+        KeyCode::Right => Some("Right".to_string()),
+        KeyCode::Up => Some("Up".to_string()),
+        KeyCode::Down => Some("Down".to_string()),
+        KeyCode::Home => Some("Home".to_string()),
+        KeyCode::End => Some("End".to_string()),
+        KeyCode::PageUp => Some("PageUp".to_string()),
+        KeyCode::PageDown => Some("PageDown".to_string()),
+        KeyCode::Esc => Some("Esc".to_string()),
+        _ => None,
+    }
+}
 
 fn main() -> Result<(), io::Error> {
     // Parse command-line arguments
@@ -68,6 +95,9 @@ fn main() -> Result<(), io::Error> {
         enable_verbose_logging();
         log_verbose("Verbose logging enabled");
     }
+
+    // Load keybinds configuration
+    let keybinds_config = KeybindsConfig::load_or_default();
 
     // Ensure server is running (Windows only)
     #[cfg(windows)]
@@ -89,7 +119,7 @@ fn main() -> Result<(), io::Error> {
     let mut app = App::new(use_interactive_mode, value_by_mouse_move);
 
     // Main loop
-    let res = run_app(&mut terminal, &mut app);
+    let res = run_app(&mut terminal, &mut app, &keybinds_config);
 
     // Restore terminal
     disable_raw_mode()?;
@@ -106,6 +136,7 @@ fn main() -> Result<(), io::Error> {
 fn run_app<B: ratatui::backend::Backend>(
     terminal: &mut Terminal<B>,
     app: &mut App,
+    keybinds_config: &KeybindsConfig,
 ) -> io::Result<()> {
     loop {
         terminal.draw(|f| {
@@ -118,145 +149,54 @@ fn run_app<B: ratatui::backend::Backend>(
                 // This follows crossterm/ratatui best practices for avoiding duplicate
                 // actions while still supporting key repeat functionality
                 if key.kind == KeyEventKind::Press || key.kind == KeyEventKind::Repeat {
-                    match key.code {
-                        // Value modification keys
-                        KeyCode::Char('q') | KeyCode::PageDown => app.decrease_value(),
-                        KeyCode::Char('e') | KeyCode::PageUp => app.increase_value(),
-                        KeyCode::Home => app.set_value_to_max(),
-                        KeyCode::End => app.set_value_to_min(),
-                        KeyCode::Char('r') | KeyCode::Char('R') => app.set_value_to_random(),
-                        
-                        // "+" to increase by 1 (note: "+" is already SHIFT+"=")
-                        KeyCode::Char('+') => app.increase_value(),
-                        
-                        // "." to increase by 1, or by 10 with SHIFT (">" is SHIFT+".")
-                        KeyCode::Char('.') | KeyCode::Char('>') => {
-                            if key.modifiers.contains(KeyModifiers::SHIFT) || key.code == KeyCode::Char('>') {
-                                app.increase_value_by(10);
-                            } else {
-                                app.increase_value();
+                    // Convert key to string for config lookup
+                    if let Some(key_string) = key_to_string(key.code, key.modifiers) {
+                        // Look up action in config
+                        if let Some(action) = keybinds_config.get_action(&key_string) {
+                            use config::Action;
+                            match action {
+                                Action::DecreaseValue => app.decrease_value(),
+                                Action::IncreaseValue => app.increase_value(),
+                                Action::SetValueToMax => app.set_value_to_max(),
+                                Action::SetValueToMin => app.set_value_to_min(),
+                                Action::SetValueToRandom => app.set_value_to_random(),
+                                Action::IncreaseValueBy1 => app.increase_value_by(1),
+                                Action::IncreaseValueBy2 => app.increase_value_by(2),
+                                Action::IncreaseValueBy3 => app.increase_value_by(3),
+                                Action::IncreaseValueBy4 => app.increase_value_by(4),
+                                Action::IncreaseValueBy5 => app.increase_value_by(5),
+                                Action::IncreaseValueBy6 => app.increase_value_by(6),
+                                Action::IncreaseValueBy7 => app.increase_value_by(7),
+                                Action::IncreaseValueBy8 => app.increase_value_by(8),
+                                Action::IncreaseValueBy9 => app.increase_value_by(9),
+                                Action::IncreaseValueBy10 => app.increase_value_by(10),
+                                Action::DecreaseValueBy1 => app.decrease_value_by(1),
+                                Action::DecreaseValueBy2 => app.decrease_value_by(2),
+                                Action::DecreaseValueBy3 => app.decrease_value_by(3),
+                                Action::DecreaseValueBy4 => app.decrease_value_by(4),
+                                Action::DecreaseValueBy5 => app.decrease_value_by(5),
+                                Action::DecreaseValueBy6 => app.decrease_value_by(6),
+                                Action::DecreaseValueBy7 => app.decrease_value_by(7),
+                                Action::DecreaseValueBy8 => app.decrease_value_by(8),
+                                Action::DecreaseValueBy9 => app.decrease_value_by(9),
+                                Action::DecreaseValueBy10 => app.decrease_value_by(10),
+                                Action::PlayCurrentTone => app.play_current_tone(),
+                                Action::IncreaseFb => app.increase_fb(),
+                                Action::DecreaseFb => app.decrease_fb(),
+                                Action::MoveCursorLeft => app.move_cursor_left(),
+                                Action::MoveCursorRight => app.move_cursor_right(),
+                                Action::MoveCursorUp => app.move_cursor_up(),
+                                Action::MoveCursorDown => app.move_cursor_down(),
+                                Action::Exit => {
+                                    // Save tone data to JSON before exiting
+                                    app.save_to_json()?;
+                                    // Stop interactive mode if active (Windows only)
+                                    #[cfg(windows)]
+                                    app.cleanup();
+                                    return Ok(());
+                                }
                             }
                         }
-                        
-                        // "-" to decrease by 1, or by 10 with SHIFT ("_" is SHIFT+"-")
-                        KeyCode::Char('-') | KeyCode::Char('_') => {
-                            if key.modifiers.contains(KeyModifiers::SHIFT) || key.code == KeyCode::Char('_') {
-                                app.decrease_value_by(10);
-                            } else {
-                                app.decrease_value();
-                            }
-                        }
-                        
-                        // "," to decrease by 1, or by 10 with SHIFT ("<" is SHIFT+",")
-                        KeyCode::Char(',') | KeyCode::Char('<') => {
-                            if key.modifiers.contains(KeyModifiers::SHIFT) || key.code == KeyCode::Char('<') {
-                                app.decrease_value_by(10);
-                            } else {
-                                app.decrease_value();
-                            }
-                        }
-                        
-                        // Number keys for quick value adjustment
-                        // Keys 1-9: increase by 1-9, key 0: increase by 10
-                        // With SHIFT: decrease by the same amount
-                        KeyCode::Char('1') => {
-                            if key.modifiers.contains(KeyModifiers::SHIFT) {
-                                app.decrease_value_by(1);
-                            } else {
-                                app.increase_value_by(1);
-                            }
-                        }
-                        KeyCode::Char('2') => {
-                            if key.modifiers.contains(KeyModifiers::SHIFT) {
-                                app.decrease_value_by(2);
-                            } else {
-                                app.increase_value_by(2);
-                            }
-                        }
-                        KeyCode::Char('3') => {
-                            if key.modifiers.contains(KeyModifiers::SHIFT) {
-                                app.decrease_value_by(3);
-                            } else {
-                                app.increase_value_by(3);
-                            }
-                        }
-                        KeyCode::Char('4') => {
-                            if key.modifiers.contains(KeyModifiers::SHIFT) {
-                                app.decrease_value_by(4);
-                            } else {
-                                app.increase_value_by(4);
-                            }
-                        }
-                        KeyCode::Char('5') => {
-                            if key.modifiers.contains(KeyModifiers::SHIFT) {
-                                app.decrease_value_by(5);
-                            } else {
-                                app.increase_value_by(5);
-                            }
-                        }
-                        KeyCode::Char('6') => {
-                            if key.modifiers.contains(KeyModifiers::SHIFT) {
-                                app.decrease_value_by(6);
-                            } else {
-                                app.increase_value_by(6);
-                            }
-                        }
-                        KeyCode::Char('7') => {
-                            if key.modifiers.contains(KeyModifiers::SHIFT) {
-                                app.decrease_value_by(7);
-                            } else {
-                                app.increase_value_by(7);
-                            }
-                        }
-                        KeyCode::Char('8') => {
-                            if key.modifiers.contains(KeyModifiers::SHIFT) {
-                                app.decrease_value_by(8);
-                            } else {
-                                app.increase_value_by(8);
-                            }
-                        }
-                        KeyCode::Char('9') => {
-                            if key.modifiers.contains(KeyModifiers::SHIFT) {
-                                app.decrease_value_by(9);
-                            } else {
-                                app.increase_value_by(9);
-                            }
-                        }
-                        KeyCode::Char('0') => {
-                            if key.modifiers.contains(KeyModifiers::SHIFT) {
-                                app.decrease_value_by(10);
-                            } else {
-                                app.increase_value_by(10);
-                            }
-                        }
-                        
-                        // Play current tone without parameter changes
-                        KeyCode::Char('p') | KeyCode::Char('P') | KeyCode::Char(' ') => app.play_current_tone(),
-                        
-                        // FB (Feedback) shortcuts
-                        KeyCode::Char('f') | KeyCode::Char('F') => {
-                            if key.modifiers.contains(KeyModifiers::SHIFT) {
-                                app.decrease_fb();
-                            } else {
-                                app.increase_fb();
-                            }
-                        }
-                        
-                        // Cursor movement keys (hjkl/aswd + arrow keys)
-                        KeyCode::Char('h') | KeyCode::Char('a') | KeyCode::Left => app.move_cursor_left(),
-                        KeyCode::Char('j') | KeyCode::Char('s') | KeyCode::Down => app.move_cursor_down(),
-                        KeyCode::Char('k') | KeyCode::Char('w') | KeyCode::Up => app.move_cursor_up(),
-                        KeyCode::Char('l') | KeyCode::Char('d') | KeyCode::Right => app.move_cursor_right(),
-                        
-                        KeyCode::Esc => {
-                            // Save tone data to JSON before exiting
-                            app.save_to_json()?;
-                            // Stop interactive mode if active (Windows only)
-                            #[cfg(windows)]
-                            app.cleanup();
-                            return Ok(());
-                        }
-                        _ => {}
                     }
                 }
             }

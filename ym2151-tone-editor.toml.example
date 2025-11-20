@@ -1,0 +1,99 @@
+# YM2151 Tone Editor Keybinds Configuration
+# 
+# This file allows you to customize keyboard shortcuts for the editor.
+# Format: "Key" = "action"
+#
+# Available keys:
+# - Letter keys: "a", "b", ... "z" (lowercase)
+# - Letter keys with shift: "A", "B", ... "Z" (uppercase)
+# - Number keys: "0", "1", ... "9"
+# - Special keys with shift: "!", "@", "#", "$", "%", "^", "&", "*", "(", ")"
+# - Other special chars: "+", "-", "_", "=", ".", ",", "<", ">", "/", "?"
+# - Arrow keys: "Left", "Right", "Up", "Down"
+# - Special keys: "Home", "End", "PageUp", "PageDown", "Esc", "Space"
+#
+# Available actions:
+# - decrease_value, increase_value
+# - set_value_to_max, set_value_to_min, set_value_to_random
+# - increase_value_by1 through increase_value_by10
+# - decrease_value_by1 through decrease_value_by10
+# - play_current_tone
+# - increase_fb, decrease_fb
+# - move_cursor_left, move_cursor_right, move_cursor_up, move_cursor_down
+# - exit
+
+[keybinds]
+# Value modification keys
+"q" = "decrease_value"
+"PageDown" = "decrease_value"
+"e" = "increase_value"
+"PageUp" = "increase_value"
+"Home" = "set_value_to_max"
+"End" = "set_value_to_min"
+"r" = "set_value_to_random"
+"R" = "set_value_to_random"
+
+# Increase/decrease by 1
+"+" = "increase_value_by1"
+"." = "increase_value_by1"
+"-" = "decrease_value_by1"
+"," = "decrease_value_by1"
+
+# Increase/decrease by 10
+">" = "increase_value_by10"
+"_" = "decrease_value_by10"
+"<" = "decrease_value_by10"
+
+# Number keys for quick value adjustment
+"1" = "increase_value_by1"
+"2" = "increase_value_by2"
+"3" = "increase_value_by3"
+"4" = "increase_value_by4"
+"5" = "increase_value_by5"
+"6" = "increase_value_by6"
+"7" = "increase_value_by7"
+"8" = "increase_value_by8"
+"9" = "increase_value_by9"
+"0" = "increase_value_by10"
+
+# SHIFT + number keys for decrease
+"!" = "decrease_value_by1"
+"@" = "decrease_value_by2"
+"#" = "decrease_value_by3"
+"$" = "decrease_value_by4"
+"%" = "decrease_value_by5"
+"^" = "decrease_value_by6"
+"&" = "decrease_value_by7"
+"*" = "decrease_value_by8"
+"(" = "decrease_value_by9"
+")" = "decrease_value_by10"
+
+# Play current tone
+"p" = "play_current_tone"
+"P" = "play_current_tone"
+"Space" = "play_current_tone"
+
+# FB (Feedback) shortcuts
+"f" = "increase_fb"
+"F" = "decrease_fb"
+
+# Cursor movement (vi-style)
+"h" = "move_cursor_left"
+"j" = "move_cursor_down"
+"k" = "move_cursor_up"
+"l" = "move_cursor_right"
+
+# Cursor movement (WASD)
+"a" = "move_cursor_left"
+"s" = "move_cursor_down"
+"w" = "move_cursor_up"
+"d" = "move_cursor_right"
+
+# Cursor movement (arrow keys)
+"Left" = "move_cursor_left"
+"Down" = "move_cursor_down"
+"Up" = "move_cursor_up"
+"Right" = "move_cursor_right"
+
+# Exit
+"Esc" = "exit"
