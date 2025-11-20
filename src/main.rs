@@ -126,6 +126,36 @@ fn run_app<B: ratatui::backend::Backend>(
                         KeyCode::End => app.set_value_to_min(),
                         KeyCode::Char('r') | KeyCode::Char('R') => app.set_value_to_random(),
                         
+                        // "+" to increase by 1 (note: "+" is already SHIFT+"=")
+                        KeyCode::Char('+') => app.increase_value(),
+                        
+                        // "." to increase by 1, or by 10 with SHIFT (">" is SHIFT+".")
+                        KeyCode::Char('.') | KeyCode::Char('>') => {
+                            if key.modifiers.contains(KeyModifiers::SHIFT) || key.code == KeyCode::Char('>') {
+                                app.increase_value_by(10);
+                            } else {
+                                app.increase_value();
+                            }
+                        }
+                        
+                        // "-" to decrease by 1, or by 10 with SHIFT ("_" is SHIFT+"-")
+                        KeyCode::Char('-') | KeyCode::Char('_') => {
+                            if key.modifiers.contains(KeyModifiers::SHIFT) || key.code == KeyCode::Char('_') {
+                                app.decrease_value_by(10);
+                            } else {
+                                app.decrease_value();
+                            }
+                        }
+                        
+                        // "," to decrease by 1, or by 10 with SHIFT ("<" is SHIFT+",")
+                        KeyCode::Char(',') | KeyCode::Char('<') => {
+                            if key.modifiers.contains(KeyModifiers::SHIFT) || key.code == KeyCode::Char('<') {
+                                app.decrease_value_by(10);
+                            } else {
+                                app.decrease_value();
+                            }
+                        }
+                        
                         // Number keys for quick value adjustment
                         // Keys 1-9: increase by 1-9, key 0: increase by 10
                         // With SHIFT: decrease by the same amount
