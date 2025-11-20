@@ -221,4 +221,35 @@ mod tests {
         // Clean up
         let _ = std::fs::remove_file(temp_file);
     }
+
+    #[test]
+    fn test_custom_keybinds_file() {
+        // Create a custom keybinds file
+        let custom_toml = r#"
+[keybinds]
+"u" = "decrease_value"
+"i" = "increase_value"
+"x" = "set_value_to_random"
+"Esc" = "exit"
+"#;
+        
+        let temp_file = "/tmp/test_custom_keybinds.toml";
+        std::fs::write(temp_file, custom_toml).unwrap();
+        
+        // Load the custom config
+        let config = KeybindsConfig::load_from_file(temp_file).unwrap();
+        
+        // Verify custom keybinds
+        assert_eq!(config.get_action("u"), Some(&Action::DecreaseValue));
+        assert_eq!(config.get_action("i"), Some(&Action::IncreaseValue));
+        assert_eq!(config.get_action("x"), Some(&Action::SetValueToRandom));
+        assert_eq!(config.get_action("Esc"), Some(&Action::Exit));
+        
+        // Verify that default keybinds are NOT present (since we only defined a few)
+        assert_eq!(config.get_action("q"), None);
+        assert_eq!(config.get_action("e"), None);
+        
+        // Clean up
+        let _ = std::fs::remove_file(temp_file);
+    }
 }
