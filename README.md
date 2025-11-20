@@ -130,6 +130,11 @@ To enable interactive mode:
 | **Value Change** | |
 | `PageUp` / `e` | Increase value at cursor position |
 | `PageDown` / `q` | Decrease value at cursor position |
+| `+` / `.` | Increase value by 1 |
+| `-` / `,` | Decrease value by 1 |
+| `Shift` + `.` (`>`) | Increase value by 10 |
+| `Shift` + `-` (`_`) | Decrease value by 10 |
+| `Shift` + `,` (`<`) | Decrease value by 10 |
 | `Home` | Set to maximum value for current parameter |
 | `End` | Set to minimum value (0) |
 | `r` / `R` | Set to random value (within valid range) |
