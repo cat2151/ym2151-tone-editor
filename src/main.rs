@@ -62,8 +62,16 @@ use config::KeybindsConfig;
 fn key_to_string(code: KeyCode, modifiers: KeyModifiers) -> Option<String> {
     match code {
         KeyCode::Char(c) => {
+            // Handle CTRL+SHIFT modifier (for CTRL+SHIFT+1,2,3,4)
+            if modifiers.contains(KeyModifiers::CONTROL) && modifiers.contains(KeyModifiers::SHIFT) {
+                Some(format!("Ctrl+Shift+{}", c))
+            }
+            // Handle CTRL modifier (for CTRL+1,2,3,4)
+            else if modifiers.contains(KeyModifiers::CONTROL) {
+                Some(format!("Ctrl+{}", c))
+            }
             // Handle SHIFT modifier for special characters
-            if modifiers.contains(KeyModifiers::SHIFT) {
+            else if modifiers.contains(KeyModifiers::SHIFT) {
                 // For shifted characters, return the character as-is
                 Some(c.to_string())
             } else {
@@ -187,6 +195,14 @@ fn run_app<B: ratatui::backend::Backend>(
                                 Action::MoveCursorRight => app.move_cursor_right(),
                                 Action::MoveCursorUp => app.move_cursor_up(),
                                 Action::MoveCursorDown => app.move_cursor_down(),
+                                Action::JumpToOp1AndIncrease => app.jump_to_operator_and_increase(0),
+                                Action::JumpToOp2AndIncrease => app.jump_to_operator_and_increase(1),
+                                Action::JumpToOp3AndIncrease => app.jump_to_operator_and_increase(2),
+                                Action::JumpToOp4AndIncrease => app.jump_to_operator_and_increase(3),
+                                Action::JumpToOp1AndDecrease => app.jump_to_operator_and_decrease(0),
+                                Action::JumpToOp2AndDecrease => app.jump_to_operator_and_decrease(1),
+                                Action::JumpToOp3AndDecrease => app.jump_to_operator_and_decrease(2),
+                                Action::JumpToOp4AndDecrease => app.jump_to_operator_and_decrease(3),
                                 Action::Exit => {
                                     // Save tone data to JSON before exiting
                                     app.save_to_json()?;

@@ -39,6 +39,14 @@ pub enum Action {
     MoveCursorRight,
     MoveCursorUp,
     MoveCursorDown,
+    JumpToOp1AndIncrease,
+    JumpToOp2AndIncrease,
+    JumpToOp3AndIncrease,
+    JumpToOp4AndIncrease,
+    JumpToOp1AndDecrease,
+    JumpToOp2AndDecrease,
+    JumpToOp3AndDecrease,
+    JumpToOp4AndDecrease,
     Exit,
 }
 
@@ -124,6 +132,19 @@ impl Default for KeybindsConfig {
         keybinds.insert("l".to_string(), Action::MoveCursorRight);
         keybinds.insert("d".to_string(), Action::MoveCursorRight);
         keybinds.insert("Right".to_string(), Action::MoveCursorRight);
+        
+        // Jump to operator row and increase value
+        keybinds.insert("Ctrl+1".to_string(), Action::JumpToOp1AndIncrease);
+        keybinds.insert("Ctrl+2".to_string(), Action::JumpToOp2AndIncrease);
+        keybinds.insert("Ctrl+3".to_string(), Action::JumpToOp3AndIncrease);
+        keybinds.insert("Ctrl+4".to_string(), Action::JumpToOp4AndIncrease);
+        
+        // Jump to operator row and decrease value
+        keybinds.insert("Ctrl+Shift+1".to_string(), Action::JumpToOp1AndDecrease);
+        keybinds.insert("Ctrl+Shift+2".to_string(), Action::JumpToOp2AndDecrease);
+        keybinds.insert("Ctrl+Shift+3".to_string(), Action::JumpToOp3AndDecrease);
+        keybinds.insert("Ctrl+Shift+4".to_string(), Action::JumpToOp4AndDecrease);
+
         
         // Exit
         keybinds.insert("Esc".to_string(), Action::Exit);
