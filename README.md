@@ -2,31 +2,31 @@
 
 <p align="left">
   <a href="README.ja.md"><img src="https://img.shields.io/badge/🇯🇵-Japanese-red.svg" alt="Japanese"></a>
-  <a href="README.md"><img src="https://img.shields.com/badge/🇺🇸-English-blue.svg" alt="English"></a>
+  <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸-English-blue.svg" alt="English"></a>
 </p>
 
-A YM2151 (OPM) FM tone editor for Windows. Built as a Rust TUI (Text User Interface) editor.
+YM2151 (OPM) FM sound tone editor for Windows. A Rust TUI (Text User Interface) editor.
 
 ## Status
 
-Currently under development. Progress is roughly 50%.
+Currently under development. Current progress is approximately 50%.
 
 - Future Outlook
-    - \* All are provisional specifications for verification and are subject to frequent breaking changes.
-    - Tone saving in a GitHub-friendly format. Tone data itself to be described in lines of approximately 100 characters. See below.
-    - Significant keybind changes. See below.
+    - *Note: All specifications are provisional for verification and are subject to frequent breaking changes.*
+    - Tone saving format suitable for GitHub management. Tone data itself described in approximately 100 characters per line. Details below.
+    - Significant keybind changes. Details below.
 
 ## Features
 
-- Edit YM2151 tone parameters with labeled controls
-- Display 11 parameters across 5 rows (4 operators + 1 channel row)
-- Visual parameter names: DT, MUL, TL, KS, AR, D1R, D1L, D2R, RR, DT2, AMS
-- Cursor navigation using arrow keys, `hjkl` (Vim style), or `wasd` keys
-- Increment/decrement values using PageUp/PageDown or `e`/`q` keys (respecting parameter maximums)
-- Fast value setting with Home (max), End (min), R (random)
-- Play the currently edited tone with `P` or `SPACE` key (check sound without changing parameter values)
-- Exit with `ESC` key
-- Saves tone to JSON on exit and loads the latest JSON on next startup
+- Edit YM2151 tone parameters with parameter labels.
+- Display 11 parameters across 5 rows (4 operators + 1 channel row).
+- Visual parameter names: DT, MUL, TL, KS, AR, D1R, D1L, D2R, RR, DT2, AMS.
+- Cursor navigation using arrow keys, `hjkl` (Vim-style), or `wasd` keys.
+- Increase/decrease values using PageUp/PageDown or `e`/`q` keys (respects parameter maximums).
+- Fast value setting with Home (maximum), End (minimum), R (random).
+- Play the currently edited tone with `P` or `SPACE` key (check sound without changing parameter values).
+- Exit with `ESC` key.
+- Saves the tone as JSON on exit and loads the latest JSON on next startup.
 
 ## YM2151 Tone Data Format
 
@@ -64,7 +64,7 @@ cargo build --release
 cargo run
 ```
 
-Alternatively, run the compiled binary directly:
+Or run the compiled binary directly:
 
 ```bash
 ./target/release/ym2151-tone-editor
@@ -72,10 +72,10 @@ Alternatively, run the compiled binary directly:
 
 ## Real-time Audio Feedback (Windows Only)
 
-The editor automatically ensures the server is ready by calling the `ensure_server_ready()` function from the `ym2151-log-play-server` library. This handles server installation, startup, and readiness checks automatically.
+The editor automatically ensures the server is ready using the `ensure_server_ready()` function from the `ym2151-log-play-server` library. This automatically handles server installation, startup, and readiness checks.
 
 ```bash
-# Just run the tone editor - the server will be set up and started automatically
+# Just run the tone editor - the server will be set up and launched automatically
 cargo run
 ```
 
@@ -85,7 +85,7 @@ The editor operates in two modes:
 
 #### Legacy Mode (Default)
 
-By default, the editor uses `send_json` to transmit complete tone data in JSON format via a named pipe. Each time a parameter is changed, the entire new JSON is sent.
+By default, the editor uses `send_json` to transmit complete tone data in JSON format via a named pipe. The entire new JSON is sent every time a parameter is changed.
 
 ```bash
 cargo run
@@ -101,33 +101,33 @@ cargo run -- --use-client-interactive-mode-access
 
 To enable interactive mode:
 - The editor calls `start_interactive()` on startup to begin continuous audio streaming on the server.
-- When parameters change, it uses `write_register()` to update only the affected YM2151 registers.
+- It uses `write_register()` to update only the affected YM2151 registers when parameters change.
 - It calls `stop_interactive()` on exit to stop audio streaming.
 
-**Note**: The library's `ensure_server_ready()` function handles all server management, including installation if needed.
+**Note**: The library's `ensure_server_ready()` function handles all server management, including installation if necessary.
 
 ### Mode Comparison
 
 | Feature | Legacy Mode | Interactive Mode |
-|---------|-------------|------------------|
-| Data Transmission | Complete JSON | Register writes only |
+|------|---------------|---------------------|
+| Data Transmission | Full JSON | Register writes only |
 | Efficiency | Low (sends all data every time) | High (sends only changes) |
 | Audio Continuity | Restarts on parameter change | Continuous streaming |
-| Usage | For comparison/verification | Normal editing workflow |
+| Use Case | For comparison/verification | For regular editing tasks |
 
 ## How to Use
 
-\* Subject to breaking changes in the future. For verification purposes.
+*Note: This is subject to breaking changes in the future for verification purposes.*
 
 | Key | Action |
 |-----|--------|
 | **Cursor Movement** | |
-| Arrow keys (←↓↑→) | Move cursor in the respective direction |
+| Arrow keys (←↓↑→) | Move cursor in respective direction |
 | `h` / `a` | Move cursor left |
 | `j` / `s` | Move cursor down |
 | `k` / `w` | Move cursor up |
 | `l` / `d` | Move cursor right |
-| **Value Change** | |
+| **Value Modification** | |
 | `PageUp` / `e` | Increase value at cursor position |
 | `PageDown` / `q` | Decrease value at cursor position |
 | `+` / `.` | Increase value by 1 |
@@ -144,65 +144,65 @@ To enable interactive mode:
 | **Other** | |
 | `ESC` | Save and exit application |
 
-## Command Line Options
+## Command-line Options
 
 | Option | Description |
 |--------|-------------|
-| `--use-client-interactive-mode-access` | Use interactive mode for more efficient audio feedback (continuously streams audio, sends only register changes) |
-| `--value-by-mouse-move` | Enable legacy mouse behavior (change value at cursor position by moving mouse left/right) |
+| `--use-client-interactive-mode-access` | Use interactive mode for more efficient audio feedback (continuously streams audio and sends only register changes) |
+| `--value-by-mouse-move` | Enable legacy mouse behavior (mouse horizontal movement changes value at cursor position) |
 
 ## Dependencies
 
 - `ratatui` 0.28 - Terminal UI framework
 - `crossterm` 0.28 - Cross-platform terminal manipulation library
 
-## Concepts
-- Startup in 100ms, sound plays in 100ms. \* Numbers are rough; idea is significantly faster than 1 second.
-- Press a key, sound plays and tone changes.
-    - Prioritize addressing the feeling of "It doesn't play or edit, I don't understand it."
+## Concept
+- Launch in 100ms, sound in 100ms * (These numbers are rough; the idea is significantly faster than 1 second)
+- Pressing a key plays sound and changes the tone.
+    - Prioritize addressing the frustration of "can't play sound, can't edit, unclear how to use."
 - Colorful visualization.
 - Simple.
-- Easy to grasp controls for minimal editing (cursor, mouse).
+- Easy-to-learn operation (cursor, mouse) for basic editing.
 
-## Out of Scope, Not Aiming For
-- High-performance editor
-    - A perfect, versatile editor that satisfies all users from beginners to super-experts.
+## Out of Scope, Not Aimed For
+- Feature-rich editor
+    - A perfect, all-purpose editor that satisfies everyone from beginners to super-advanced users.
     - Unlimited intelligent UNDO.
-    - Various intelligent, fully automatic, user-friendly, error-free, flexible, and advanced editing features.
+    - Various intelligent, fully automatic, easy-to-use, flexible, and advanced editing features without mistakes.
 - Interactive
-    - Highly interactive performance with a virtual MIDI keyboard; server also changed to low-latency, advanced real-time processing using shared memory.
-    - Highly interactive performance in general with good responsiveness.
+    - Highly interactive performance via a virtual MIDI keyboard; changing the server to use shared memory for low-latency, advanced real-time processing.
+    - Overall highly interactive performance with good responsiveness.
 - GUI
-    - Graphical visualization of tones. Dedicated terminal emulator for envelope and waveform visualization, high-performance oscilloscope updating every 16ms.
-- High-functionality librarian
-    - Flexible, clear, and quick access, preview, selection, editing, and highly intelligent version control for all tones.
+    - Graphical tone visualization. Envelope and waveform visualization using a dedicated terminal emulator, high-performance oscilloscope with 16ms display updates.
+- Advanced librarian
+    - Flexible, easy, and quick access, preview, selection, editing, and highly intelligent version management for all tones.
     - Fully automatic or interactive and advanced tone extraction from existing songs, with a 100% success rate.
-    - Automatic detection and loading of all YM2151 tone formats, with a 100% detection success rate.
-    - Automatic detection and conversion for loading all FM tone formats, with a 100% success rate.
-- Advanced Extensibility
+    - Automatic identification and loading of all YM2151 tone formats, with a 100% identification success rate.
+    - Automatic identification and conversion of all FM tone formats for loading, with a 100% success rate.
+- Advanced extensibility
     - Advanced tone creation using automation.
-    - Advanced tone creation utilizing all 8 channels, and even multiple YM2151s.
-    - Compatibility with all FM sound sources, beyond the scope of YM2151.
-    - Compatibility with all DAWs and audio plugins, allowing playback and import/export of FM sound source tones for each.
+    - Advanced tone creation utilizing all 8 channels, and even multiple YM2151 chips.
+    - Support for all FM sound chips beyond the YM2151 framework.
+    - Compatibility with all DAWs and audio plugins, enabling playback and tone import/export for each FM sound chip.
 
-## Considering Tone Storage Format
-- Past Challenges
-    - `ym2151-log` format
+## Considering a Tone Data Storage Format
+- Previous challenges
+    - ym2151-log format
         - JSON data with many lines.
         - Cannot include multiple tone variations in one file.
-        - Maintaining this directly on GitHub for General MIDI is not very practical.
-        - Will continue to be used for server transmission. However, there's a feeling that a more appropriate format is needed for tone management.
-### Proposed Solution
+        - Maintaining this as-is on GitHub for General MIDI is not very practical.
+        - Will continue to be used for server transmission. However, for tone management, a more suitable format is needed.
+### Proposed solution
 - Operation
     - Placement
         - `tones/general_midi/000_AcousticGrand.json`
-        - Benefits
-            - Self-describing
-                - Directory hierarchy and filenames make purpose and tone easy to understand.
+        - Advantages
+            - Self-documenting
+                - Directory hierarchy and filename clearly indicate purpose and tone.
     - Commit
-        - Commit to the `ym2151-tone-editor` repository 0-1 times a day.
+        - Commit to the ym2151-tone-editor repository at a frequency of 0-1 times per day.
 - File Format
-```
+```json
 {
   "description": "GM:000 Acoustic Grand Piano family",
   "variations": [
@@ -211,97 +211,97 @@ To enable interactive mode:
   ]
 }
 ```
-- JSON File Format Description
-    - The core is `registers`. This is a required field.
-    - `mml`, `note_number`, `description` are optional fields.
-    - If `mml` and `note_number` are omitted, what plays is up to the application, e.g., middle C.
-    - If both `mml` and `note_number` are present, which one plays is also up to the application, e.g., `note_number`, then `mml`, playing alternately.
-- Data Format Description
+- JSON File Format Explanation
+    - The core is `registers`. This is a mandatory item.
+    - `mml`, `note_number`, `description` are optional items.
+    - If `mml` and `note_number` are omitted, what sounds is up to the application (e.g., middle C).
+    - If both `mml` and `note_number` are written, which one sounds is also up to the application (e.g., `note_number`, then `mml`, alternating).
+- Data Format Explanation
     - Address and Data
-        - Repeated pairs of 2-character address, 2-character data.
-    - Benefits
-        - Structured
-            - Being JSON, it lacks the ambiguity of natural language and can be read/written with simple code.
+        - Repeated pairs of 2-character address and 2-character data.
+    - Advantages
+        - Structure
+            - Being JSON, it has no ambiguity like natural language, allowing simple code for reading and writing.
         - Flexibility
-            - If a format were to limit to specific registers and fix their description method, problems like the following could arise, but this approach avoids them:
-                - E.g., This format lacks necessary information.
-                - E.g., How much information is sufficient for the format, incurring format design costs.
-                - E.g., Later format changes require parser/output code changes or migration.
-                    - Format changes include changes in description methods or increases/decreases in target registers.
-        - Self-describing
-            - `description` ensures readability and self-descriptiveness, as do directory and filenames.
-                - The JSON nature also contributes to this.
+            - If the format were restricted to specific registers and fixed to a particular description method, problems like the following could arise, but this approach avoids them:
+                - Example: In this format, necessary information might be insufficient.
+                - Example: High format consideration cost to determine what information is sufficient to record.
+                - Example: If the format is changed later, requiring changes to parser/output code and migration.
+                    - Format changes include modifications to description methods or increasing/decreasing target registers.
+        - Self-documenting
+            - `description` ensures readability and self-documentation, as do directory and file names.
+                - Being JSON also contributes to this.
         - Variations
-            - In practice, GM000 might have many variations, so this is handled by storing them in an array within the JSON.
+            - In practice, even GM000 can have many variations; this is handled by keeping them in an array within the JSON.
         - Readability
-            - Writing on one line with `description` first leads to high readability. Intended to be treated as a list of tone variation names.
+            - Writing on a single line, with `description` at the beginning, provides high readability. Intended to be treated as a list of tone variation names.
         - Portability
-            - A highly portable format; code for mutual conversion at this level should be easy to write.
+            - Highly portable format; at this level, it's easy to write code for mutual conversion.
         - Uniqueness
-            - Using `registers` as a unique ID provides a certain level of uniqueness.
-                - Benefit: Duplicate detection can help prevent excessive tone library bloat.
-                - Benefit: Can be used as an ID when uniquely identifying a tone.
-                    - Searchable even if the `description` changes.
-                    - Could make handling various aspects easier.
-                - Benefit: Searching by `registers` can reveal "This is YM2151 tone data from so-and-so's repository." The data has self-descriptiveness.
-                    - For this reason, `registers` must maintain a format without delimiters.
-                    - Prerequisite: Being registered on GitHub and having a self-describing registration location.
-                - Note: This is only to a certain extent. Tones that are almost identical but differ by 1 bit will have different IDs.
+            - Utilizing `registers` as a unique ID provides some benefits of uniqueness.
+                - Advantage: Can detect duplicates, potentially preventing excessive tone library bloat.
+                - Advantage: Can be used as an ID to uniquely identify a tone when needed.
+                    - Can be searched even if the `description` has changed.
+                    - Can simplify various handling tasks.
+                - Advantage: Searching by `registers` can identify "this is YM2151 tone data from so-and-so's repository." The data is self-describing.
+                    - For this, it is necessary to maintain a format for `registers` without delimiters.
+                    - This assumes GitHub management and self-describing registration locations.
+                - Note: This is only to a certain extent. Almost identical tones will have different IDs if even 1 bit differs.
     - Supplement
-        - Slot mask
-            - Including "note on" in `registers` can represent the slot mask. The application can extract the slot mask from it. `ym2151-tone-editor` already implements this.
-            - The purpose of the slot mask is to provide an easy-to-edit 2-op tone editing experience, etc.
-        - Saving all 256 bytes of register information to JSON is not recommended. This carries the risk of the application behaving unexpectedly.
-            - Fine-tuning and consideration of this will be deferred. YAGNI. It's assumed to be manageable by the application later.
-        - It should be noted that advanced performance techniques such as modulator TL automation cannot be included in this tone data.
-            - This means "advanced performance data including tones" that cannot be expressed in this format may exist, and compatibility with it will be limited.
+        - Slot Mask
+            - Including `note on` in `registers` can represent the slot mask. The application can extract the slot mask from it. `ym2151-tone-editor` already implements this.
+            - The purpose of the slot mask is to provide an easy-to-edit 2-operator tone editing experience, etc.
+        - Saving all 256 bytes of register information as JSON is not recommended. This carries the risk of the application behaving unexpectedly.
+            - Detailed examination and consideration will be postponed. YAGNI. It is assumed that the application can handle it later.
+        - Note that advanced performance techniques such as modulator TL automation cannot be included in this tone data.
+            - This means that "advanced performance tone data" that cannot be expressed in this format may exist, and compatibility with such data will be limited.
 - Challenges and Solutions
-    - Challenge: 128 items is a lot of effort.
+    - Challenge: 128 entries is tedious.
     - Solution: It is assumed that this can be sufficiently handled by writing simple code for it.
-        - For example, preparing a list of 128 tone names and simple code should make JSON filename generation and description generation easy.
+        - For example, preparing a list of 128 tone names and simple code would make JSON filename generation and description generation easy.
 
 ## Considering Keybinds
-- \* Each point will be separated into individual issues. Prioritize safety. Prevent confusion.
-- \* Assumed to be configurable in the `keybinds` section of `ym2151-tone-editor.toml`.
+- *Note: Each will be separated into individual issues. Prioritize safety, prevent confusion.*
+- *Note: It is assumed that keybinds can be configured in the `keybinds` section of `ym2151-tone-editor.toml`.*
 - Concept
-    - Basic operations are completed using only cursor keys and Page Up/Down.
+    - Basic operations are fully achievable with cursor keys and Page Up/Down.
     - Supplement
-        - Shortcut keys provide fast editing and advanced functionality.
-        - Mouse left-click for cursor movement, wheel for value increase/decrease, is also standard and will be implemented.
-            - Right-click in TUI is confusing and best avoided.
-        - Note that for some functions like exit, `ESC` alone is sufficient, as it is standard.
-- `+` and `-` to increase/decrease values. This is widely known and improves UX for new users.
+        - Shortcut keys provide quick editing and advanced functionality.
+        - Mouse left-click for cursor movement, wheel for value increment/decrement will also be implemented as they are standard.
+            - Right-click in TUI is confusing, so it's best avoided.
+        - For some functions, like exiting, `ESC` alone is sufficient, as it is standard.
+- Use `+` and `-` to increment/decrement values. This is widely known and improves UX for new users.
 - `CTRL hjkl` for cursor movement. `CTRL npfb` also for cursor movement.
-    - While cursor-key-less movement is achievable with other shortcuts, these could improve UX, especially for new users.
-- `P` and `SPACE` for playback. Being able to repeatedly play the current sound improves UX.
-- `F` to increase FB (Feedback), `SHIFT+F` to decrease FB. Cursor also moves to FB.
-    - Other similar operations should combine cursor jump and value increase/decrease for speed. To be verified.
-- `T` to increase TL (Total Level) of the current row, `SHIFT+T` to decrease.
-- `M` to increase MUL (Multiplier) of the current row, `SHIFT+M` to decrease.
-    - Memo: If `M` is prioritized for something else, use `X`. `x` is similar in meaning to "multiple".
-- `A`, `D`, `S`, `R` to increase AR, D1R, D2R, RR of the current row, `SHIFT+` to decrease.
-    - Supplement: Stop using `WASD` for cursor movement. It resulted in too many errors and didn't feel beneficial. The need to constantly shift the left hand one position left from home row led to many mistakes.
-- `L` to increase D1L (Decay 1 Level), `SHIFT+L` to decrease.
-    - The `L` in D1L. The heading explanation is easy to understand.
-- `1`, `2`, `3`, `4` to directly move to M1, C1, M2, C2 rows, respectively, and increase the value of the column the cursor is on.
-    - `SHIFT` key press will decrease the value.
-    - Purpose: For quickly increasing/decreasing values across operators.
-        - E.g., when working on OP1 and wanting to increase OP4, it's 1 press for `4` vs. 3 cursor key presses and page up, so 4 times faster.
-    - Note: Numbers are relatively difficult for touch typing, so `hjkl` aliases will also be verified.
-- `5`, `6`, `7`, `8` to toggle Slot Mask for OP1-4.
-    - `SHIFT` key press will toggle solo mode.
-        - Even for modulators, solo mode will force ALG7 playback to check envelopes, etc.
-            - In this case, ALG and SM will be made clear with a special color or background.
+    - While cursor movement is achievable with other shortcut keys, using these could also improve UX, especially for new users.
+- `P` and `SPACE` for playback. Being able to repeatedly play the current sound improves the UX.
+- `F` to increase FB, `SHIFT+F` to decrease FB. The cursor will also move to FB.
+    - Similar operations will also combine cursor jump and value increment/decrement for faster workflow. This will be tested.
+- `T` to increase TL of the current row, `SHIFT+T` to decrease.
+- `M` to increase MUL of the current row, `SHIFT+M` to decrease.
+    - Memo: If `M` is prioritized elsewhere, use `X`. `X` is conceptually close to "multiply".
+- `A, D, S, R` to increase AR, D1R, D2R, RR of the current row, `SHIFT+` for decrease.
+    - Supplement: Discontinue `WASD` for cursor movement. It led to too many mistakes for this purpose and offered no noticeable advantages. It required constantly shifting the left hand one position to the left from the home row, which often caused errors.
+- `L` to increase D1L, `SHIFT+L` to decrease.
+    - The `L` in D1L. The heading explanation makes it clear.
+- `1, 2, 3, 4` to directly move to M1, C1, M2, C2 rows and increment the value in the current column.
+    - Holding `SHIFT` will decrement.
+    - Intended use: For quickly increasing/decreasing values across multiple operators.
+        - Example: If you're working on OP1 and want to increment OP4, `4` takes 1 press compared to 3 cursor key presses and Page Up, making it 4 times faster.
+    - Note: Since numbers are relatively hard to touch-type, `hjkl` aliases will also be tested.
+- `5, 6, 7, 8` to toggle SlotMask for OP1-4.
+    - Holding `SHIFT` will toggle solo mode.
+        - Even for modulators, solo mode will force playback with ALG7 to check envelopes, etc.
+            - In this case, ALG and SM will be highlighted with a special color or background color for clarity.
         - The row with the cursor will always be in solo mode, meaning SM dynamically changes with cursor movement.
-        - Toggling off solo mode will revert to the ALG held immediately before solo mode was toggled on.
-            - `SHIFT+5,6,7,8` will all act as toggle off, a simple initial specification.
-                - This means no soloing of two ops simultaneously. Prioritize simplicity first.
-- `K` to toggle mouse multi-cursor lock. Easy to explain with `K` for `lock`.
-    - When locked, pressing `F` key, etc., will not move the cursor.
-        - Multiple lock targets are possible. Each will be subject to numerical increase/decrease by mouse.
-        - Intended use case: Group-adjusting envelopes while previewing.
+        - Toggling solo mode off reverts to the ALG held just before solo mode was toggled on.
+            - Toggling off will occur with any of `SHIFT+5, 6, 7, 8` for simplicity first.
+                - This means no soloing of two ops simultaneously. Prioritizing simplicity.
+- `K` to toggle mouse multi-cursor lock. The 'K' in 'lock' makes it easy to explain.
+    - When locked, pressing keys like `F` will not move the cursor.
+        - Multiple items can be locked. Each becomes a target for value increment/decrement via mouse.
+        - Intended use: To preview envelopes while adjusting them in groups.
     - When not locked, mouse behavior will be:
-        - Left-click moves cursor to position and increases value.
-        - Right-click moves cursor to position and decreases value.
-- `,` and `.` for Note down and up, respectively. Will use a C Ionian scale centered on middle C.
-    - However, these keys are also strong candidates for value increase/decrease, so keybind changes are anticipated in the future.
+        - Left-click moves cursor to position and increments value.
+        - Right-click moves cursor to position and decrements value.
+- `,` and `.` for Note down and up, respectively. Uses a C Ionian scale centered on middle C.
+    - However, since these are also strong candidates for value increment/decrement, keybind changes are anticipated in the future.
