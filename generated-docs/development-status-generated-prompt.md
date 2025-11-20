@@ -1,4 +1,4 @@
-Last updated: 2025-11-20
+Last updated: 2025-11-21
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -202,6 +202,7 @@ Last updated: 2025-11-20
 - README.ja.md
 - README.md
 - _config.yml
+- docs/KEYBINDS.ja.md
 - generated-docs/project-overview-generated-prompt.md
 - issue-notes/55.md
 - issue-notes/57.md
@@ -214,8 +215,14 @@ Last updated: 2025-11-20
 - issue-notes/70.md
 - issue-notes/72.md
 - issue-notes/75.md
+- issue-notes/77.md
+- issue-notes/79.md
+- issue-notes/81.md
+- issue-notes/83.md
+- issue-notes/85.md
 - src/app.rs
 - src/audio.rs
+- src/config.rs
 - src/file_ops.rs
 - src/main.rs
 - src/midi_conversion.rs
@@ -230,6 +237,7 @@ Last updated: 2025-11-20
 - src/tests/verbose_logging_tests.rs
 - src/ui.rs
 - tones/general_midi/000_AcousticGrand.json
+- ym2151-tone-editor.toml.example
 
 ## 現在のオープンIssues
 オープン中のIssueはありません
@@ -239,38 +247,33 @@ Last updated: 2025-11-20
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-a974b14 Merge pull request #76 from cat2151/copilot/add-verbose-logging-feature
-85404ad Add --verbose flag for interactive mode debug logging
-d38dcd8 Initial plan
-8495326 Auto-translate README.ja.md to README.md [auto]
-350aa13 Merge pull request #74 from cat2151/copilot/fix-playback-performance-issue
-16ea37a Update README documentation for P/SPACE playback feature
-5fe2fe1 Add 'P' and 'SPACE' key support to play current tone
-516e410 Add issue note for #75 [auto]
-4fffc14 Initial plan
-14a2770 ビルドエラーをagentに修正させた
+828480e Merge pull request #86 from cat2151/copilot/add-keybinds-to-ym2151
+17699ec Add documentation and tests for keybinds configuration
+6780db8 Add keybinds configuration support via ym2151-tone-editor.toml
+eea92d2 Initial plan
+417ca7b Add issue note for #85 [auto]
+9a9fcda Auto-translate README.ja.md to README.md [auto]
+0139b87 Merge pull request #84 from cat2151/copilot/implement-value-increment-decrement
+ec99c38 Update README files with new keyboard shortcuts documentation
+da51eca Add keyboard shortcuts for +/- and ./, with SHIFT for ±10
+b481b46 Add issue note for #83 [auto]
 
 ### 変更されたファイル:
+.gitignore
 Cargo.lock
+Cargo.toml
 README.ja.md
 README.md
-issue-notes/72.md
-issue-notes/75.md
+docs/KEYBINDS.ja.md
+issue-notes/81.md
+issue-notes/83.md
+issue-notes/85.md
 src/app.rs
-src/audio.rs
-src/file_ops.rs
+src/config.rs
 src/main.rs
-src/midi_conversion.rs
-src/register.rs
 src/tests/app_tests.rs
-src/tests/file_ops_tests.rs
-src/tests/midi_conversion_tests.rs
-src/tests/mod.rs
-src/tests/register_tests.rs
-src/tests/ui_tests.rs
-src/tests/verbose_logging_tests.rs
-src/ui.rs
+ym2151-tone-editor.toml.example
 
 
 ---
-Generated at: 2025-11-20 07:08:15 JST
+Generated at: 2025-11-21 07:08:16 JST

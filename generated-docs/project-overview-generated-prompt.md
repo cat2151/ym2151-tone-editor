@@ -1,4 +1,4 @@
-Last updated: 2025-11-20
+Last updated: 2025-11-21
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -193,6 +193,11 @@ cargo run -- --use-client-interactive-mode-access
 | **値の変更** | |
 | `PageUp` / `e` | カーソル位置の値を増加 |
 | `PageDown` / `q` | カーソル位置の値を減少 |
+| `+` / `.` | 値を1増やす |
+| `-` / `,` | 値を1減らす |
+| `Shift` + `.` (`>`) | 値を10増やす |
+| `Shift` + `-` (`_`) | 値を10減らす |
+| `Shift` + `,` (`<`) | 値を10減らす |
 | `Home` | 現在のパラメータの最大値に設定 |
 | `End` | 最小値（0）に設定 |
 | `r` / `R` | ランダム値に設定（有効範囲内） |
@@ -379,6 +384,8 @@ cargo run -- --use-client-interactive-mode-access
 📖 README.ja.md
 📖 README.md
 📄 _config.yml
+📁 docs/
+  📖 KEYBINDS.ja.md
 📁 generated-docs/
 📁 issue-notes/
   📖 55.md
@@ -392,9 +399,15 @@ cargo run -- --use-client-interactive-mode-access
   📖 70.md
   📖 72.md
   📖 75.md
+  📖 77.md
+  📖 79.md
+  📖 81.md
+  📖 83.md
+  📖 85.md
 📁 src/
   📄 app.rs
   📄 audio.rs
+  📄 config.rs
   📄 file_ops.rs
   📄 main.rs
   📄 midi_conversion.rs
@@ -412,6 +425,7 @@ cargo run -- --use-client-interactive-mode-access
 📁 tones/
   📁 general_midi/
     📊 000_AcousticGrand.json
+📄 ym2151-tone-editor.toml.example
 
 ## ファイル詳細分析
 
@@ -422,6 +436,7 @@ cargo run -- --use-client-interactive-mode-access
 ## プロジェクト構造（ファイル一覧）
 README.ja.md
 README.md
+docs/KEYBINDS.ja.md
 issue-notes/55.md
 issue-notes/57.md
 issue-notes/59.md
@@ -433,6 +448,11 @@ issue-notes/68.md
 issue-notes/70.md
 issue-notes/72.md
 issue-notes/75.md
+issue-notes/77.md
+issue-notes/79.md
+issue-notes/81.md
+issue-notes/83.md
+issue-notes/85.md
 tones/general_midi/000_AcousticGrand.json
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
@@ -445,4 +465,4 @@ tones/general_midi/000_AcousticGrand.json
 
 
 ---
-Generated at: 2025-11-20 07:08:14 JST
+Generated at: 2025-11-21 07:08:16 JST
