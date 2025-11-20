@@ -126,6 +126,80 @@ fn run_app<B: ratatui::backend::Backend>(
                         KeyCode::End => app.set_value_to_min(),
                         KeyCode::Char('r') | KeyCode::Char('R') => app.set_value_to_random(),
                         
+                        // Number keys for quick value adjustment
+                        // Keys 1-9: increase by 1-9, key 0: increase by 10
+                        // With SHIFT: decrease by the same amount
+                        KeyCode::Char('1') => {
+                            if key.modifiers.contains(KeyModifiers::SHIFT) {
+                                app.decrease_value_by(1);
+                            } else {
+                                app.increase_value_by(1);
+                            }
+                        }
+                        KeyCode::Char('2') => {
+                            if key.modifiers.contains(KeyModifiers::SHIFT) {
+                                app.decrease_value_by(2);
+                            } else {
+                                app.increase_value_by(2);
+                            }
+                        }
+                        KeyCode::Char('3') => {
+                            if key.modifiers.contains(KeyModifiers::SHIFT) {
+                                app.decrease_value_by(3);
+                            } else {
+                                app.increase_value_by(3);
+                            }
+                        }
+                        KeyCode::Char('4') => {
+                            if key.modifiers.contains(KeyModifiers::SHIFT) {
+                                app.decrease_value_by(4);
+                            } else {
+                                app.increase_value_by(4);
+                            }
+                        }
+                        KeyCode::Char('5') => {
+                            if key.modifiers.contains(KeyModifiers::SHIFT) {
+                                app.decrease_value_by(5);
+                            } else {
+                                app.increase_value_by(5);
+                            }
+                        }
+                        KeyCode::Char('6') => {
+                            if key.modifiers.contains(KeyModifiers::SHIFT) {
+                                app.decrease_value_by(6);
+                            } else {
+                                app.increase_value_by(6);
+                            }
+                        }
+                        KeyCode::Char('7') => {
+                            if key.modifiers.contains(KeyModifiers::SHIFT) {
+                                app.decrease_value_by(7);
+                            } else {
+                                app.increase_value_by(7);
+                            }
+                        }
+                        KeyCode::Char('8') => {
+                            if key.modifiers.contains(KeyModifiers::SHIFT) {
+                                app.decrease_value_by(8);
+                            } else {
+                                app.increase_value_by(8);
+                            }
+                        }
+                        KeyCode::Char('9') => {
+                            if key.modifiers.contains(KeyModifiers::SHIFT) {
+                                app.decrease_value_by(9);
+                            } else {
+                                app.increase_value_by(9);
+                            }
+                        }
+                        KeyCode::Char('0') => {
+                            if key.modifiers.contains(KeyModifiers::SHIFT) {
+                                app.decrease_value_by(10);
+                            } else {
+                                app.increase_value_by(10);
+                            }
+                        }
+                        
                         // Play current tone without parameter changes
                         KeyCode::Char('p') | KeyCode::Char('P') | KeyCode::Char(' ') => app.play_current_tone(),
                         

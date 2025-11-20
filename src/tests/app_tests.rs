@@ -513,3 +513,173 @@ use crate::models::*;
         // Verify FB value decreased
         assert_eq!(app.values[ROW_CH][CH_PARAM_FB], 5, "FB should decrease from 6 to 5");
     }
+
+    #[test]
+    fn test_increase_value_by() {
+        let mut app = App::new(false, false);
+        
+        // Test with TL parameter (max = 99)
+        app.cursor_x = PARAM_TL;
+        app.cursor_y = 0;
+        app.values[0][PARAM_TL] = 10;
+        
+        // Increase by 5
+        app.increase_value_by(5);
+        assert_eq!(app.values[0][PARAM_TL], 15, "TL should increase from 10 to 15");
+        
+        // Increase by 10
+        app.increase_value_by(10);
+        assert_eq!(app.values[0][PARAM_TL], 25, "TL should increase from 15 to 25");
+        
+        // Test boundary: increase near max should clamp
+        app.values[0][PARAM_TL] = 95;
+        app.increase_value_by(10);
+        assert_eq!(app.values[0][PARAM_TL], 99, "TL should clamp to max (99)");
+        
+        // Test at max: should not change
+        app.values[0][PARAM_TL] = 99;
+        app.increase_value_by(5);
+        assert_eq!(app.values[0][PARAM_TL], 99, "TL should remain at max (99)");
+    }
+
+    #[test]
+    fn test_decrease_value_by() {
+        let mut app = App::new(false, false);
+        
+        // Test with TL parameter
+        app.cursor_x = PARAM_TL;
+        app.cursor_y = 0;
+        app.values[0][PARAM_TL] = 50;
+        
+        // Decrease by 5
+        app.decrease_value_by(5);
+        assert_eq!(app.values[0][PARAM_TL], 45, "TL should decrease from 50 to 45");
+        
+        // Decrease by 10
+        app.decrease_value_by(10);
+        assert_eq!(app.values[0][PARAM_TL], 35, "TL should decrease from 45 to 35");
+        
+        // Test boundary: decrease near min should clamp to 0
+        app.values[0][PARAM_TL] = 5;
+        app.decrease_value_by(10);
+        assert_eq!(app.values[0][PARAM_TL], 0, "TL should clamp to min (0)");
+        
+        // Test at min: should not change
+        app.values[0][PARAM_TL] = 0;
+        app.decrease_value_by(5);
+        assert_eq!(app.values[0][PARAM_TL], 0, "TL should remain at min (0)");
+    }
+
+    #[test]
+    fn test_increase_value_by_with_different_parameters() {
+        let mut app = App::new(false, false);
+        
+        // Test with DT parameter (max = 7)
+        app.cursor_x = PARAM_DT;
+        app.cursor_y = 0;
+        app.values[0][PARAM_DT] = 2;
+        
+        app.increase_value_by(3);
+        assert_eq!(app.values[0][PARAM_DT], 5, "DT should increase from 2 to 5");
+        
+        // Test clamping to max
+        app.increase_value_by(5);
+        assert_eq!(app.values[0][PARAM_DT], 7, "DT should clamp to max (7)");
+        
+        // Test with MUL parameter (max = 15)
+        app.cursor_x = PARAM_MUL;
+        app.values[0][PARAM_MUL] = 8;
+        
+        app.increase_value_by(9);
+        assert_eq!(app.values[0][PARAM_MUL], 15, "MUL should clamp to max (15)");
+        
+        // Test with CH row parameter (ALG, max = 7)
+        app.cursor_y = ROW_CH;
+        app.cursor_x = CH_PARAM_ALG;
+        app.values[ROW_CH][CH_PARAM_ALG] = 3;
+        
+        app.increase_value_by(2);
+        assert_eq!(app.values[ROW_CH][CH_PARAM_ALG], 5, "ALG should increase from 3 to 5");
+        
+        app.increase_value_by(10);
+        assert_eq!(app.values[ROW_CH][CH_PARAM_ALG], 7, "ALG should clamp to max (7)");
+    }
+
+    #[test]
+    fn test_decrease_value_by_with_different_parameters() {
+        let mut app = App::new(false, false);
+        
+        // Test with DT parameter
+        app.cursor_x = PARAM_DT;
+        app.cursor_y = 0;
+        app.values[0][PARAM_DT] = 7;
+        
+        app.decrease_value_by(3);
+        assert_eq!(app.values[0][PARAM_DT], 4, "DT should decrease from 7 to 4");
+        
+        // Test clamping to min
+        app.decrease_value_by(10);
+        assert_eq!(app.values[0][PARAM_DT], 0, "DT should clamp to min (0)");
+        
+        // Test with AR parameter (max = 31)
+        app.cursor_x = PARAM_AR;
+        app.values[0][PARAM_AR] = 25;
+        
+        app.decrease_value_by(9);
+        assert_eq!(app.values[0][PARAM_AR], 16, "AR should decrease from 25 to 16");
+        
+        // Test with CH row parameter (FB, max = 7)
+        app.cursor_y = ROW_CH;
+        app.cursor_x = CH_PARAM_FB;
+        app.values[ROW_CH][CH_PARAM_FB] = 6;
+        
+        app.decrease_value_by(4);
+        assert_eq!(app.values[ROW_CH][CH_PARAM_FB], 2, "FB should decrease from 6 to 2");
+    }
+
+    #[test]
+    fn test_increase_value_by_amount_10() {
+        let mut app = App::new(false, false);
+        
+        // Test with TL parameter which has max of 99 (supports +10 without clamping)
+        app.cursor_x = PARAM_TL;
+        app.cursor_y = 0;
+        app.values[0][PARAM_TL] = 20;
+        
+        // Increase by 10 (simulating '0' key)
+        app.increase_value_by(10);
+        assert_eq!(app.values[0][PARAM_TL], 30, "TL should increase from 20 to 30");
+        
+        // Increase by 10 again
+        app.increase_value_by(10);
+        assert_eq!(app.values[0][PARAM_TL], 40, "TL should increase from 30 to 40");
+        
+        // Test near max - should clamp
+        app.values[0][PARAM_TL] = 92;
+        app.increase_value_by(10);
+        assert_eq!(app.values[0][PARAM_TL], 99, "TL should clamp to max (99)");
+    }
+
+    #[test]
+    fn test_decrease_value_by_amount_10() {
+        let mut app = App::new(false, false);
+        
+        // Test with TL parameter
+        app.cursor_x = PARAM_TL;
+        app.cursor_y = 0;
+        app.values[0][PARAM_TL] = 50;
+        
+        // Decrease by 10 (simulating 'Shift+0' key)
+        app.decrease_value_by(10);
+        assert_eq!(app.values[0][PARAM_TL], 40, "TL should decrease from 50 to 40");
+        
+        // Decrease by 10 again
+        app.decrease_value_by(10);
+        assert_eq!(app.values[0][PARAM_TL], 30, "TL should decrease from 40 to 30");
+        
+        // Test near min - should clamp to 0
+        app.values[0][PARAM_TL] = 7;
+        app.decrease_value_by(10);
+        assert_eq!(app.values[0][PARAM_TL], 0, "TL should clamp to min (0)");
+    }
+
