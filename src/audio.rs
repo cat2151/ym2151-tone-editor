@@ -129,10 +129,10 @@ fn send_interactive_update(values: &ToneData, cursor_x: usize, cursor_y: usize) 
 /// Send only the specific operator register(s) affected by a parameter change
 #[cfg(windows)]
 fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_index: usize) {
-    let channel = 0; // We use channel 0
+    let channel: u8 = 0; // We use channel 0
     const DATA_ROW_TO_SLOT: [usize; 4] = [0, 1, 2, 3];
     let hw_slot = DATA_ROW_TO_SLOT[data_row];
-    let op_offset = hw_slot * 8 + channel;
+    let op_offset = hw_slot * 8 + channel as usize;
 
     // Clear any pending scheduled events first
     let _ = ym2151_log_play_server::client::clear_schedule();
