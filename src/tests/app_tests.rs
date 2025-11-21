@@ -5,7 +5,7 @@ use crate::models::*;
 
 #[test]
 fn test_cursor_movement() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Test initial position
     assert_eq!(app.cursor_x, 0);
@@ -59,7 +59,7 @@ fn test_cursor_movement() {
 
 #[test]
 fn test_increase_decrease_value() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Move cursor to a parameter with a wider range (e.g., TL at index 1)
     app.cursor_x = PARAM_TL;
@@ -89,7 +89,7 @@ fn test_increase_decrease_value() {
 
 #[test]
 fn test_ch_row_cursor_restriction() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Start on an operator row, move to the right edge
     app.cursor_y = 0;
@@ -127,7 +127,7 @@ fn test_ch_row_cursor_restriction() {
 
 #[test]
 fn test_update_value_from_mouse_x() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
     let terminal_width = 120;
     app.cursor_x = PARAM_DT; // DT has max value of 7
     app.cursor_y = 0;
@@ -187,7 +187,7 @@ fn test_update_value_from_mouse_x() {
 
 #[test]
 fn test_update_value_from_mouse_x_zero_width() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
     let terminal_width = 0;
     app.cursor_x = PARAM_DT;
     app.cursor_y = 0;
@@ -204,7 +204,7 @@ fn test_update_value_from_mouse_x_zero_width() {
 
 #[test]
 fn test_set_value_to_max() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Test with operator row parameter (DT, max = 7)
     app.cursor_x = PARAM_DT;
@@ -251,7 +251,7 @@ fn test_set_value_to_max() {
 
 #[test]
 fn test_set_value_to_min() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Test with operator row parameter
     app.cursor_x = PARAM_DT;
@@ -288,7 +288,7 @@ fn test_set_value_to_min() {
 
 #[test]
 fn test_set_value_to_random() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Test with operator row parameter (DT, max = 7)
     app.cursor_x = PARAM_DT;
@@ -341,7 +341,7 @@ fn test_set_value_to_random() {
 
 #[test]
 fn test_update_value_from_mouse_x_left_right_edges() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
     let terminal_width = 120;
 
     // Test with DT parameter (max value = 7)
@@ -414,7 +414,7 @@ fn test_update_value_from_mouse_x_left_right_edges() {
 
 #[test]
 fn test_move_cursor_to_mouse_position() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Test moving cursor to operator row (M1, row 0)
     // UI layout: row_label_width=4, cell_width=4, inner_x=1, inner_y=1, label_offset=1
@@ -498,7 +498,7 @@ fn test_move_cursor_to_mouse_position() {
 
 #[test]
 fn test_play_current_tone_does_not_modify_values() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Set specific values
     app.cursor_x = PARAM_DT;
@@ -537,7 +537,7 @@ fn test_play_current_tone_does_not_modify_values() {
 
 #[test]
 fn test_increase_fb() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Set initial cursor position somewhere else
     app.cursor_x = 0;
@@ -580,7 +580,7 @@ fn test_increase_fb() {
 
 #[test]
 fn test_decrease_fb() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Set initial cursor position somewhere else
     app.cursor_x = 5;
@@ -623,7 +623,7 @@ fn test_decrease_fb() {
 
 #[test]
 fn test_increase_fb_moves_cursor_from_operator_row() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Start with cursor on operator row
     app.cursor_x = PARAM_MUL;
@@ -654,7 +654,7 @@ fn test_increase_fb_moves_cursor_from_operator_row() {
 
 #[test]
 fn test_decrease_fb_moves_cursor_from_operator_row() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Start with cursor on operator row
     app.cursor_x = PARAM_AR;
@@ -685,7 +685,7 @@ fn test_decrease_fb_moves_cursor_from_operator_row() {
 
 #[test]
 fn test_increase_value_by() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Test with TL parameter (max = 99)
     app.cursor_x = PARAM_TL;
@@ -719,7 +719,7 @@ fn test_increase_value_by() {
 
 #[test]
 fn test_decrease_value_by() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Test with TL parameter
     app.cursor_x = PARAM_TL;
@@ -753,7 +753,7 @@ fn test_decrease_value_by() {
 
 #[test]
 fn test_increase_value_by_with_different_parameters() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Test with DT parameter (max = 7)
     app.cursor_x = PARAM_DT;
@@ -794,7 +794,7 @@ fn test_increase_value_by_with_different_parameters() {
 
 #[test]
 fn test_decrease_value_by_with_different_parameters() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Test with DT parameter
     app.cursor_x = PARAM_DT;
@@ -832,7 +832,7 @@ fn test_decrease_value_by_with_different_parameters() {
 
 #[test]
 fn test_increase_value_by_amount_10() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Test with TL parameter which has max of 99 (supports +10 without clamping)
     app.cursor_x = PARAM_TL;
@@ -861,7 +861,7 @@ fn test_increase_value_by_amount_10() {
 
 #[test]
 fn test_decrease_value_by_amount_10() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Test with TL parameter
     app.cursor_x = PARAM_TL;
@@ -890,7 +890,7 @@ fn test_decrease_value_by_amount_10() {
 
 #[test]
 fn test_jump_to_op1_and_increase() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Start at a different position (OP3, column 5)
     app.cursor_x = 5;
@@ -913,7 +913,7 @@ fn test_jump_to_op1_and_increase() {
 
 #[test]
 fn test_jump_to_op2_and_increase() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Start at a different position
     app.cursor_x = 2;
@@ -936,7 +936,7 @@ fn test_jump_to_op2_and_increase() {
 
 #[test]
 fn test_jump_to_op3_and_increase() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Start at CH row
     app.cursor_x = 1;
@@ -959,7 +959,7 @@ fn test_jump_to_op3_and_increase() {
 
 #[test]
 fn test_jump_to_op4_and_increase() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Start at a different position
     app.cursor_x = 3;
@@ -982,7 +982,7 @@ fn test_jump_to_op4_and_increase() {
 
 #[test]
 fn test_jump_to_op1_and_decrease() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Start at a different position
     app.cursor_x = 4;
@@ -1005,7 +1005,7 @@ fn test_jump_to_op1_and_decrease() {
 
 #[test]
 fn test_jump_to_op2_and_decrease() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Start at a different position
     app.cursor_x = 6;
@@ -1028,7 +1028,7 @@ fn test_jump_to_op2_and_decrease() {
 
 #[test]
 fn test_jump_and_increase_clamps_to_max() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Set OP1 SM (column 0, max=1) to max value
     app.cursor_x = 0;
@@ -1044,7 +1044,7 @@ fn test_jump_and_increase_clamps_to_max() {
 
 #[test]
 fn test_jump_and_decrease_clamps_to_min() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Set OP1 column 1 to min value
     app.cursor_x = 1;
@@ -1060,7 +1060,7 @@ fn test_jump_and_decrease_clamps_to_min() {
 
 #[test]
 fn test_jump_from_ch_row_clamps_cursor_x() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Start at CH row which has only 3 columns
     // Place cursor at column 2 (last column in CH row)
@@ -1084,7 +1084,7 @@ fn test_jump_from_ch_row_clamps_cursor_x() {
 
 #[test]
 fn test_rapid_operator_switching() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Set initial values for column 3 on all operators
     app.values[0][3] = 10; // OP1 (M1)
@@ -1119,7 +1119,7 @@ fn test_rapid_operator_switching() {
 
 #[test]
 fn test_jump_to_ar_and_increase() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Set cursor to operator row 0, column 0
     app.cursor_x = 0;
@@ -1144,7 +1144,7 @@ fn test_jump_to_ar_and_increase() {
 
 #[test]
 fn test_jump_to_ar_and_decrease() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Set cursor to operator row 1, column 5
     app.cursor_x = 5;
@@ -1169,7 +1169,7 @@ fn test_jump_to_ar_and_decrease() {
 
 #[test]
 fn test_jump_to_d1r_and_increase() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Set cursor to operator row 2, column 1
     app.cursor_x = 1;
@@ -1194,7 +1194,7 @@ fn test_jump_to_d1r_and_increase() {
 
 #[test]
 fn test_jump_to_d1r_and_decrease() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Set cursor to operator row 3
     app.cursor_x = 7;
@@ -1219,7 +1219,7 @@ fn test_jump_to_d1r_and_decrease() {
 
 #[test]
 fn test_jump_to_d2r_and_increase() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Set cursor to operator row 0
     app.cursor_x = 2;
@@ -1244,7 +1244,7 @@ fn test_jump_to_d2r_and_increase() {
 
 #[test]
 fn test_jump_to_d2r_and_decrease() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Set cursor to operator row 1
     app.cursor_x = 8;
@@ -1269,7 +1269,7 @@ fn test_jump_to_d2r_and_decrease() {
 
 #[test]
 fn test_jump_to_rr_and_increase() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Set cursor to operator row 2
     app.cursor_x = 3;
@@ -1291,7 +1291,7 @@ fn test_jump_to_rr_and_increase() {
 
 #[test]
 fn test_jump_to_rr_and_decrease() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Set cursor to operator row 3
     app.cursor_x = 1;
@@ -1313,7 +1313,7 @@ fn test_jump_to_rr_and_decrease() {
 
 #[test]
 fn test_adsr_shortcuts_ignore_ch_row() {
-    let mut app = App::new(false, false);
+    let mut app = App::new(false);
 
     // Set cursor to CH row
     app.cursor_x = 0;
