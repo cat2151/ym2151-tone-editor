@@ -68,7 +68,7 @@ pub struct KeybindsConfig {
 impl Default for KeybindsConfig {
     fn default() -> Self {
         let mut keybinds = HashMap::new();
-        
+
         // Value modification keys
         keybinds.insert("q".to_string(), Action::DecreaseValue);
         keybinds.insert("PageDown".to_string(), Action::DecreaseValue);
@@ -78,22 +78,22 @@ impl Default for KeybindsConfig {
         keybinds.insert("End".to_string(), Action::SetValueToMin);
         keybinds.insert("r".to_string(), Action::SetValueToRandom);
         keybinds.insert("R".to_string(), Action::SetValueToRandom);
-        
+
         // "+" to increase by 1
         keybinds.insert("+".to_string(), Action::IncreaseValueBy1);
-        
+
         // "." and ">" for increase
         keybinds.insert(".".to_string(), Action::IncreaseValueBy1);
         keybinds.insert(">".to_string(), Action::IncreaseValueBy10);
-        
+
         // "-" and "_" for decrease
         keybinds.insert("-".to_string(), Action::DecreaseValueBy1);
         keybinds.insert("_".to_string(), Action::DecreaseValueBy10);
-        
+
         // "," and "<" for decrease
         keybinds.insert(",".to_string(), Action::DecreaseValueBy1);
         keybinds.insert("<".to_string(), Action::DecreaseValueBy10);
-        
+
         // Number keys for quick value adjustment
         keybinds.insert("1".to_string(), Action::IncreaseValueBy1);
         keybinds.insert("2".to_string(), Action::IncreaseValueBy2);
@@ -105,28 +105,28 @@ impl Default for KeybindsConfig {
         keybinds.insert("8".to_string(), Action::IncreaseValueBy8);
         keybinds.insert("9".to_string(), Action::IncreaseValueBy9);
         keybinds.insert("0".to_string(), Action::IncreaseValueBy10);
-        
+
         // SHIFT + number keys for decrease
-        keybinds.insert("!".to_string(), Action::DecreaseValueBy1);  // Shift+1
-        keybinds.insert("@".to_string(), Action::DecreaseValueBy2);  // Shift+2
-        keybinds.insert("#".to_string(), Action::DecreaseValueBy3);  // Shift+3
-        keybinds.insert("$".to_string(), Action::DecreaseValueBy4);  // Shift+4
-        keybinds.insert("%".to_string(), Action::DecreaseValueBy5);  // Shift+5
-        keybinds.insert("^".to_string(), Action::DecreaseValueBy6);  // Shift+6
-        keybinds.insert("&".to_string(), Action::DecreaseValueBy7);  // Shift+7
-        keybinds.insert("*".to_string(), Action::DecreaseValueBy8);  // Shift+8
-        keybinds.insert("(".to_string(), Action::DecreaseValueBy9);  // Shift+9
+        keybinds.insert("!".to_string(), Action::DecreaseValueBy1); // Shift+1
+        keybinds.insert("@".to_string(), Action::DecreaseValueBy2); // Shift+2
+        keybinds.insert("#".to_string(), Action::DecreaseValueBy3); // Shift+3
+        keybinds.insert("$".to_string(), Action::DecreaseValueBy4); // Shift+4
+        keybinds.insert("%".to_string(), Action::DecreaseValueBy5); // Shift+5
+        keybinds.insert("^".to_string(), Action::DecreaseValueBy6); // Shift+6
+        keybinds.insert("&".to_string(), Action::DecreaseValueBy7); // Shift+7
+        keybinds.insert("*".to_string(), Action::DecreaseValueBy8); // Shift+8
+        keybinds.insert("(".to_string(), Action::DecreaseValueBy9); // Shift+9
         keybinds.insert(")".to_string(), Action::DecreaseValueBy10); // Shift+0
-        
+
         // Play current tone
         keybinds.insert("p".to_string(), Action::PlayCurrentTone);
         keybinds.insert("P".to_string(), Action::PlayCurrentTone);
         keybinds.insert("Space".to_string(), Action::PlayCurrentTone);
-        
+
         // FB shortcuts
         keybinds.insert("f".to_string(), Action::IncreaseFb);
         keybinds.insert("F".to_string(), Action::DecreaseFb);
-        
+
         // Cursor movement
         keybinds.insert("h".to_string(), Action::MoveCursorLeft);
         keybinds.insert("Left".to_string(), Action::MoveCursorLeft);
@@ -136,19 +136,19 @@ impl Default for KeybindsConfig {
         keybinds.insert("Up".to_string(), Action::MoveCursorUp);
         keybinds.insert("l".to_string(), Action::MoveCursorRight);
         keybinds.insert("Right".to_string(), Action::MoveCursorRight);
-        
+
         // Jump to operator row and increase value
         keybinds.insert("Ctrl+1".to_string(), Action::JumpToOp1AndIncrease);
         keybinds.insert("Ctrl+2".to_string(), Action::JumpToOp2AndIncrease);
         keybinds.insert("Ctrl+3".to_string(), Action::JumpToOp3AndIncrease);
         keybinds.insert("Ctrl+4".to_string(), Action::JumpToOp4AndIncrease);
-        
+
         // Jump to operator row and decrease value
         keybinds.insert("Ctrl+Shift+1".to_string(), Action::JumpToOp1AndDecrease);
         keybinds.insert("Ctrl+Shift+2".to_string(), Action::JumpToOp2AndDecrease);
         keybinds.insert("Ctrl+Shift+3".to_string(), Action::JumpToOp3AndDecrease);
         keybinds.insert("Ctrl+Shift+4".to_string(), Action::JumpToOp4AndDecrease);
-        
+
         // ADSR envelope shortcuts (jump to current row's AR, D1R, D2R, RR parameters)
         keybinds.insert("a".to_string(), Action::JumpToArAndIncrease);
         keybinds.insert("d".to_string(), Action::JumpToD1rAndIncrease);
@@ -159,10 +159,9 @@ impl Default for KeybindsConfig {
         keybinds.insert("S".to_string(), Action::JumpToD2rAndDecrease);
         keybinds.insert("R".to_string(), Action::JumpToRrAndDecrease);
 
-        
         // Exit
         keybinds.insert("Esc".to_string(), Action::Exit);
-        
+
         KeybindsConfig { keybinds }
     }
 }
@@ -175,12 +174,12 @@ impl KeybindsConfig {
             .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
         Ok(config)
     }
-    
+
     /// Load keybinds from current directory's ym2151-tone-editor.toml if it exists,
     /// otherwise use default keybinds
     pub fn load_or_default() -> Self {
         const CONFIG_FILE: &str = "ym2151-tone-editor.toml";
-        
+
         match Self::load_from_file(CONFIG_FILE) {
             Ok(config) => {
                 crate::log_verbose(&format!("Loaded keybinds from {}", CONFIG_FILE));
@@ -192,13 +191,14 @@ impl KeybindsConfig {
             }
         }
     }
-    
+
     /// Get the action for a given key string
     pub fn get_action(&self, key: &str) -> Option<&Action> {
         self.keybinds.get(key)
     }
-    
+
     /// Save the current keybinds configuration to a TOML file
+    #[cfg(test)]
     pub fn save_to_file(&self, filename: &str) -> io::Result<()> {
         let toml_string = toml::to_string_pretty(self)
             .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
@@ -214,7 +214,7 @@ mod tests {
     #[test]
     fn test_default_keybinds_has_expected_actions() {
         let config = KeybindsConfig::default();
-        
+
         // Test a few key bindings
         assert_eq!(config.get_action("q"), Some(&Action::DecreaseValue));
         assert_eq!(config.get_action("e"), Some(&Action::IncreaseValue));
@@ -231,7 +231,7 @@ mod tests {
 "w" = "increase_value"
 "Esc" = "exit"
 "#;
-        
+
         let config: KeybindsConfig = toml::from_str(toml_str).unwrap();
         assert_eq!(config.get_action("q"), Some(&Action::DecreaseValue));
         assert_eq!(config.get_action("w"), Some(&Action::IncreaseValue));
@@ -241,18 +241,20 @@ mod tests {
     #[test]
     fn test_save_and_load_roundtrip() {
         let mut config = KeybindsConfig::default();
-        
+
         // Modify a keybind
         config.keybinds.insert("x".to_string(), Action::Exit);
-        
+
         // Save to temp file
-        let temp_file = "/tmp/test_keybinds.toml";
+        let temp_dir = std::env::temp_dir();
+        let temp_file = temp_dir.join("test_keybinds.toml");
+        let temp_file = temp_file.to_str().unwrap();
         config.save_to_file(temp_file).unwrap();
-        
+
         // Load back
         let loaded_config = KeybindsConfig::load_from_file(temp_file).unwrap();
         assert_eq!(loaded_config.get_action("x"), Some(&Action::Exit));
-        
+
         // Clean up
         let _ = std::fs::remove_file(temp_file);
     }
@@ -267,23 +269,25 @@ mod tests {
 "x" = "set_value_to_random"
 "Esc" = "exit"
 "#;
-        
-        let temp_file = "/tmp/test_custom_keybinds.toml";
+
+        let temp_dir = std::env::temp_dir();
+        let temp_file = temp_dir.join("test_custom_keybinds.toml");
+        let temp_file = temp_file.to_str().unwrap();
         std::fs::write(temp_file, custom_toml).unwrap();
-        
+
         // Load the custom config
         let config = KeybindsConfig::load_from_file(temp_file).unwrap();
-        
+
         // Verify custom keybinds
         assert_eq!(config.get_action("u"), Some(&Action::DecreaseValue));
         assert_eq!(config.get_action("i"), Some(&Action::IncreaseValue));
         assert_eq!(config.get_action("x"), Some(&Action::SetValueToRandom));
         assert_eq!(config.get_action("Esc"), Some(&Action::Exit));
-        
+
         // Verify that default keybinds are NOT present (since we only defined a few)
         assert_eq!(config.get_action("q"), None);
         assert_eq!(config.get_action("e"), None);
-        
+
         // Clean up
         let _ = std::fs::remove_file(temp_file);
     }

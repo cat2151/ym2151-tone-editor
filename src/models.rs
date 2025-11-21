@@ -7,7 +7,7 @@ pub const GRID_HEIGHT: usize = 5;
 // Parameter names for each column
 // New order: SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS
 pub const PARAM_NAMES: [&str; GRID_WIDTH] = [
-    "SM", "TL", "MUL", "AR", "D1R", "D1L", "D2R", "RR", "DT", "DT2", "KS", "AMS"
+    "SM", "TL", "MUL", "AR", "D1R", "D1L", "D2R", "RR", "DT", "DT2", "KS", "AMS",
 ];
 
 // CH row has 3 parameters: ALG, FB, and MIDI note number
@@ -17,31 +17,29 @@ pub const CH_PARAM_NAMES: [&str; CH_PARAM_COUNT] = ["ALG", "FB", "Note"];
 // Maximum values for each parameter (respecting YM2151 bit ranges)
 // New order: SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS
 pub const PARAM_MAX: [u8; GRID_WIDTH] = [
-    1,   // SM (SlotMask): 0 or 1
-    99,  // TL: 7 bits (0-127, limited to 99 for display)
-    15,  // MUL: 4 bits (0-15)
-    31,  // AR: 5 bits (0-31)
-    31,  // D1R: 5 bits (0-31)
-    15,  // D1L: 4 bits (0-15)
-    15,  // D2R: 4 bits (0-15)
-    15,  // RR: 4 bits (0-15)
-    7,   // DT: 3 bits (0-7)
-    3,   // DT2: 2 bits (0-3)
-    3,   // KS: 2 bits (0-3)
-    3    // AMS: 2 bits (0-3)
+    1,  // SM (SlotMask): 0 or 1
+    99, // TL: 7 bits (0-127, limited to 99 for display)
+    15, // MUL: 4 bits (0-15)
+    31, // AR: 5 bits (0-31)
+    31, // D1R: 5 bits (0-31)
+    15, // D1L: 4 bits (0-15)
+    15, // D2R: 4 bits (0-15)
+    15, // RR: 4 bits (0-15)
+    7,  // DT: 3 bits (0-7)
+    3,  // DT2: 2 bits (0-3)
+    3,  // KS: 2 bits (0-3)
+    3,  // AMS: 2 bits (0-3)
 ];
 
 // Maximum values for CH row parameters
 pub const CH_PARAM_MAX: [u8; CH_PARAM_COUNT] = [
     7,   // ALG: 3 bits (0-7) - Algorithm
     7,   // FB: 3 bits (0-7) - Feedback
-    127  // MIDI Note Number: 0-127 (60 = middle C)
+    127, // MIDI Note Number: 0-127 (60 = middle C)
 ];
 
 // Row names for operators (display order: M1, C1, M2, C2)
-pub const ROW_NAMES: [&str; GRID_HEIGHT] = [
-    "M1", "C1", "M2", "C2", "CH"
-];
+pub const ROW_NAMES: [&str; GRID_HEIGHT] = ["M1", "C1", "M2", "C2", "CH"];
 
 // Display row to data row mapping for operators
 // Display shows: M1(row0), C1(row1), M2(row2), C2(row3)

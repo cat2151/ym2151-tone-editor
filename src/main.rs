@@ -1,18 +1,18 @@
-mod models;
-mod midi_conversion;
-mod register;
-mod file_ops;
-mod ui;
 mod app;
-mod config;
 #[cfg(windows)]
 mod audio;
+mod config;
+mod file_ops;
+mod midi_conversion;
+mod models;
+mod register;
 #[cfg(test)]
 mod tests;
+mod ui;
 
-use std::sync::Mutex;
 use std::fs::OpenOptions;
 use std::io::Write;
+use std::sync::Mutex;
 
 /// Global verbose logging flag
 static VERBOSE_LOGGING: Mutex<bool> = Mutex::new(false);
@@ -44,26 +44,27 @@ pub fn enable_verbose_logging() {
     }
 }
 
+use app::App;
+use config::KeybindsConfig;
 use crossterm::{
-    event::{self, Event, KeyCode, KeyEventKind, KeyModifiers, MouseEventKind, EnableMouseCapture, DisableMouseCapture},
+    event::{
+        self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, KeyModifiers,
+        MouseEventKind,
+    },
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use ratatui::{
-    backend::CrosstermBackend,
-    Terminal,
-};
-use std::io;
+use ratatui::{backend::CrosstermBackend, Terminal};
 use std::env;
-use app::App;
-use config::KeybindsConfig;
+use std::io;
 
 /// Convert KeyCode and KeyModifiers to a key string for config lookup
 fn key_to_string(code: KeyCode, modifiers: KeyModifiers) -> Option<String> {
     match code {
         KeyCode::Char(c) => {
             // Handle CTRL+SHIFT modifier (for CTRL+SHIFT+1,2,3,4)
-            if modifiers.contains(KeyModifiers::CONTROL) && modifiers.contains(KeyModifiers::SHIFT) {
+            if modifiers.contains(KeyModifiers::CONTROL) && modifiers.contains(KeyModifiers::SHIFT)
+            {
                 Some(format!("Ctrl+Shift+{}", c))
             }
             // Handle CTRL modifier (for CTRL+1,2,3,4)
@@ -94,10 +95,12 @@ fn key_to_string(code: KeyCode, modifiers: KeyModifiers) -> Option<String> {
 fn main() -> Result<(), io::Error> {
     // Parse command-line arguments
     let args: Vec<String> = env::args().collect();
-    let use_interactive_mode = args.iter().any(|arg| arg == "--use-client-interactive-mode-access");
+    let use_interactive_mode = args
+        .iter()
+        .any(|arg| arg == "--use-client-interactive-mode-access");
     let value_by_mouse_move = args.iter().any(|arg| arg == "--value-by-mouse-move");
     let verbose = args.iter().any(|arg| arg == "--verbose");
-    
+
     // Enable verbose logging if requested
     if verbose {
         enable_verbose_logging();
@@ -131,7 +134,11 @@ fn main() -> Result<(), io::Error> {
 
     // Restore terminal
     disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen, DisableMouseCapture)?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
     terminal.show_cursor()?;
 
     if let Err(err) = res {
@@ -195,14 +202,30 @@ fn run_app<B: ratatui::backend::Backend>(
                                 Action::MoveCursorRight => app.move_cursor_right(),
                                 Action::MoveCursorUp => app.move_cursor_up(),
                                 Action::MoveCursorDown => app.move_cursor_down(),
-                                Action::JumpToOp1AndIncrease => app.jump_to_operator_and_increase(0),
-                                Action::JumpToOp2AndIncrease => app.jump_to_operator_and_increase(1),
-                                Action::JumpToOp3AndIncrease => app.jump_to_operator_and_increase(2),
-                                Action::JumpToOp4AndIncrease => app.jump_to_operator_and_increase(3),
-                                Action::JumpToOp1AndDecrease => app.jump_to_operator_and_decrease(0),
-                                Action::JumpToOp2AndDecrease => app.jump_to_operator_and_decrease(1),
-                                Action::JumpToOp3AndDecrease => app.jump_to_operator_and_decrease(2),
-                                Action::JumpToOp4AndDecrease => app.jump_to_operator_and_decrease(3),
+                                Action::JumpToOp1AndIncrease => {
+                                    app.jump_to_operator_and_increase(0)
+                                }
+                                Action::JumpToOp2AndIncrease => {
+                                    app.jump_to_operator_and_increase(1)
+                                }
+                                Action::JumpToOp3AndIncrease => {
+                                    app.jump_to_operator_and_increase(2)
+                                }
+                                Action::JumpToOp4AndIncrease => {
+                                    app.jump_to_operator_and_increase(3)
+                                }
+                                Action::JumpToOp1AndDecrease => {
+                                    app.jump_to_operator_and_decrease(0)
+                                }
+                                Action::JumpToOp2AndDecrease => {
+                                    app.jump_to_operator_and_decrease(1)
+                                }
+                                Action::JumpToOp3AndDecrease => {
+                                    app.jump_to_operator_and_decrease(2)
+                                }
+                                Action::JumpToOp4AndDecrease => {
+                                    app.jump_to_operator_and_decrease(3)
+                                }
                                 Action::JumpToArAndIncrease => app.jump_to_ar_and_increase(),
                                 Action::JumpToD1rAndIncrease => app.jump_to_d1r_and_increase(),
                                 Action::JumpToD2rAndIncrease => app.jump_to_d2r_and_increase(),
@@ -254,5 +277,3 @@ fn run_app<B: ratatui::backend::Backend>(
         }
     }
 }
-
-

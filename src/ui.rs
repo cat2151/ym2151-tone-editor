@@ -1,3 +1,4 @@
+use crate::{app::App, models::*};
 use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
@@ -5,7 +6,6 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
-use crate::{models::*, app::App};
 
 /// Get the color for a parameter based on its column index and row
 /// Returns the color to use for both the parameter name and value
@@ -13,16 +13,16 @@ pub(crate) fn get_param_color(col: usize, is_ch_row: bool) -> Color {
     if is_ch_row {
         // CH row colors
         match col {
-            CH_PARAM_ALG | CH_PARAM_FB => Color::Green,  // ALG and FB: Green (same as MUL)
+            CH_PARAM_ALG | CH_PARAM_FB => Color::Green, // ALG and FB: Green (same as MUL)
             _ => Color::White,
         }
     } else {
         // Operator row colors
         match col {
-            PARAM_MUL => Color::Green,                    // MUL: Green
-            PARAM_TL | PARAM_D1L => Color::Cyan,          // TL and D1L: Light Blue (Cyan)
+            PARAM_MUL => Color::Green,           // MUL: Green
+            PARAM_TL | PARAM_D1L => Color::Cyan, // TL and D1L: Light Blue (Cyan)
             PARAM_AR | PARAM_D1R | PARAM_D2R | PARAM_RR => Color::Rgb(255, 165, 0), // Envelope params: Orange
-            _ => Color::White,                            // Others: White
+            _ => Color::White,                                                      // Others: White
         }
     }
 }
@@ -32,10 +32,7 @@ pub(crate) fn get_param_color(col: usize, is_ch_row: bool) -> Color {
 /// Uses M1, C1, M2, C2 notation (M=Modulator, C=Carrier)
 pub fn get_algorithm_diagram(alg: u8) -> Vec<&'static str> {
     match alg {
-        0 => vec![
-            "ALG 0: M1->C1->M2->C2->OUT",
-            "       (Pure FM cascade)",
-        ],
+        0 => vec!["ALG 0: M1->C1->M2->C2->OUT", "       (Pure FM cascade)"],
         1 => vec![
             "ALG 1: M1->C1-+",
             "       M2-----+->C2->OUT",
@@ -83,7 +80,9 @@ pub fn ui(f: &mut Frame, app: &App) {
     let size = f.area();
 
     let block = Block::default()
-        .title("YM2151 Tone Editor (hjkl/wasd:move, q/e:dec/inc, mouse wheel:change value, ESC:quit)")
+        .title(
+            "YM2151 Tone Editor (hjkl/wasd:move, q/e:dec/inc, mouse wheel:change value, ESC:quit)",
+        )
         .borders(Borders::ALL);
     let inner = block.inner(size);
     f.render_widget(block, size);
@@ -95,7 +94,7 @@ pub fn ui(f: &mut Frame, app: &App) {
     let row_label_width = 4; // Width for row labels (e.g., "OP1 ")
 
     // Draw parameter names (column headers) for operator rows
-    for col in 0..GRID_WIDTH {
+    for (col, param_name) in PARAM_NAMES.iter().enumerate().take(GRID_WIDTH) {
         let x = inner.x + row_label_width + (col as u16 * cell_width);
         let y = inner.y;
 
@@ -103,13 +102,12 @@ pub fn ui(f: &mut Frame, app: &App) {
             x,
             y,
             width: cell_width,
-            height: cell_height,
+            height: 1,
         };
 
-        let param_name = PARAM_NAMES[col];
         let color = get_param_color(col, false);
         let paragraph = Paragraph::new(Span::styled(
-            param_name,
+            *param_name,
             Style::default().fg(color).add_modifier(Modifier::BOLD),
         ));
         f.render_widget(paragraph, area);
@@ -119,10 +117,10 @@ pub fn ui(f: &mut Frame, app: &App) {
     // Display order: M1, C1, M2, C2
     for display_row in 0..4 {
         let data_row = DISPLAY_ROW_TO_DATA_ROW[display_row];
-        
+
         // Check if this row's slot mask is enabled (SM is at index PARAM_SM)
         let slot_mask_enabled = app.values[data_row][PARAM_SM] != 0;
-        
+
         // Draw row label (operator name)
         let row_label_area = Rect {
             x: inner.x,
@@ -131,11 +129,13 @@ pub fn ui(f: &mut Frame, app: &App) {
             height: cell_height,
         };
         let row_name = ROW_NAMES[display_row];
-        let row_label_color = if slot_mask_enabled { Color::Yellow } else { Color::DarkGray };
-        let row_label = Paragraph::new(Span::styled(
-            row_name,
-            Style::default().fg(row_label_color),
-        ));
+        let row_label_color = if slot_mask_enabled {
+            Color::Yellow
+        } else {
+            Color::DarkGray
+        };
+        let row_label =
+            Paragraph::new(Span::styled(row_name, Style::default().fg(row_label_color)));
         f.render_widget(row_label, row_label_area);
 
         // Draw values
@@ -160,7 +160,7 @@ pub fn ui(f: &mut Frame, app: &App) {
                 let color = if slot_mask_enabled {
                     get_param_color(col, false)
                 } else {
-                    Color::DarkGray  // Gray out disabled rows
+                    Color::DarkGray // Gray out disabled rows
                 };
                 Style::default().fg(color)
             };
@@ -173,20 +173,19 @@ pub fn ui(f: &mut Frame, app: &App) {
 
     // Draw CH row header (parameter names for CH row)
     let ch_header_y = inner.y + label_offset + 4;
-    for col in 0..CH_PARAM_COUNT {
+    for (col, ch_param_name) in CH_PARAM_NAMES.iter().enumerate().take(CH_PARAM_COUNT) {
         let x = inner.x + row_label_width + (col as u16 * cell_width);
 
         let area = Rect {
             x,
             y: ch_header_y,
             width: cell_width,
-            height: cell_height,
+            height: 1,
         };
 
-        let param_name = CH_PARAM_NAMES[col];
         let color = get_param_color(col, true);
         let paragraph = Paragraph::new(Span::styled(
-            param_name,
+            *ch_param_name,
             Style::default().fg(color).add_modifier(Modifier::BOLD),
         ));
         f.render_widget(paragraph, area);
@@ -194,7 +193,7 @@ pub fn ui(f: &mut Frame, app: &App) {
 
     // Draw CH row (row 4) with ALG, FB, and MIDI note number
     let ch_row_y = inner.y + label_offset + 5;
-    
+
     // Draw row label (CH)
     let row_label_area = Rect {
         x: inner.x,
@@ -239,20 +238,18 @@ pub fn ui(f: &mut Frame, app: &App) {
     let alg_value = app.values[ROW_CH][CH_PARAM_ALG];
     let diagram = get_algorithm_diagram(alg_value);
     let diagram_start_y = ch_row_y + 2; // Leave one line of space
-    
+
     for (i, line) in diagram.iter().enumerate() {
         let y = diagram_start_y + i as u16;
-        if y < size.height - 1 { // Make sure we don't draw outside the terminal
+        if y < size.height - 1 {
+            // Make sure we don't draw outside the terminal
             let area = Rect {
                 x: inner.x,
                 y,
                 width: inner.width,
                 height: 1,
             };
-            let paragraph = Paragraph::new(Span::styled(
-                *line,
-                Style::default().fg(Color::Green),
-            ));
+            let paragraph = Paragraph::new(Span::styled(*line, Style::default().fg(Color::Green)));
             f.render_widget(paragraph, area);
         }
     }

@@ -67,13 +67,43 @@ struct Ym2151Log { event_count: usize, events: Vec<Ym2151Event> }
 ### 条件付きコンパイル
 Windows限定音声機能は`ym2151-log-play-server`統合周辺で`#[cfg(windows)]`ガードを使用。
 
-### マウス入力革新
-垂直マウス移動がパラメータ値に直接マッピング（上=最大、下=0）、ターミナルインターフェースでアナログ風パラメータ制御を実現。
-
-### 課題文書化
-`issue-notes/`ディレクトリでアクティブ開発追跡、GitHub課題参照付きで特定バグ修正と機能実装を文書化。
-
 ## 重要統合ポイント
 - **ym2151-log-play-server**: 名前付きパイプ経由のWindows音声再生用外部クレート
 - **ratatui + crossterm**: 特定イベント処理パターンを持つターミナルUIフレームワーク
 - **serde**: log-play-serverの期待形式に合致するJSONシリアライゼーション
+
+## コード品質とリンティング
+
+### リンターの実行
+
+コミット前に必ずリンターを実行:
+
+```bash
+# rustfmtでコードをフォーマット
+cargo fmt
+
+# ファイルを変更せずにフォーマットをチェック
+cargo fmt -- --check
+
+# Clippyでコード品質をチェック
+cargo clippy --all-targets
+
+# 警告をエラーとして扱うClippy (CI用)
+cargo clippy --all-targets -- -D warnings
+```
+
+### コミット前チェックリスト
+
+コミットまたはコードレビュー要求前に:
+
+1. **コードフォーマット**: `cargo fmt` を実行して一貫したフォーマットを確保
+2. **リンティング問題修正**: `cargo clippy` を実行して警告に対処
+3. **ビルド成功**: `cargo build` (または `cargo build --release`) を実行
+4. **テスト実行**: `cargo test` を実行して全テストが通ることを確認
+5. **ドキュメント更新**: パブリックAPIを追加した場合、docコメントを更新
+
+# userからの指示
+- PRコメント
+  - 作業報告は、プルリクエストのコメントに書く。document作成禁止
+    - DRY原則に準拠し、「codeやbuild scriptと同じことを、documentに書いたせいで、そのdocumentが陳腐化してハルシネーションやuserレビューコスト増大や混乱ほか様々なトラブル原因になる」を防止する
+    - なおissue-notes/は、userがissueごとの意図を記録する用途で使う

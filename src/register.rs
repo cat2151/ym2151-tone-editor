@@ -1,6 +1,6 @@
-use std::io;
-use crate::models::*;
 use crate::midi_conversion::{kc_to_midi_note, midi_to_kc_kf};
+use crate::models::*;
+use std::io;
 
 /// Convert tone data to YM2151 register events
 /// This generates register writes for the YM2151 chip based on the current tone parameters
@@ -28,12 +28,12 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
     // Internal data order: M1, M2, C1, C2 (rows 0, 1, 2, 3)
     // Mapping: Data M1(row0)→slot0, Data M2(row1)→slot1, Data C1(row2)→slot2, Data C2(row3)→slot3
     const DATA_ROW_TO_SLOT: [usize; 4] = [0, 1, 2, 3];
-    
+
     // For each of 4 operators in data order (M1, M2, C1, C2)
     for data_row in 0..4 {
         let hw_slot = DATA_ROW_TO_SLOT[data_row]; // Convert data row to hardware slot
         let op_offset = hw_slot * 8 + channel; // Operator offset in register map
-        
+
         // DT1 (bits 6-4) and MUL (bits 3-0) - Register $40-$5F
         let dt = values[data_row][PARAM_DT];
         let mul = values[data_row][PARAM_MUL];
@@ -104,38 +104,41 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
         addr: format!("0x{:02X}", 0x20 + channel),
         data: format!("0x{:02X}", rl_fb_con),
     });
-    
+
     // Key Code (KC) and Key Fraction (KF) - Use MIDI note number from CH row
     let midi_note = values[ROW_CH][CH_PARAM_NOTE];
     let (kc, kf) = midi_to_kc_kf(midi_note);
-    
+
     // Key Code (KC) - Register $28-$2F
     events.push(Ym2151Event {
         time: 0.0,
         addr: format!("0x{:02X}", 0x28 + channel),
         data: format!("0x{:02X}", kc),
     });
-    
+
     // Key Fraction (KF) - Register $30-$37 - Fine frequency adjust
     events.push(Ym2151Event {
         time: 0.0,
         addr: format!("0x{:02X}", 0x30 + channel),
         data: format!("0x{:02X}", kf),
     });
-    
+
     // Note On - Register $08 - Key On with operators based on slot masks
     // Bits 0-2: Channel (0-7)
     // Bits 3-6: Operator enable (M1=bit3, C1=bit4, M2=bit5, C2=bit6)
     // YM2151 hardware uses non-sequential bit order: M1, C1, M2, C2
     // Use slot masks from operator rows (SM parameter at PARAM_SM)
-    let m1_mask = values[0][PARAM_SM];  // M1 is data row 0
-    let m2_mask = values[1][PARAM_SM];  // M2 is data row 1
-    let c1_mask = values[2][PARAM_SM];  // C1 is data row 2
-    let c2_mask = values[3][PARAM_SM];  // C2 is data row 3
-    
+    let m1_mask = values[0][PARAM_SM]; // M1 is data row 0
+    let m2_mask = values[1][PARAM_SM]; // M2 is data row 1
+    let c1_mask = values[2][PARAM_SM]; // C1 is data row 2
+    let c2_mask = values[3][PARAM_SM]; // C2 is data row 3
+
     // Correct bit mapping: M1→bit3, C1→bit4, M2→bit5, C2→bit6
-    let key_on_data = ((m1_mask & 1) << 3) | ((c1_mask & 1) << 4) 
-                    | ((m2_mask & 1) << 5) | ((c2_mask & 1) << 6) | (channel as u8);
+    let key_on_data = ((m1_mask & 1) << 3)
+        | ((c1_mask & 1) << 4)
+        | ((m2_mask & 1) << 5)
+        | ((c2_mask & 1) << 6)
+        | (channel as u8);
     events.push(Ym2151Event {
         time: 0.0,
         addr: "0x08".to_string(),
@@ -230,10 +233,10 @@ pub fn events_to_tone_data(events: &[Ym2151Event]) -> io::Result<ToneData> {
                 // YM2151 hardware uses bit order: M1, C1, M2, C2
                 // Bit 3: M1, Bit 4: C1, Bit 5: M2, Bit 6: C2
                 // Store these in the SM parameter of each operator row
-                values[0][PARAM_SM] = (data >> 3) & 0x01;  // M1 is data row 0
-                values[2][PARAM_SM] = (data >> 4) & 0x01;  // C1 is data row 2
-                values[1][PARAM_SM] = (data >> 5) & 0x01;  // M2 is data row 1
-                values[3][PARAM_SM] = (data >> 6) & 0x01;  // C2 is data row 3
+                values[0][PARAM_SM] = (data >> 3) & 0x01; // M1 is data row 0
+                values[2][PARAM_SM] = (data >> 4) & 0x01; // C1 is data row 2
+                values[1][PARAM_SM] = (data >> 5) & 0x01; // M2 is data row 1
+                values[3][PARAM_SM] = (data >> 6) & 0x01; // C2 is data row 3
             }
             // KC (Key Code) register (0x28-0x2F)
             0x28..=0x2F => {
@@ -263,11 +266,11 @@ pub fn to_json_string(values: &ToneData) -> Result<String, serde_json::Error> {
 /// - Register 0x20 = 0x4F
 /// - Register 0x20 = 0x4C (this example shows duplicate addresses are allowed)
 /// - Register 0x36 = 0x40
-/// etc.
+///   etc.
 pub fn tone_data_to_registers(values: &ToneData) -> String {
     let events = to_ym2151_events(values);
     let mut result = String::new();
-    
+
     for event in events {
         // Remove "0x" prefix from addr and data
         let addr_hex = event.addr.trim_start_matches("0x");
@@ -275,7 +278,7 @@ pub fn tone_data_to_registers(values: &ToneData) -> String {
         result.push_str(addr_hex);
         result.push_str(data_hex);
     }
-    
+
     result
 }
 
@@ -285,34 +288,41 @@ pub fn tone_data_to_registers(values: &ToneData) -> String {
 pub fn registers_to_tone_data(registers: &str) -> io::Result<ToneData> {
     // Parse hex string into events
     let mut events = Vec::new();
-    
+
     // Process pairs of address+data (4 characters each)
     let chars: Vec<char> = registers.chars().collect();
-    if chars.len() % 4 != 0 {
+    if !chars.len().is_multiple_of(4) {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
-            "Registers string length must be a multiple of 4"
+            "Registers string length must be a multiple of 4",
         ));
     }
-    
+
     for chunk in chars.chunks(4) {
         let addr_str: String = chunk[0..2].iter().collect();
         let data_str: String = chunk[2..4].iter().collect();
-        
+
         // Parse hex values
-        let addr = u8::from_str_radix(&addr_str, 16)
-            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("Invalid address hex: {}", e)))?;
-        let data = u8::from_str_radix(&data_str, 16)
-            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("Invalid data hex: {}", e)))?;
-        
+        let addr = u8::from_str_radix(&addr_str, 16).map_err(|e| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("Invalid address hex: {}", e),
+            )
+        })?;
+        let data = u8::from_str_radix(&data_str, 16).map_err(|e| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("Invalid data hex: {}", e),
+            )
+        })?;
+
         events.push(Ym2151Event {
             time: 0.0,
             addr: format!("0x{:02X}", addr),
             data: format!("0x{:02X}", data),
         });
     }
-    
+
     // Convert events to tone data using existing function
     events_to_tone_data(&events)
 }
-

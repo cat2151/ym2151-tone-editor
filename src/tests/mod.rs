@@ -1,5 +1,5 @@
 //! Unit tests separated from main source files
-//! 
+//!
 //! This module structure allows tests to access private functions
 //! while keeping them separate to prevent hallucination issues.
 
