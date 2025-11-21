@@ -95,6 +95,9 @@ fn key_to_string(code: KeyCode, modifiers: KeyModifiers) -> Option<String> {
 fn main() -> Result<(), io::Error> {
     // Parse command-line arguments
     let args: Vec<String> = env::args().collect();
+    let use_interactive_mode = args
+        .iter()
+        .any(|arg| arg == "--use-client-interactive-mode-access");
     let value_by_mouse_move = args.iter().any(|arg| arg == "--value-by-mouse-move");
     let verbose = args.iter().any(|arg| arg == "--verbose");
 
@@ -123,8 +126,8 @@ fn main() -> Result<(), io::Error> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // Create app state with mouse mode flag
-    let mut app = App::new(value_by_mouse_move);
+    // Create app state with interactive mode flag and mouse mode flag
+    let mut app = App::new(use_interactive_mode, value_by_mouse_move);
 
     // Main loop
     let res = run_app(&mut terminal, &mut app, &keybinds_config);
@@ -234,6 +237,9 @@ fn run_app<B: ratatui::backend::Backend>(
                                 Action::Exit => {
                                     // Save tone data to JSON before exiting
                                     app.save_to_json()?;
+                                    // Stop interactive mode if active (Windows only)
+                                    #[cfg(windows)]
+                                    app.cleanup();
                                     return Ok(());
                                 }
                             }

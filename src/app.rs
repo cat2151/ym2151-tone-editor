@@ -8,10 +8,15 @@ pub struct App {
     pub cursor_x: usize,
     pub cursor_y: usize,
     pub value_by_mouse_move: bool,
+    #[cfg(windows)]
+    pub use_interactive_mode: bool,
 }
 
 impl App {
-    pub fn new(value_by_mouse_move: bool) -> App {
+    pub fn new(
+        #[allow(unused_variables)] use_interactive_mode: bool,
+        value_by_mouse_move: bool,
+    ) -> App {
         // Initialize with a basic FM piano-like tone
         // Based on typical YM2151 patch settings
         let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
@@ -39,6 +44,8 @@ impl App {
             cursor_x: 0,
             cursor_y: 0,
             value_by_mouse_move,
+            #[cfg(windows)]
+            use_interactive_mode,
         };
 
         // Try to load from GM file format first, then fall back to legacy format
@@ -49,6 +56,14 @@ impl App {
         } else if let Ok(loaded_values) = file_ops::load_newest_json() {
             // Fall back to loading from legacy format
             app.values = loaded_values;
+        }
+
+        // Initialize interactive mode if enabled (Windows only)
+        #[cfg(windows)]
+        if use_interactive_mode {
+            if let Err(e) = audio::init_interactive_mode(&app.values) {
+                eprintln!("⚠️  Warning: Failed to start interactive mode: {}", e);
+            }
         }
 
         app
@@ -128,7 +143,12 @@ impl App {
         if current < max {
             self.values[data_row][self.cursor_x] = current + 1;
             #[cfg(windows)]
-            audio::play_tone(&self.values);
+            audio::play_tone(
+                &self.values,
+                self.use_interactive_mode,
+                self.cursor_x,
+                self.cursor_y,
+            );
         }
     }
 
@@ -138,7 +158,12 @@ impl App {
         if current > 0 {
             self.values[data_row][self.cursor_x] = current - 1;
             #[cfg(windows)]
-            audio::play_tone(&self.values);
+            audio::play_tone(
+                &self.values,
+                self.use_interactive_mode,
+                self.cursor_x,
+                self.cursor_y,
+            );
         }
     }
 
@@ -159,7 +184,12 @@ impl App {
         if new_value != current {
             self.values[data_row][self.cursor_x] = new_value;
             #[cfg(windows)]
-            audio::play_tone(&self.values);
+            audio::play_tone(
+                &self.values,
+                self.use_interactive_mode,
+                self.cursor_x,
+                self.cursor_y,
+            );
         }
     }
 
@@ -175,7 +205,12 @@ impl App {
         if new_value != current {
             self.values[data_row][self.cursor_x] = new_value;
             #[cfg(windows)]
-            audio::play_tone(&self.values);
+            audio::play_tone(
+                &self.values,
+                self.use_interactive_mode,
+                self.cursor_x,
+                self.cursor_y,
+            );
         }
     }
 
@@ -188,14 +223,24 @@ impl App {
         };
         self.values[data_row][self.cursor_x] = max;
         #[cfg(windows)]
-        audio::play_tone(&self.values);
+        audio::play_tone(
+            &self.values,
+            self.use_interactive_mode,
+            self.cursor_x,
+            self.cursor_y,
+        );
     }
 
     pub fn set_value_to_min(&mut self) {
         let data_row = self.get_data_row();
         self.values[data_row][self.cursor_x] = 0;
         #[cfg(windows)]
-        audio::play_tone(&self.values);
+        audio::play_tone(
+            &self.values,
+            self.use_interactive_mode,
+            self.cursor_x,
+            self.cursor_y,
+        );
     }
 
     pub fn set_value_to_random(&mut self) {
@@ -225,7 +270,12 @@ impl App {
 
         self.values[data_row][self.cursor_x] = random_value;
         #[cfg(windows)]
-        audio::play_tone(&self.values);
+        audio::play_tone(
+            &self.values,
+            self.use_interactive_mode,
+            self.cursor_x,
+            self.cursor_y,
+        );
     }
 
     /// Move cursor to a specific mouse position
@@ -327,7 +377,12 @@ impl App {
         if self.values[data_row][self.cursor_x] != new_value {
             self.values[data_row][self.cursor_x] = new_value;
             #[cfg(windows)]
-            audio::play_tone(&self.values);
+            audio::play_tone(
+                &self.values,
+                self.use_interactive_mode,
+                self.cursor_x,
+                self.cursor_y,
+            );
         }
     }
 
@@ -348,7 +403,12 @@ impl App {
     /// This is triggered by 'P' or 'SPACE' key
     pub fn play_current_tone(&self) {
         #[cfg(windows)]
-        audio::play_tone(&self.values);
+        audio::play_tone(
+            &self.values,
+            self.use_interactive_mode,
+            self.cursor_x,
+            self.cursor_y,
+        );
     }
 
     /// Move cursor to FB parameter and increase its value
@@ -364,7 +424,12 @@ impl App {
         if current < max {
             self.values[ROW_CH][CH_PARAM_FB] = current + 1;
             #[cfg(windows)]
-            audio::play_tone(&self.values);
+            audio::play_tone(
+                &self.values,
+                self.use_interactive_mode,
+                self.cursor_x,
+                self.cursor_y,
+            );
         }
     }
 
@@ -380,7 +445,12 @@ impl App {
         if current > 0 {
             self.values[ROW_CH][CH_PARAM_FB] = current - 1;
             #[cfg(windows)]
-            audio::play_tone(&self.values);
+            audio::play_tone(
+                &self.values,
+                self.use_interactive_mode,
+                self.cursor_x,
+                self.cursor_y,
+            );
         }
     }
 
@@ -513,6 +583,14 @@ impl App {
         // Only apply to operator rows, not CH row
         if self.cursor_y < 4 {
             self.decrease_value();
+        }
+    }
+
+    /// Cleanup - stop interactive mode if active
+    #[cfg(windows)]
+    pub fn cleanup(&self) {
+        if self.use_interactive_mode {
+            audio::cleanup_interactive_mode();
         }
     }
 }
