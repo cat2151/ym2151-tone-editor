@@ -1,4 +1,4 @@
-Last updated: 2025-11-21
+Last updated: 2025-11-22
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -220,6 +220,10 @@ Last updated: 2025-11-21
 - issue-notes/81.md
 - issue-notes/83.md
 - issue-notes/85.md
+- issue-notes/87.md
+- issue-notes/89.md
+- issue-notes/91.md
+- issue-notes/93.md
 - src/app.rs
 - src/audio.rs
 - src/config.rs
@@ -247,33 +251,41 @@ Last updated: 2025-11-21
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-828480e Merge pull request #86 from cat2151/copilot/add-keybinds-to-ym2151
-17699ec Add documentation and tests for keybinds configuration
-6780db8 Add keybinds configuration support via ym2151-tone-editor.toml
-eea92d2 Initial plan
-417ca7b Add issue note for #85 [auto]
-9a9fcda Auto-translate README.ja.md to README.md [auto]
-0139b87 Merge pull request #84 from cat2151/copilot/implement-value-increment-decrement
-ec99c38 Update README files with new keyboard shortcuts documentation
-da51eca Add keyboard shortcuts for +/- and ./, with SHIFT for ±10
-b481b46 Add issue note for #83 [auto]
+378027e Merge pull request #94 from cat2151/copilot/update-server-library-audio-json
+84aae9d Add schedule clear, note-off and note-on to all parameter edits
+e03ac8e Remove git revision pin from Cargo.toml
+3d2a7f3 Send only the specific register being edited in interactive mode
+d2319ab Use minimal JSON for interactive mode instead of complete tone data
+21cd15d Refactor: Extract common JSON sending logic to helper function
+a28841f Replace write_register with play_json_interactive in interactive mode
+cb1ebdf Update server library and switch to JSON-only audio approach
+1f358b9 Initial plan
+b8fee61 Add issue note for #93 [auto]
 
 ### 変更されたファイル:
-.gitignore
+.github/copilot-instructions.md
 Cargo.lock
 Cargo.toml
-README.ja.md
-README.md
-docs/KEYBINDS.ja.md
-issue-notes/81.md
-issue-notes/83.md
-issue-notes/85.md
+issue-notes/91.md
+issue-notes/93.md
 src/app.rs
+src/audio.rs
 src/config.rs
+src/file_ops.rs
 src/main.rs
+src/midi_conversion.rs
+src/models.rs
+src/register.rs
 src/tests/app_tests.rs
+src/tests/file_ops_tests.rs
+src/tests/midi_conversion_tests.rs
+src/tests/mod.rs
+src/tests/register_tests.rs
+src/tests/ui_tests.rs
+src/tests/verbose_logging_tests.rs
+src/ui.rs
 ym2151-tone-editor.toml.example
 
 
 ---
-Generated at: 2025-11-21 07:08:16 JST
+Generated at: 2025-11-22 07:08:11 JST
