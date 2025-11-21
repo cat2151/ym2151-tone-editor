@@ -12,4 +12,4 @@ toml = "0.9"
 smf-to-ym2151log-rust = { git = "https://github.com/cat2151/smf-to-ym2151log-rust" }
 
 [target.'cfg(windows)'.dependencies]
-ym2151-log-play-server = { git = "https://github.com/cat2151/ym2151-log-play-server", rev = "dac0301dd2aa32f0efb0ea02ff1e51d9b5973042" }
+ym2151-log-play-server = { git = "https://github.com/cat2151/ym2151-log-play-server" }
