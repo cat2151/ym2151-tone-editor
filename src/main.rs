@@ -203,6 +203,14 @@ fn run_app<B: ratatui::backend::Backend>(
                                 Action::JumpToOp2AndDecrease => app.jump_to_operator_and_decrease(1),
                                 Action::JumpToOp3AndDecrease => app.jump_to_operator_and_decrease(2),
                                 Action::JumpToOp4AndDecrease => app.jump_to_operator_and_decrease(3),
+                                Action::JumpToArAndIncrease => app.jump_to_ar_and_increase(),
+                                Action::JumpToD1rAndIncrease => app.jump_to_d1r_and_increase(),
+                                Action::JumpToD2rAndIncrease => app.jump_to_d2r_and_increase(),
+                                Action::JumpToRrAndIncrease => app.jump_to_rr_and_increase(),
+                                Action::JumpToArAndDecrease => app.jump_to_ar_and_decrease(),
+                                Action::JumpToD1rAndDecrease => app.jump_to_d1r_and_decrease(),
+                                Action::JumpToD2rAndDecrease => app.jump_to_d2r_and_decrease(),
+                                Action::JumpToRrAndDecrease => app.jump_to_rr_and_decrease(),
                                 Action::Exit => {
                                     // Save tone data to JSON before exiting
                                     app.save_to_json()?;

@@ -440,6 +440,94 @@ impl App {
         self.decrease_value();
     }
 
+    /// Jump to AR parameter and increase its value (stays on current row)
+    pub fn jump_to_ar_and_increase(&mut self) {
+        // AR is at column index PARAM_AR
+        self.cursor_x = PARAM_AR;
+        
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < 4 {
+            self.increase_value();
+        }
+    }
+
+    /// Jump to AR parameter and decrease its value (stays on current row)
+    pub fn jump_to_ar_and_decrease(&mut self) {
+        // AR is at column index PARAM_AR
+        self.cursor_x = PARAM_AR;
+        
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < 4 {
+            self.decrease_value();
+        }
+    }
+
+    /// Jump to D1R parameter and increase its value (stays on current row)
+    pub fn jump_to_d1r_and_increase(&mut self) {
+        // D1R is at column index PARAM_D1R
+        self.cursor_x = PARAM_D1R;
+        
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < 4 {
+            self.increase_value();
+        }
+    }
+
+    /// Jump to D1R parameter and decrease its value (stays on current row)
+    pub fn jump_to_d1r_and_decrease(&mut self) {
+        // D1R is at column index PARAM_D1R
+        self.cursor_x = PARAM_D1R;
+        
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < 4 {
+            self.decrease_value();
+        }
+    }
+
+    /// Jump to D2R parameter and increase its value (stays on current row)
+    pub fn jump_to_d2r_and_increase(&mut self) {
+        // D2R is at column index PARAM_D2R
+        self.cursor_x = PARAM_D2R;
+        
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < 4 {
+            self.increase_value();
+        }
+    }
+
+    /// Jump to D2R parameter and decrease its value (stays on current row)
+    pub fn jump_to_d2r_and_decrease(&mut self) {
+        // D2R is at column index PARAM_D2R
+        self.cursor_x = PARAM_D2R;
+        
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < 4 {
+            self.decrease_value();
+        }
+    }
+
+    /// Jump to RR parameter and increase its value (stays on current row)
+    pub fn jump_to_rr_and_increase(&mut self) {
+        // RR is at column index PARAM_RR
+        self.cursor_x = PARAM_RR;
+        
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < 4 {
+            self.increase_value();
+        }
+    }
+
+    /// Jump to RR parameter and decrease its value (stays on current row)
+    pub fn jump_to_rr_and_decrease(&mut self) {
+        // RR is at column index PARAM_RR
+        self.cursor_x = PARAM_RR;
+        
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < 4 {
+            self.decrease_value();
+        }
+    }
+
     /// Cleanup - stop interactive mode if active
     #[cfg(windows)]
     pub fn cleanup(&self) {

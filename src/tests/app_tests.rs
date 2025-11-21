@@ -891,3 +891,208 @@ use crate::models::*;
         assert_eq!(app.values[1][3], 19, "OP3 value should decrease");
     }
 
+    #[test]
+    fn test_jump_to_ar_and_increase() {
+        let mut app = App::new(false, false);
+        
+        // Set cursor to operator row 0, column 0
+        app.cursor_x = 0;
+        app.cursor_y = 0;
+        
+        // Set initial AR value
+        app.values[0][PARAM_AR] = 10;
+        
+        // Jump to AR and increase
+        app.jump_to_ar_and_increase();
+        
+        // Verify cursor moved to AR column
+        assert_eq!(app.cursor_x, PARAM_AR, "Cursor should move to AR column");
+        assert_eq!(app.cursor_y, 0, "Cursor should stay on same row");
+        
+        // Verify AR value increased
+        assert_eq!(app.values[0][PARAM_AR], 11, "AR should increase from 10 to 11");
+    }
+
+    #[test]
+    fn test_jump_to_ar_and_decrease() {
+        let mut app = App::new(false, false);
+        
+        // Set cursor to operator row 1, column 5
+        app.cursor_x = 5;
+        app.cursor_y = 1;
+        
+        // Set initial AR value for display row 1 (data row 2)
+        app.values[2][PARAM_AR] = 15;
+        
+        // Jump to AR and decrease
+        app.jump_to_ar_and_decrease();
+        
+        // Verify cursor moved to AR column
+        assert_eq!(app.cursor_x, PARAM_AR, "Cursor should move to AR column");
+        assert_eq!(app.cursor_y, 1, "Cursor should stay on same row");
+        
+        // Verify AR value decreased
+        assert_eq!(app.values[2][PARAM_AR], 14, "AR should decrease from 15 to 14");
+    }
+
+    #[test]
+    fn test_jump_to_d1r_and_increase() {
+        let mut app = App::new(false, false);
+        
+        // Set cursor to operator row 2, column 1
+        app.cursor_x = 1;
+        app.cursor_y = 2;
+        
+        // Set initial D1R value for display row 2 (data row 1)
+        app.values[1][PARAM_D1R] = 8;
+        
+        // Jump to D1R and increase
+        app.jump_to_d1r_and_increase();
+        
+        // Verify cursor moved to D1R column
+        assert_eq!(app.cursor_x, PARAM_D1R, "Cursor should move to D1R column");
+        assert_eq!(app.cursor_y, 2, "Cursor should stay on same row");
+        
+        // Verify D1R value increased
+        assert_eq!(app.values[1][PARAM_D1R], 9, "D1R should increase from 8 to 9");
+    }
+
+    #[test]
+    fn test_jump_to_d1r_and_decrease() {
+        let mut app = App::new(false, false);
+        
+        // Set cursor to operator row 3
+        app.cursor_x = 7;
+        app.cursor_y = 3;
+        
+        // Set initial D1R value for display row 3 (data row 3)
+        app.values[3][PARAM_D1R] = 20;
+        
+        // Jump to D1R and decrease
+        app.jump_to_d1r_and_decrease();
+        
+        // Verify cursor moved to D1R column
+        assert_eq!(app.cursor_x, PARAM_D1R, "Cursor should move to D1R column");
+        assert_eq!(app.cursor_y, 3, "Cursor should stay on same row");
+        
+        // Verify D1R value decreased
+        assert_eq!(app.values[3][PARAM_D1R], 19, "D1R should decrease from 20 to 19");
+    }
+
+    #[test]
+    fn test_jump_to_d2r_and_increase() {
+        let mut app = App::new(false, false);
+        
+        // Set cursor to operator row 0
+        app.cursor_x = 2;
+        app.cursor_y = 0;
+        
+        // Set initial D2R value
+        app.values[0][PARAM_D2R] = 5;
+        
+        // Jump to D2R and increase
+        app.jump_to_d2r_and_increase();
+        
+        // Verify cursor moved to D2R column
+        assert_eq!(app.cursor_x, PARAM_D2R, "Cursor should move to D2R column");
+        assert_eq!(app.cursor_y, 0, "Cursor should stay on same row");
+        
+        // Verify D2R value increased
+        assert_eq!(app.values[0][PARAM_D2R], 6, "D2R should increase from 5 to 6");
+    }
+
+    #[test]
+    fn test_jump_to_d2r_and_decrease() {
+        let mut app = App::new(false, false);
+        
+        // Set cursor to operator row 1
+        app.cursor_x = 8;
+        app.cursor_y = 1;
+        
+        // Set initial D2R value for display row 1 (data row 2)
+        app.values[2][PARAM_D2R] = 12;
+        
+        // Jump to D2R and decrease
+        app.jump_to_d2r_and_decrease();
+        
+        // Verify cursor moved to D2R column
+        assert_eq!(app.cursor_x, PARAM_D2R, "Cursor should move to D2R column");
+        assert_eq!(app.cursor_y, 1, "Cursor should stay on same row");
+        
+        // Verify D2R value decreased
+        assert_eq!(app.values[2][PARAM_D2R], 11, "D2R should decrease from 12 to 11");
+    }
+
+    #[test]
+    fn test_jump_to_rr_and_increase() {
+        let mut app = App::new(false, false);
+        
+        // Set cursor to operator row 2
+        app.cursor_x = 3;
+        app.cursor_y = 2;
+        
+        // Set initial RR value for display row 2 (data row 1)
+        app.values[1][PARAM_RR] = 7;
+        
+        // Jump to RR and increase
+        app.jump_to_rr_and_increase();
+        
+        // Verify cursor moved to RR column
+        assert_eq!(app.cursor_x, PARAM_RR, "Cursor should move to RR column");
+        assert_eq!(app.cursor_y, 2, "Cursor should stay on same row");
+        
+        // Verify RR value increased
+        assert_eq!(app.values[1][PARAM_RR], 8, "RR should increase from 7 to 8");
+    }
+
+    #[test]
+    fn test_jump_to_rr_and_decrease() {
+        let mut app = App::new(false, false);
+        
+        // Set cursor to operator row 3
+        app.cursor_x = 1;
+        app.cursor_y = 3;
+        
+        // Set initial RR value for display row 3 (data row 3)
+        app.values[3][PARAM_RR] = 9;
+        
+        // Jump to RR and decrease
+        app.jump_to_rr_and_decrease();
+        
+        // Verify cursor moved to RR column
+        assert_eq!(app.cursor_x, PARAM_RR, "Cursor should move to RR column");
+        assert_eq!(app.cursor_y, 3, "Cursor should stay on same row");
+        
+        // Verify RR value decreased
+        assert_eq!(app.values[3][PARAM_RR], 8, "RR should decrease from 9 to 8");
+    }
+
+    #[test]
+    fn test_adsr_shortcuts_ignore_ch_row() {
+        let mut app = App::new(false, false);
+        
+        // Set cursor to CH row
+        app.cursor_x = 0;
+        app.cursor_y = ROW_CH;
+        
+        // Store initial values
+        let initial_values = app.values;
+        
+        // Try to use ADSR shortcuts on CH row - they should be ignored
+        app.jump_to_ar_and_increase();
+        assert_eq!(app.values, initial_values, "AR shortcut should not modify values on CH row");
+        
+        app.jump_to_d1r_and_decrease();
+        assert_eq!(app.values, initial_values, "D1R shortcut should not modify values on CH row");
+        
+        app.jump_to_d2r_and_increase();
+        assert_eq!(app.values, initial_values, "D2R shortcut should not modify values on CH row");
+        
+        app.jump_to_rr_and_decrease();
+        assert_eq!(app.values, initial_values, "RR shortcut should not modify values on CH row");
+        
+        // Cursor should move to the parameter column, but stay on CH row
+        assert_eq!(app.cursor_y, ROW_CH, "Cursor should stay on CH row");
+    }
+
+
