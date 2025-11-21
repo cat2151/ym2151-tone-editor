@@ -78,7 +78,7 @@ pub type ToneData = [[u8; GRID_WIDTH]; GRID_HEIGHT];
 /// JSON event structure for ym2151-log-play-server
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Ym2151Event {
-    pub time: u32,
+    pub time: f64,
     pub addr: String,
     pub data: String,
 }
