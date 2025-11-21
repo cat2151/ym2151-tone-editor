@@ -134,14 +134,19 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
     let hw_slot = DATA_ROW_TO_SLOT[data_row];
     let op_offset = hw_slot * 8 + channel;
 
+    // Clear any pending scheduled events first
+    let _ = ym2151_log_play_server::client::clear_schedule();
+
     let mut events = Vec::new();
+
+    // Add note-off at the beginning
+    send_note_off_register(&mut events, channel);
 
     // Determine which register(s) to send based on the edited parameter
     match param_index {
         PARAM_SM => {
-            // SM affects KEY_ON register, which is a channel register
-            // Send it from here for consistency
-            send_key_on_register(values, &mut events);
+            // SM affects KEY_ON register, which is handled at the end
+            // No additional register needed here
         }
         PARAM_TL => {
             // TL - Register $60-$7F (standalone)
@@ -257,6 +262,9 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
         }
     }
 
+    // Add note-on at the end
+    send_key_on_register(values, &mut events);
+
     if events.is_empty() {
         return;
     }
@@ -288,7 +296,14 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
 #[cfg(windows)]
 fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
     let channel = 0; // We use channel 0
+
+    // Clear any pending scheduled events first
+    let _ = ym2151_log_play_server::client::clear_schedule();
+
     let mut events = Vec::new();
+
+    // Add note-off at the beginning
+    send_note_off_register(&mut events, channel);
 
     // Determine which register(s) to send based on the edited parameter
     match param_index {
@@ -311,7 +326,7 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
             });
         }
         CH_PARAM_NOTE => {
-            // MIDI note affects KC, KF, and KEY_ON
+            // MIDI note affects KC, KF
             let midi_note = values[ROW_CH][CH_PARAM_NOTE];
             let (kc, kf) = midi_to_kc_kf(midi_note);
 
@@ -340,9 +355,6 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
                 addr: format!("0x{:02X}", 0x30 + channel as u8),
                 data: format!("0x{:02X}", kf),
             });
-
-            // Also send KEY_ON to retrigger the note
-            send_key_on_register(values, &mut events);
         }
         _ => {
             log_verbose(&format!(
@@ -352,6 +364,9 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
             return;
         }
     }
+
+    // Add note-on at the end
+    send_key_on_register(values, &mut events);
 
     if events.is_empty() {
         return;
@@ -378,6 +393,20 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
 
     // Send JSON content to interactive mode
     let _ = ym2151_log_play_server::client::play_json_interactive(&json_string);
+}
+
+/// Helper function to add KEY_OFF (note-off) register to events
+#[cfg(windows)]
+fn send_note_off_register(events: &mut Vec<Ym2151Event>, channel: u8) {
+    log_verbose(&format!(
+        "  channel register: addr=0x08, data=0x{:02X} (KEY_OFF)",
+        channel
+    ));
+    events.push(Ym2151Event {
+        time: 0.0,
+        addr: "0x08".to_string(),
+        data: format!("0x{:02X}", channel), // KEY_OFF: no slot mask, just channel
+    });
 }
 
 /// Helper function to add KEY_ON register to events
