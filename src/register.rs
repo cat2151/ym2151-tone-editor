@@ -39,7 +39,7 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
         let mul = values[data_row][PARAM_MUL];
         let dt_mul = ((dt & 0x07) << 4) | (mul & 0x0F);
         events.push(Ym2151Event {
-            time: 0,
+            time: 0.0,
             addr: format!("0x{:02X}", 0x40 + op_offset),
             data: format!("0x{:02X}", dt_mul),
         });
@@ -47,7 +47,7 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
         // TL (Total Level) - Register $60-$7F (7 bits)
         let tl = values[data_row][PARAM_TL];
         events.push(Ym2151Event {
-            time: 0,
+            time: 0.0,
             addr: format!("0x{:02X}", 0x60 + op_offset),
             data: format!("0x{:02X}", tl & 0x7F),
         });
@@ -57,7 +57,7 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
         let ar = values[data_row][PARAM_AR];
         let ks_ar = ((ks & 0x03) << 6) | (ar & 0x1F);
         events.push(Ym2151Event {
-            time: 0,
+            time: 0.0,
             addr: format!("0x{:02X}", 0x80 + op_offset),
             data: format!("0x{:02X}", ks_ar),
         });
@@ -67,7 +67,7 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
         let d1r = values[data_row][PARAM_D1R];
         let ams_d1r = ((ams & 0x03) << 6) | (d1r & 0x1F);
         events.push(Ym2151Event {
-            time: 0,
+            time: 0.0,
             addr: format!("0x{:02X}", 0xA0 + op_offset),
             data: format!("0x{:02X}", ams_d1r),
         });
@@ -77,7 +77,7 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
         let d2r = values[data_row][PARAM_D2R];
         let dt2_d2r = ((dt2 & 0x03) << 6) | (d2r & 0x0F);
         events.push(Ym2151Event {
-            time: 0,
+            time: 0.0,
             addr: format!("0x{:02X}", 0xC0 + op_offset),
             data: format!("0x{:02X}", dt2_d2r),
         });
@@ -87,7 +87,7 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
         let rr = values[data_row][PARAM_RR];
         let d1l_rr = ((d1l & 0x0F) << 4) | (rr & 0x0F);
         events.push(Ym2151Event {
-            time: 0,
+            time: 0.0,
             addr: format!("0x{:02X}", 0xE0 + op_offset),
             data: format!("0x{:02X}", d1l_rr),
         });
@@ -100,7 +100,7 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
     let rl = 0xC0; // Both L and R enabled
     let rl_fb_con = rl | ((fb & 0x07) << 3) | (alg & 0x07);
     events.push(Ym2151Event {
-        time: 0,
+        time: 0.0,
         addr: format!("0x{:02X}", 0x20 + channel),
         data: format!("0x{:02X}", rl_fb_con),
     });
@@ -111,14 +111,14 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
     
     // Key Code (KC) - Register $28-$2F
     events.push(Ym2151Event {
-        time: 0,
+        time: 0.0,
         addr: format!("0x{:02X}", 0x28 + channel),
         data: format!("0x{:02X}", kc),
     });
     
     // Key Fraction (KF) - Register $30-$37 - Fine frequency adjust
     events.push(Ym2151Event {
-        time: 0,
+        time: 0.0,
         addr: format!("0x{:02X}", 0x30 + channel),
         data: format!("0x{:02X}", kf),
     });
@@ -137,7 +137,7 @@ pub fn to_ym2151_events(values: &ToneData) -> Vec<Ym2151Event> {
     let key_on_data = ((m1_mask & 1) << 3) | ((c1_mask & 1) << 4) 
                     | ((m2_mask & 1) << 5) | ((c2_mask & 1) << 6) | (channel as u8);
     events.push(Ym2151Event {
-        time: 0,
+        time: 0.0,
         addr: "0x08".to_string(),
         data: format!("0x{:02X}", key_on_data),
     });
@@ -306,7 +306,7 @@ pub fn registers_to_tone_data(registers: &str) -> io::Result<ToneData> {
             .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("Invalid data hex: {}", e)))?;
         
         events.push(Ym2151Event {
-            time: 0,
+            time: 0.0,
             addr: format!("0x{:02X}", addr),
             data: format!("0x{:02X}", data),
         });

@@ -30,7 +30,7 @@ use crate::models::*;
         
         // Check that events have correct format
         for event in &events {
-            assert_eq!(event.time, 0);
+            assert_eq!(event.time, 0.0);
             assert!(event.addr.starts_with("0x"));
             assert!(event.data.starts_with("0x"));
         }
@@ -45,32 +45,32 @@ use crate::models::*;
         // Create sample events
         let events = vec![
             Ym2151Event {
-                time: 0,
+                time: 0.0,
                 addr: "0x40".to_string(),
                 data: "0x12".to_string(), // DT=1, MUL=2
             },
             Ym2151Event {
-                time: 0,
+                time: 0.0,
                 addr: "0x60".to_string(),
                 data: "0x1F".to_string(), // TL=31
             },
             Ym2151Event {
-                time: 0,
+                time: 0.0,
                 addr: "0x80".to_string(),
                 data: "0x8A".to_string(), // KS=2, AR=10
             },
             Ym2151Event {
-                time: 0,
+                time: 0.0,
                 addr: "0xA0".to_string(),
                 data: "0x0C".to_string(), // D1R=12
             },
             Ym2151Event {
-                time: 0,
+                time: 0.0,
                 addr: "0xC0".to_string(),
                 data: "0x85".to_string(), // DT2=2, D2R=5
             },
             Ym2151Event {
-                time: 0,
+                time: 0.0,
                 addr: "0xE0".to_string(),
                 data: "0x78".to_string(), // D1L=7, RR=8
             },
@@ -139,7 +139,7 @@ use crate::models::*;
         // Using 0x3E which is KC for middle C (MIDI 60)
         let events = vec![
             Ym2151Event {
-                time: 0,
+                time: 0.0,
                 addr: "0x28".to_string(),
                 data: "0x3E".to_string(), // KC for middle C (MIDI 60)
             },
