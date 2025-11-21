@@ -72,46 +72,37 @@ pub fn init_interactive_mode(values: &ToneData) -> Result<(), Box<dyn std::error
 /// This initializes the YM2151 chip with the current tone data
 #[cfg(windows)]
 fn send_all_registers(values: &ToneData) {
-    log_verbose("send_all_registers: Converting tone data to JSON");
-
-    // Get JSON string of current tone data
-    let json_string = match register::to_json_string(values) {
-        Ok(json) => json,
-        Err(_) => {
-            log_verbose("send_all_registers: Failed to convert to JSON");
-            return;
-        }
-    };
-
-    log_verbose("send_all_registers: Sending JSON to interactive mode");
-
-    // Send JSON content to interactive mode
-    let _ = ym2151_log_play_server::client::play_json_interactive(&json_string);
-
-    log_verbose("send_all_registers: JSON sent successfully");
+    send_json_to_interactive(values, "send_all_registers");
 }
 
 /// Send interactive update for a single parameter change
 /// Sends the complete tone data as JSON to interactive mode
 #[cfg(windows)]
 fn send_interactive_update(values: &ToneData, _cursor_x: usize, _cursor_y: usize) {
-    log_verbose("send_interactive_update: Converting tone data to JSON");
+    send_json_to_interactive(values, "send_interactive_update");
+}
+
+/// Helper function to send JSON to interactive mode
+/// Converts tone data to JSON and sends via play_json_interactive API
+#[cfg(windows)]
+fn send_json_to_interactive(values: &ToneData, caller: &str) {
+    log_verbose(&format!("{}: Converting tone data to JSON", caller));
 
     // Get JSON string of current tone data
     let json_string = match register::to_json_string(values) {
         Ok(json) => json,
         Err(_) => {
-            log_verbose("send_interactive_update: Failed to convert to JSON");
+            log_verbose(&format!("{}: Failed to convert to JSON", caller));
             return;
         }
     };
 
-    log_verbose("send_interactive_update: Sending JSON to interactive mode");
+    log_verbose(&format!("{}: Sending JSON to interactive mode", caller));
 
     // Send JSON content to interactive mode
     let _ = ym2151_log_play_server::client::play_json_interactive(&json_string);
 
-    log_verbose("send_interactive_update: JSON sent successfully");
+    log_verbose(&format!("{}: JSON sent successfully", caller));
 }
 
 /// Cleanup - stop interactive mode if active
