@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ratatui = "0.28"
-crossterm = "0.28"
+ratatui = "0.28.1"
+crossterm = "0.29"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-toml = "0.8"
+toml = "0.9"
 smf-to-ym2151log-rust = { git = "https://github.com/cat2151/smf-to-ym2151log-rust" }
 
 [target.'cfg(windows)'.dependencies]

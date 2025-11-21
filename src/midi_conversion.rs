@@ -23,7 +23,6 @@ pub fn kc_to_midi_note(kc: u8) -> u8 {
     // Formula from midi_to_kc_kf: adjusted_midi = midi_note - 1
     // So: midi_note = adjusted_midi + 1
     let adjusted_midi = (octave + 1) * 12 + note_in_octave;
-    
 
     (adjusted_midi + 1).min(127)
 }
