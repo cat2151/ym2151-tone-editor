@@ -12,6 +12,14 @@ use crate::models::*;
 #[cfg(windows)]
 use crate::register;
 
+#[cfg(windows)]
+fn handle_server_send_error(context: &str, err: &dyn std::fmt::Display) {
+    let msg = format!("{}: サーバー送信失敗: {}", context, err);
+    eprintln!("{}", msg);
+    log_verbose(&msg);
+    std::process::exit(1);
+}
+
 /// Log a verbose message (imported from main)
 #[cfg(windows)]
 pub(crate) fn log_verbose(message: &str) {
@@ -49,10 +57,7 @@ fn send_json_update(values: &ToneData) {
     // サーバーへJSON送信（失敗時はprintして即終了）
     match ym2151_log_play_server::client::send_json(&json_string) {
         Ok(_) => {},
-        Err(e) => {
-            eprintln!("send_json_update: サーバー送信失敗: {}", e);
-            std::process::exit(1);
-        }
+        Err(e) => handle_server_send_error("send_json_update", &e),
     }
 }
 
@@ -106,10 +111,7 @@ fn send_all_registers(values: &ToneData) {
     // インタラクティブモードへJSON送信（失敗時はprintして即終了）
     match ym2151_log_play_server::client::play_json_interactive(&json_string) {
         Ok(_) => log_verbose("send_all_registers: JSON sent successfully"),
-        Err(e) => {
-            eprintln!("send_all_registers: サーバー送信失敗: {}", e);
-            std::process::exit(1);
-        }
+        Err(e) => handle_server_send_error("send_all_registers", &e),
     }
 }
 
@@ -300,10 +302,7 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
     // インタラクティブモードへJSON送信（失敗時はprintして即終了）
     match ym2151_log_play_server::client::play_json_interactive(&json_string) {
         Ok(_) => {},
-        Err(e) => {
-            eprintln!("send_operator_register_for_param: サーバー送信失敗: {}", e);
-            std::process::exit(1);
-        }
+        Err(e) => handle_server_send_error("send_operator_register_for_param", &e),
     }
 }
 
@@ -409,10 +408,7 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
     // インタラクティブモードへJSON送信（失敗時はprintして即終了）
     match ym2151_log_play_server::client::play_json_interactive(&json_string) {
         Ok(_) => {},
-        Err(e) => {
-            eprintln!("send_channel_register_for_param: サーバー送信失敗: {}", e);
-            std::process::exit(1);
-        }
+        Err(e) => handle_server_send_error("send_channel_register_for_param", &e),
     }
 }
 
