@@ -56,7 +56,7 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::{backend::CrosstermBackend, Terminal};
-use std::env;
+use clap::{Arg, Command};
 use std::io;
 
 /// Convert KeyCode and KeyModifiers to a key string for config lookup
@@ -94,24 +94,41 @@ fn key_to_string(code: KeyCode, modifiers: KeyModifiers) -> Option<String> {
 }
 
 fn main() -> Result<(), io::Error> {
-    // Parse command-line arguments
-    let args: Vec<String> = env::args().collect();
-    let use_interactive_mode = args
-        .iter()
-        .any(|arg| arg == "--use-client-interactive-mode-access");
-    let value_by_mouse_move = args.iter().any(|arg| arg == "--value-by-mouse-move");
-    let verbose = args.iter().any(|arg| arg == "--verbose");
+    let matches = Command::new("ym2151-tone-editor")
+        .version("0.1.0")
+        .about("YM2151 FM音色エディタ")
+        .arg(
+            Arg::new("use-client-interactive-mode-access")
+                .long("use-client-interactive-mode-access")
+                .help("Windows限定: ym2151-log-play-serverと連携するインタラクティブモードを有効化")
+                .action(clap::ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("value-by-mouse-move")
+                .long("value-by-mouse-move")
+                .help("マウス移動で値変更するレガシーモードを有効化")
+                .action(clap::ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("verbose")
+                .long("verbose")
+                .help("詳細なログ出力を有効化")
+                .action(clap::ArgAction::SetTrue),
+        )
+        .after_help("例: ym2151-tone-editor --verbose")
+        .get_matches();
 
-    // Enable verbose logging if requested
+    let use_interactive_mode = matches.get_flag("use-client-interactive-mode-access");
+    let value_by_mouse_move = matches.get_flag("value-by-mouse-move");
+    let verbose = matches.get_flag("verbose");
+
     if verbose {
         enable_verbose_logging();
         log_verbose("Verbose logging enabled");
     }
 
-    // Load keybinds configuration
     let keybinds_config = KeybindsConfig::load_or_default();
 
-    // Ensure server is running (Windows only)
     #[cfg(windows)]
     {
         if let Err(e) = ym2151_log_play_server::client::ensure_server_ready("cat-play-mml") {
@@ -120,20 +137,16 @@ fn main() -> Result<(), io::Error> {
         }
     }
 
-    // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // Create app state with interactive mode flag and mouse mode flag
     let mut app = App::new(use_interactive_mode, value_by_mouse_move);
 
-    // Main loop
     let res = run_app(&mut terminal, &mut app, &keybinds_config);
 
-    // Restore terminal
     disable_raw_mode()?;
     execute!(
         terminal.backend_mut(),
