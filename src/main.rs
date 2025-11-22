@@ -18,6 +18,8 @@ use std::sync::Mutex;
 /// Global verbose logging flag
 static VERBOSE_LOGGING: Mutex<bool> = Mutex::new(false);
 
+static LOG_FILENAME: &str = "ym2151-tone-editor.log";
+
 /// Log a message to ym2151-tone-editor.log if verbose logging is enabled
 pub fn log_verbose(message: &str) {
     if let Ok(enabled) = VERBOSE_LOGGING.lock() {
@@ -26,7 +28,7 @@ pub fn log_verbose(message: &str) {
             if let Ok(mut file) = OpenOptions::new()
                 .create(true)
                 .append(true)
-                .open("ym2151-tone-editor.log")
+                .open(LOG_FILENAME)
             {
                 use chrono::Local;
                 let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S");
@@ -44,6 +46,7 @@ pub fn enable_verbose_logging() {
 }
 
 use app::App;
+use clap::{Arg, Command};
 use config::KeybindsConfig;
 use crossterm::{
     event::{
@@ -54,7 +57,6 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::{backend::CrosstermBackend, Terminal};
-use clap::{Arg, Command};
 use std::io;
 
 /// Convert KeyCode and KeyModifiers to a key string for config lookup
@@ -92,7 +94,6 @@ fn key_to_string(code: KeyCode, modifiers: KeyModifiers) -> Option<String> {
 }
 
 fn main() -> Result<(), io::Error> {
-
     let matches = Command::new("ym2151-tone-editor")
         .version("0.1.0")
         .about("YM2151 FM音色エディタ")
@@ -125,9 +126,9 @@ fn main() -> Result<(), io::Error> {
         enable_verbose_logging();
         log_verbose("Verbose logging enabled");
     }
+    ym2151_log_play_server::client::init_client(verbose);
 
     let keybinds_config = KeybindsConfig::load_or_default();
-
     let use_interactive_mode = !legacy_play_mode;
 
     #[cfg(windows)]
@@ -147,6 +148,15 @@ fn main() -> Result<(), io::Error> {
     let mut terminal = Terminal::new(backend)?;
 
     let mut app = App::new(use_interactive_mode, value_by_mouse_move);
+
+    #[cfg(windows)]
+    {
+        if use_interactive_mode {
+            if let Err(e) = audio::init_interactive_mode(&app.values) {
+                eprintln!("⚠️  Warning: Failed to start interactive mode: {}", e);
+            }
+        }
+    }
 
     let res = run_app(&mut terminal, &mut app, &keybinds_config);
 

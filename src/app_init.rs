@@ -1,6 +1,4 @@
 use crate::app::App;
-#[cfg(windows)]
-use crate::audio;
 use crate::file_ops;
 use crate::models::*;
 
@@ -37,12 +35,6 @@ pub fn init_app(
     } else {
         #[cfg(windows)]
         log_verbose("init_app: using hardcoded default values");
-    }
-    #[cfg(windows)]
-    if use_interactive_mode {
-        if let Err(e) = audio::init_interactive_mode(&app.values) {
-            eprintln!("⚠️  Warning: Failed to start interactive mode: {}", e);
-        }
     }
     app
 }

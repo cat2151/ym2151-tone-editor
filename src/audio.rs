@@ -56,7 +56,7 @@ fn send_json_update(values: &ToneData) {
 
     // サーバーへJSON送信（失敗時はprintして即終了）
     match ym2151_log_play_server::client::send_json(&json_string) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(e) => handle_server_send_error("send_json_update", &e),
     }
 }
@@ -301,7 +301,7 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
 
     // インタラクティブモードへJSON送信（失敗時はprintして即終了）
     match ym2151_log_play_server::client::play_json_interactive(&json_string) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(e) => handle_server_send_error("send_operator_register_for_param", &e),
     }
 }
@@ -407,7 +407,7 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
 
     // インタラクティブモードへJSON送信（失敗時はprintして即終了）
     match ym2151_log_play_server::client::play_json_interactive(&json_string) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(e) => handle_server_send_error("send_channel_register_for_param", &e),
     }
 }
