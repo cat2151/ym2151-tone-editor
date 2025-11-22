@@ -40,15 +40,20 @@ fn send_json_update(values: &ToneData) {
     // Get JSON string of current tone data
     let json_string = match register::to_json_string(values) {
         Ok(json) => json,
-        Err(_) => return, // Silently fail if JSON conversion fails
+        Err(e) => {
+            eprintln!("send_json_update: JSON変換失敗: {}", e);
+            std::process::exit(1);
+        }
     };
 
-    // Send JSON content to server via named pipe
-    // Using the ym2151-log-play-server client library with send_json
-    // Automatically chooses optimal method (direct or file-based) based on size
-    let _ = ym2151_log_play_server::client::send_json(&json_string);
-
-    // Silently ignore errors - server should be auto-started at app launch
+    // サーバーへJSON送信（失敗時はprintして即終了）
+    match ym2151_log_play_server::client::send_json(&json_string) {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("send_json_update: サーバー送信失敗: {}", e);
+            std::process::exit(1);
+        }
+    }
 }
 
 /// Initialize interactive mode
@@ -90,18 +95,22 @@ fn send_all_registers(values: &ToneData) {
 
     let json_string = match serde_json::to_string(&log) {
         Ok(json) => json,
-        Err(_) => {
-            log_verbose("send_all_registers: Failed to convert to JSON");
-            return;
+        Err(e) => {
+            eprintln!("send_all_registers: JSON変換失敗: {}", e);
+            std::process::exit(1);
         }
     };
 
     log_verbose("send_all_registers: Sending JSON to interactive mode");
 
-    // Send JSON content to interactive mode
-    let _ = ym2151_log_play_server::client::play_json_interactive(&json_string);
-
-    log_verbose("send_all_registers: JSON sent successfully");
+    // インタラクティブモードへJSON送信（失敗時はprintして即終了）
+    match ym2151_log_play_server::client::play_json_interactive(&json_string) {
+        Ok(_) => log_verbose("send_all_registers: JSON sent successfully"),
+        Err(e) => {
+            eprintln!("send_all_registers: サーバー送信失敗: {}", e);
+            std::process::exit(1);
+        }
+    }
 }
 
 /// Send interactive update for a single parameter change
@@ -277,9 +286,9 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
 
     let json_string = match serde_json::to_string(&log) {
         Ok(json) => json,
-        Err(_) => {
-            log_verbose("send_operator_register_for_param: Failed to convert to JSON");
-            return;
+        Err(e) => {
+            eprintln!("send_operator_register_for_param: JSON変換失敗: {}", e);
+            std::process::exit(1);
         }
     };
 
@@ -288,8 +297,14 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
         log.event_count
     ));
 
-    // Send JSON content to interactive mode
-    let _ = ym2151_log_play_server::client::play_json_interactive(&json_string);
+    // インタラクティブモードへJSON送信（失敗時はprintして即終了）
+    match ym2151_log_play_server::client::play_json_interactive(&json_string) {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("send_operator_register_for_param: サーバー送信失敗: {}", e);
+            std::process::exit(1);
+        }
+    }
 }
 
 /// Send only the specific channel register(s) affected by a parameter change
@@ -380,9 +395,9 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
 
     let json_string = match serde_json::to_string(&log) {
         Ok(json) => json,
-        Err(_) => {
-            log_verbose("send_channel_register_for_param: Failed to convert to JSON");
-            return;
+        Err(e) => {
+            eprintln!("send_channel_register_for_param: JSON変換失敗: {}", e);
+            std::process::exit(1);
         }
     };
 
@@ -391,8 +406,14 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
         log.event_count
     ));
 
-    // Send JSON content to interactive mode
-    let _ = ym2151_log_play_server::client::play_json_interactive(&json_string);
+    // インタラクティブモードへJSON送信（失敗時はprintして即終了）
+    match ym2151_log_play_server::client::play_json_interactive(&json_string) {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("send_channel_register_for_param: サーバー送信失敗: {}", e);
+            std::process::exit(1);
+        }
+    }
 }
 
 /// Helper function to add KEY_OFF (note-off) register to events
