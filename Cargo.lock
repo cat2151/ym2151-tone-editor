@@ -1871,6 +1871,7 @@ dependencies = [
 name = "ym2151-tone-editor"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "clap",
  "crossterm 0.29.0",
  "ratatui",

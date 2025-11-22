@@ -28,10 +28,8 @@ pub fn log_verbose(message: &str) {
                 .append(true)
                 .open("ym2151-tone-editor.log")
             {
-                let timestamp = std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .map(|d| d.as_secs())
-                    .unwrap_or(0);
+                use chrono::Local;
+                let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S");
                 let _ = writeln!(file, "[{}] {}", timestamp, message);
             }
         }
