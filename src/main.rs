@@ -94,13 +94,14 @@ fn key_to_string(code: KeyCode, modifiers: KeyModifiers) -> Option<String> {
 }
 
 fn main() -> Result<(), io::Error> {
+
     let matches = Command::new("ym2151-tone-editor")
         .version("0.1.0")
         .about("YM2151 FM音色エディタ")
         .arg(
-            Arg::new("use-client-interactive-mode-access")
-                .long("use-client-interactive-mode-access")
-                .help("Windows限定: ym2151-log-play-serverと連携するインタラクティブモードを有効化")
+            Arg::new("legacy_play_mode")
+                .long("legacy-play-mode")
+                .help("Windows限定: ym2151-log-play-serverを使わないレガシープレイモードで起動")
                 .action(clap::ArgAction::SetTrue),
         )
         .arg(
@@ -118,7 +119,7 @@ fn main() -> Result<(), io::Error> {
         .after_help("例: ym2151-tone-editor --verbose")
         .get_matches();
 
-    let use_interactive_mode = matches.get_flag("use-client-interactive-mode-access");
+    let legacy_play_mode = matches.get_flag("legacy_play_mode");
     let value_by_mouse_move = matches.get_flag("value-by-mouse-move");
     let verbose = matches.get_flag("verbose");
 
@@ -129,11 +130,15 @@ fn main() -> Result<(), io::Error> {
 
     let keybinds_config = KeybindsConfig::load_or_default();
 
+    let use_interactive_mode = !legacy_play_mode;
+
     #[cfg(windows)]
     {
-        if let Err(e) = ym2151_log_play_server::client::ensure_server_ready("cat-play-mml") {
-            eprintln!("⚠️  Warning: Failed to ensure server is ready: {}", e);
-            eprintln!("   Live audio feedback may not be available.");
+        if use_interactive_mode {
+            if let Err(e) = ym2151_log_play_server::client::ensure_server_ready("cat-play-mml") {
+                eprintln!("⚠️  Warning: Failed to ensure server is ready: {}", e);
+                eprintln!("   Live audio feedback may not be available.");
+            }
         }
     }
 
