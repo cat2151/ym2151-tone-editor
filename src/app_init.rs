@@ -23,10 +23,20 @@ pub fn init_app(
         use_interactive_mode,
     };
     const GM_FILE_PATH: &str = "tones/general_midi/000_AcousticGrand.json";
+    #[cfg(windows)]
+    use crate::audio::log_verbose;
+
     if let Ok(loaded_values) = file_ops::load_from_gm_file(GM_FILE_PATH) {
         app.values = loaded_values;
+        #[cfg(windows)]
+        log_verbose("init_app: loaded from GM_FILE_PATH");
     } else if let Ok(loaded_values) = file_ops::load_newest_json() {
         app.values = loaded_values;
+        #[cfg(windows)]
+        log_verbose("init_app: loaded from newest JSON");
+    } else {
+        #[cfg(windows)]
+        log_verbose("init_app: using hardcoded default values");
     }
     #[cfg(windows)]
     if use_interactive_mode {

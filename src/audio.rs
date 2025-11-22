@@ -14,7 +14,7 @@ use crate::register;
 
 /// Log a verbose message (imported from main)
 #[cfg(windows)]
-fn log_verbose(message: &str) {
+pub(crate) fn log_verbose(message: &str) {
     crate::log_verbose(message);
 }
 
