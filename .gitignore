@@ -21,7 +21,7 @@ target
 #.idea/
 
 # Generated YM2151 tone JSON files
-ym2151_tone_*.json
+ym2151_tone*.json
 # Temporary JSON file for sound playback
 ym2151_temp.json
 test_load
