@@ -17,56 +17,7 @@ impl App {
         #[allow(unused_variables)] use_interactive_mode: bool,
         value_by_mouse_move: bool,
     ) -> App {
-        // Initialize with a basic FM piano-like tone
-        // Based on typical YM2151 patch settings
-        let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
-
-        // New parameter order: SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS
-        // Operator 1 (M1): SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS
-        values[0] = [1, 20, 1, 31, 10, 5, 5, 7, 0, 0, 0, 0];
-
-        // Operator 2 (M2): softer attack
-        values[1] = [1, 30, 1, 25, 8, 6, 4, 6, 0, 0, 0, 0];
-
-        // Operator 3 (C1): even softer
-        values[2] = [1, 40, 2, 20, 6, 7, 3, 5, 0, 0, 0, 0];
-
-        // Operator 4 (C2): gentle
-        values[3] = [1, 35, 1, 22, 7, 6, 4, 6, 0, 0, 0, 0];
-
-        // Channel settings: ALG (algorithm), FB (feedback), and MIDI Note Number
-        // Default to ALG=4 (simple FM) and FB=0 (no feedback)
-        // MIDI Note Number: 60 (middle C)
-        values[4] = [4, 0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
-        let mut app = App {
-            values,
-            cursor_x: 0,
-            cursor_y: 0,
-            value_by_mouse_move,
-            #[cfg(windows)]
-            use_interactive_mode,
-        };
-
-        // Try to load from GM file format first, then fall back to legacy format
-        const GM_FILE_PATH: &str = "tones/general_midi/000_AcousticGrand.json";
-
-        if let Ok(loaded_values) = file_ops::load_from_gm_file(GM_FILE_PATH) {
-            app.values = loaded_values;
-        } else if let Ok(loaded_values) = file_ops::load_newest_json() {
-            // Fall back to loading from legacy format
-            app.values = loaded_values;
-        }
-
-        // Initialize interactive mode if enabled (Windows only)
-        #[cfg(windows)]
-        if use_interactive_mode {
-            if let Err(e) = audio::init_interactive_mode(&app.values) {
-                eprintln!("⚠️  Warning: Failed to start interactive mode: {}", e);
-            }
-        }
-
-        app
+        crate::app_init::init_app(use_interactive_mode, value_by_mouse_move)
     }
 
     pub fn move_cursor_left(&mut self) {

@@ -1,4 +1,5 @@
 mod app;
+mod app_init;
 #[cfg(windows)]
 mod audio;
 mod config;
