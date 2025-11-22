@@ -1,4 +1,4 @@
-Last updated: 2025-11-22
+Last updated: 2025-11-23
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -387,29 +387,9 @@ cargo run -- --use-client-interactive-mode-access
 📁 docs/
   📖 KEYBINDS.ja.md
 📁 generated-docs/
-📁 issue-notes/
-  📖 55.md
-  📖 57.md
-  📖 59.md
-  📖 61.md
-  📖 62.md
-  📖 65.md
-  📖 66.md
-  📖 68.md
-  📖 70.md
-  📖 72.md
-  📖 75.md
-  📖 77.md
-  📖 79.md
-  📖 81.md
-  📖 83.md
-  📖 85.md
-  📖 87.md
-  📖 89.md
-  📖 91.md
-  📖 93.md
 📁 src/
   📄 app.rs
+  📄 app_init.rs
   📄 audio.rs
   📄 config.rs
   📄 file_ops.rs
@@ -441,26 +421,6 @@ cargo run -- --use-client-interactive-mode-access
 README.ja.md
 README.md
 docs/KEYBINDS.ja.md
-issue-notes/55.md
-issue-notes/57.md
-issue-notes/59.md
-issue-notes/61.md
-issue-notes/62.md
-issue-notes/65.md
-issue-notes/66.md
-issue-notes/68.md
-issue-notes/70.md
-issue-notes/72.md
-issue-notes/75.md
-issue-notes/77.md
-issue-notes/79.md
-issue-notes/81.md
-issue-notes/83.md
-issue-notes/85.md
-issue-notes/87.md
-issue-notes/89.md
-issue-notes/91.md
-issue-notes/93.md
 tones/general_midi/000_AcousticGrand.json
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
@@ -473,4 +433,4 @@ tones/general_midi/000_AcousticGrand.json
 
 
 ---
-Generated at: 2025-11-22 07:08:11 JST
+Generated at: 2025-11-23 07:07:38 JST
