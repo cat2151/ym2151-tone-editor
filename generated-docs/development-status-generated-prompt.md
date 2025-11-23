@@ -1,4 +1,4 @@
-Last updated: 2025-11-22
+Last updated: 2025-11-23
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -204,27 +204,8 @@ Last updated: 2025-11-22
 - _config.yml
 - docs/KEYBINDS.ja.md
 - generated-docs/project-overview-generated-prompt.md
-- issue-notes/55.md
-- issue-notes/57.md
-- issue-notes/59.md
-- issue-notes/61.md
-- issue-notes/62.md
-- issue-notes/65.md
-- issue-notes/66.md
-- issue-notes/68.md
-- issue-notes/70.md
-- issue-notes/72.md
-- issue-notes/75.md
-- issue-notes/77.md
-- issue-notes/79.md
-- issue-notes/81.md
-- issue-notes/83.md
-- issue-notes/85.md
-- issue-notes/87.md
-- issue-notes/89.md
-- issue-notes/91.md
-- issue-notes/93.md
 - src/app.rs
+- src/app_init.rs
 - src/audio.rs
 - src/config.rs
 - src/file_ops.rs
@@ -251,41 +232,26 @@ Last updated: 2025-11-22
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-378027e Merge pull request #94 from cat2151/copilot/update-server-library-audio-json
-84aae9d Add schedule clear, note-off and note-on to all parameter edits
-e03ac8e Remove git revision pin from Cargo.toml
-3d2a7f3 Send only the specific register being edited in interactive mode
-d2319ab Use minimal JSON for interactive mode instead of complete tone data
-21cd15d Refactor: Extract common JSON sending logic to helper function
-a28841f Replace write_register with play_json_interactive in interactive mode
-cb1ebdf Update server library and switch to JSON-only audio approach
-1f358b9 Initial plan
-b8fee61 Add issue note for #93 [auto]
+a60fb3c JSON送信エラー時、verbose logにも出力するようにした
+adcefeb JSON送信エラー時、エラー内容を表示してすぐ終了するようにした
+c6376a6 verbose logのtimestamp表示を人間が読みやすいものにした
+0b6027c ignore : ym2151_tone.json
+cf166a3 演奏はインタラクティブモードをデフォルトにし、従来のものは--legacy-play-modeとした
+f7324fc コマンドライン引数ミスはエラーで落とすように修正
+7eb8640 app初期化時、3通りのどの初期化をしたか、log_verboseするようにした
+ae45814 app初期化処理をapp_init.rsへ切り出した
+1c61eb5 空のissue-noteを削除
+19895c7  ビルドが通るよう修正（agentがLinuxで、windowsだとビルド通らないcode、を書いたと判断）
 
 ### 変更されたファイル:
-.github/copilot-instructions.md
+.gitignore
 Cargo.lock
 Cargo.toml
-issue-notes/91.md
-issue-notes/93.md
-src/app.rs
+src/app_init.rs
 src/audio.rs
-src/config.rs
-src/file_ops.rs
 src/main.rs
-src/midi_conversion.rs
-src/models.rs
-src/register.rs
-src/tests/app_tests.rs
-src/tests/file_ops_tests.rs
-src/tests/midi_conversion_tests.rs
-src/tests/mod.rs
-src/tests/register_tests.rs
-src/tests/ui_tests.rs
-src/tests/verbose_logging_tests.rs
-src/ui.rs
-ym2151-tone-editor.toml.example
+tones/general_midi/000_AcousticGrand.json
 
 
 ---
-Generated at: 2025-11-22 07:08:11 JST
+Generated at: 2025-11-23 07:07:38 JST
