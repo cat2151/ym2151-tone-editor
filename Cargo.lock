@@ -1852,7 +1852,7 @@ checksum = "d135d17ab770252ad95e9a872d365cf3090e3be864a34ab46f48555993efc904"
 [[package]]
 name = "ym2151-log-play-server"
 version = "0.1.0"
-source = "git+https://github.com/cat2151/ym2151-log-play-server#b8ad7598817c28430e0fefebee6bf894867e7569"
+source = "git+https://github.com/cat2151/ym2151-log-play-server#896600d332eba2ba6fe6b612e4ed3ba8dd1db371"
 dependencies = [
  "anyhow",
  "cc",

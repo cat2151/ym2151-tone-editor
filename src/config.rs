@@ -95,10 +95,6 @@ impl Default for KeybindsConfig {
         keybinds.insert("<".to_string(), Action::DecreaseValueBy10);
 
         // Number keys for quick value adjustment
-        keybinds.insert("1".to_string(), Action::IncreaseValueBy1);
-        keybinds.insert("2".to_string(), Action::IncreaseValueBy2);
-        keybinds.insert("3".to_string(), Action::IncreaseValueBy3);
-        keybinds.insert("4".to_string(), Action::IncreaseValueBy4);
         keybinds.insert("5".to_string(), Action::IncreaseValueBy5);
         keybinds.insert("6".to_string(), Action::IncreaseValueBy6);
         keybinds.insert("7".to_string(), Action::IncreaseValueBy7);
@@ -107,10 +103,6 @@ impl Default for KeybindsConfig {
         keybinds.insert("0".to_string(), Action::IncreaseValueBy10);
 
         // SHIFT + number keys for decrease
-        keybinds.insert("!".to_string(), Action::DecreaseValueBy1); // Shift+1
-        keybinds.insert("@".to_string(), Action::DecreaseValueBy2); // Shift+2
-        keybinds.insert("#".to_string(), Action::DecreaseValueBy3); // Shift+3
-        keybinds.insert("$".to_string(), Action::DecreaseValueBy4); // Shift+4
         keybinds.insert("%".to_string(), Action::DecreaseValueBy5); // Shift+5
         keybinds.insert("^".to_string(), Action::DecreaseValueBy6); // Shift+6
         keybinds.insert("&".to_string(), Action::DecreaseValueBy7); // Shift+7
@@ -138,16 +130,16 @@ impl Default for KeybindsConfig {
         keybinds.insert("Right".to_string(), Action::MoveCursorRight);
 
         // Jump to operator row and increase value
-        keybinds.insert("Ctrl+1".to_string(), Action::JumpToOp1AndIncrease);
-        keybinds.insert("Ctrl+2".to_string(), Action::JumpToOp2AndIncrease);
-        keybinds.insert("Ctrl+3".to_string(), Action::JumpToOp3AndIncrease);
-        keybinds.insert("Ctrl+4".to_string(), Action::JumpToOp4AndIncrease);
+        keybinds.insert("1".to_string(), Action::JumpToOp1AndIncrease);
+        keybinds.insert("2".to_string(), Action::JumpToOp2AndIncrease);
+        keybinds.insert("3".to_string(), Action::JumpToOp3AndIncrease);
+        keybinds.insert("4".to_string(), Action::JumpToOp4AndIncrease);
 
         // Jump to operator row and decrease value
-        keybinds.insert("Ctrl+Shift+1".to_string(), Action::JumpToOp1AndDecrease);
-        keybinds.insert("Ctrl+Shift+2".to_string(), Action::JumpToOp2AndDecrease);
-        keybinds.insert("Ctrl+Shift+3".to_string(), Action::JumpToOp3AndDecrease);
-        keybinds.insert("Ctrl+Shift+4".to_string(), Action::JumpToOp4AndDecrease);
+        keybinds.insert("!".to_string(), Action::JumpToOp1AndDecrease);
+        keybinds.insert("\"".to_string(), Action::JumpToOp2AndDecrease);
+        keybinds.insert("#".to_string(), Action::JumpToOp3AndDecrease);
+        keybinds.insert("$".to_string(), Action::JumpToOp4AndDecrease);
 
         // ADSR envelope shortcuts (jump to current row's AR, D1R, D2R, RR parameters)
         keybinds.insert("a".to_string(), Action::JumpToArAndIncrease);

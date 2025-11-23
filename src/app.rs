@@ -250,7 +250,7 @@ impl App {
 
         // Determine which row the mouse is on
         let new_cursor_y = match relative_y {
-            0..=3 => relative_y as usize, // Operator rows (M1, C1, M2, C2)
+            0..=3 => relative_y as usize, // Operator rows
             5 => ROW_CH,                  // CH row (skip row 4 which is CH header)
             _ => return,                  // Outside valid rows
         };
@@ -395,7 +395,6 @@ impl App {
     }
 
     /// Jump to operator row and increase value at current column
-    /// operator_row: 0=M1, 1=C1, 2=M2, 3=C2 (display row indices, not data row)
     pub fn jump_to_operator_and_increase(&mut self, operator_row: usize) {
         if operator_row >= 4 {
             return; // Invalid operator row
@@ -417,7 +416,6 @@ impl App {
     }
 
     /// Jump to operator row and decrease value at current column
-    /// operator_row: 0=M1, 1=C1, 2=M2, 3=C2 (display row indices, not data row)
     pub fn jump_to_operator_and_decrease(&mut self, operator_row: usize) {
         if operator_row >= 4 {
             return; // Invalid operator row
