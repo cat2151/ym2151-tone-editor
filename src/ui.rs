@@ -29,47 +29,47 @@ pub(crate) fn get_param_color(col: usize, is_ch_row: bool) -> Color {
 
 /// Get ASCII art diagram for YM2151 algorithm (0-7)
 /// Returns a vector of strings, one per line of the diagram
-/// Uses M1, C1, M2, C2 notation (M=Modulator, C=Carrier)
+/// Uses O1, O2, O3, O4 notation
 pub fn get_algorithm_diagram(alg: u8) -> Vec<&'static str> {
     match alg {
-        0 => vec!["ALG 0: M1->C1->M2->C2->OUT", "       (Pure FM cascade)"],
+        0 => vec!["ALG 0: O1->O2->O3->O4->OUT", "       (Pure FM cascade)"],
         1 => vec![
-            "ALG 1: M1->C1-+",
-            "       M2-----+->C2->OUT",
+            "ALG 1: O1->O2-+",
+            "       O3-----+->O4->OUT",
             "       (Parallel mod)",
         ],
         2 => vec![
-            "ALG 2: M1-+",
-            "       C1-+->M2->C2->OUT",
+            "ALG 2: O1-+",
+            "       O2-+->O3->O4->OUT",
             "       (Fork cascade)",
         ],
         3 => vec![
-            "ALG 3: M1->C1->C2->OUT",
-            "       M2--------->OUT",
+            "ALG 3: O1->O2->O4->OUT",
+            "       O3--------->OUT",
             "       (Cascade+carrier)",
         ],
         4 => vec![
-            "ALG 4: M1->C1->OUT",
-            "       M2->C2->OUT",
+            "ALG 4: O1->O2->OUT",
+            "       O3->O4->OUT",
             "       (Two FM pairs)",
         ],
         5 => vec![
-            "ALG 5: M1->C1->OUT",
-            "       M1->M2->OUT",
-            "       M1->C2->OUT",
+            "ALG 5: O1->O2->OUT",
+            "       O1->O3->OUT",
+            "       O1->O4->OUT",
             "       (Fan out)",
         ],
         6 => vec![
-            "ALG 6: M1->C1->OUT",
-            "       M2------>OUT",
-            "       C2------>OUT",
+            "ALG 6: O1->O2->OUT",
+            "       O3------>OUT",
+            "       O4------>OUT",
             "       (Cascade+carriers)",
         ],
         7 => vec![
-            "ALG 7: M1->OUT",
-            "       C1->OUT",
-            "       M2->OUT",
-            "       C2->OUT",
+            "ALG 7: O1->OUT",
+            "       O2->OUT",
+            "       O3->OUT",
+            "       O4->OUT",
             "       (Additive)",
         ],
         _ => vec!["Invalid ALG"],
@@ -114,12 +114,10 @@ pub fn ui(f: &mut Frame, app: &App) {
     }
 
     // Draw grid values with row labels for operators (rows 0-3)
-    // Display order: M1, C1, M2, C2
+    // Display order: O1, O2, O3, O4
     for display_row in 0..4 {
-        let data_row = DISPLAY_ROW_TO_DATA_ROW[display_row];
-
         // Check if this row's slot mask is enabled (SM is at index PARAM_SM)
-        let slot_mask_enabled = app.values[data_row][PARAM_SM] != 0;
+        let slot_mask_enabled = app.values[display_row][PARAM_SM] != 0;
 
         // Draw row label (operator name)
         let row_label_area = Rect {
@@ -140,7 +138,7 @@ pub fn ui(f: &mut Frame, app: &App) {
 
         // Draw values
         for col in 0..GRID_WIDTH {
-            let value = app.values[data_row][col];
+            let value = app.values[display_row][col];
             let x = inner.x + row_label_width + (col as u16 * cell_width);
             let y = inner.y + label_offset + display_row as u16;
 

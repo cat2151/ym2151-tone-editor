@@ -17,7 +17,7 @@ fn test_to_ym2151_events() {
     values[ROW_CH][CH_PARAM_ALG] = 4;
     values[ROW_CH][CH_PARAM_FB] = 0;
 
-    let events = to_ym2151_events(&values);
+    let events = editor_rows_to_ym2151_events(&values);
 
     // Should have events for:
     // - 4 operators × 6 registers = 24 events
@@ -76,7 +76,7 @@ fn test_events_to_tone_data() {
         },
     ];
 
-    let result = events_to_tone_data(&events);
+    let result = json_events_to_editor_rows(&events);
     assert!(result.is_ok());
 
     let values = result.unwrap();
@@ -119,7 +119,7 @@ fn test_to_ym2151_events_with_midi_note() {
     values[2][PARAM_SM] = 1;
     values[3][PARAM_SM] = 1;
 
-    let events = to_ym2151_events(&values);
+    let events = editor_rows_to_ym2151_events(&values);
 
     // Find KC event (register 0x28)
     let kc_event = events.iter().find(|e| e.addr == "0x28");
@@ -142,7 +142,7 @@ fn test_events_to_tone_data_with_kc() {
         data: "0x3E".to_string(), // KC for middle C (MIDI 60)
     }];
 
-    let result = events_to_tone_data(&events);
+    let result = json_events_to_editor_rows(&events);
     assert!(result.is_ok());
 
     let values = result.unwrap();
@@ -166,7 +166,7 @@ fn test_slot_mask_bit_order() {
     values[3][PARAM_SM] = 0; // C2
     values[ROW_CH][CH_PARAM_ALG] = 4;
 
-    let events = to_ym2151_events(&values);
+    let events = editor_rows_to_ym2151_events(&values);
 
     // Find the Key On event (register 0x08)
     let key_on_event = events.iter().find(|e| e.addr == "0x08");
@@ -182,7 +182,7 @@ fn test_slot_mask_bit_order() {
     values[1][PARAM_SM] = 0; // M2
     values[2][PARAM_SM] = 1; // C1 should map to bit 4
 
-    let events = to_ym2151_events(&values);
+    let events = editor_rows_to_ym2151_events(&values);
     let key_on_event = events.iter().find(|e| e.addr == "0x08");
     let key_on_data = key_on_event.unwrap().data.trim_start_matches("0x");
     let data = u8::from_str_radix(key_on_data, 16).unwrap();
@@ -204,8 +204,8 @@ fn test_slot_mask_roundtrip() {
     values_original[ROW_CH][CH_PARAM_ALG] = 4;
 
     // Convert to events and back
-    let events = to_ym2151_events(&values_original);
-    let values_roundtrip = events_to_tone_data(&events).unwrap();
+    let events = editor_rows_to_ym2151_events(&values_original);
+    let values_roundtrip = json_events_to_editor_rows(&events).unwrap();
 
     // Verify slot masks are preserved
     assert_eq!(values_roundtrip[0][PARAM_SM], 1, "M1 mask should roundtrip");
@@ -230,7 +230,7 @@ fn test_alg4_carrier_mapping() {
     values[2][PARAM_MUL] = 3; // C1 (data row 2) - carrier
     values[3][PARAM_MUL] = 4; // C2 (data row 3) - carrier
 
-    let events = to_ym2151_events(&values);
+    let events = editor_rows_to_ym2151_events(&values);
 
     // Verify hardware slot mapping (YM2151 hardware: M1=slot0, M2=slot1, C1=slot2, C2=slot3)
     // For ALG4, slots 2 (C1) and 3 (C2) should be carriers
@@ -276,7 +276,7 @@ fn test_operator_register_order() {
     values[2][PARAM_MUL] = 3; // Data row 2 (C1) should go to slot 2
     values[3][PARAM_MUL] = 4; // Data row 3 (C2) should go to slot 3
 
-    let events = to_ym2151_events(&values);
+    let events = editor_rows_to_ym2151_events(&values);
 
     // Check DT1/MUL registers (0x40-0x5F)
     // Register 0x40 (slot 0, channel 0) should have M1's MUL=1
@@ -335,8 +335,8 @@ fn test_operator_order_roundtrip() {
     values_original[ROW_CH][CH_PARAM_ALG] = 4;
 
     // Convert to events and back
-    let events = to_ym2151_events(&values_original);
-    let values_roundtrip = events_to_tone_data(&events).unwrap();
+    let events = editor_rows_to_ym2151_events(&values_original);
+    let values_roundtrip = json_events_to_editor_rows(&events).unwrap();
 
     // Verify all operator values are preserved
     let row_names = ["M1", "M2", "C1", "C2"];
@@ -373,7 +373,7 @@ fn test_tone_data_to_registers() {
     values[ROW_CH][CH_PARAM_ALG] = 4;
     values[ROW_CH][CH_PARAM_FB] = 0;
 
-    let registers = tone_data_to_registers(&values);
+    let registers = editor_rows_to_registers(&values);
 
     // Should be a hex string with pairs of address+data (4 chars per register write)
     // We have 28 events, so 28 * 4 = 112 characters
@@ -400,10 +400,10 @@ fn test_registers_to_tone_data() {
     values_original[ROW_CH][CH_PARAM_FB] = 2;
 
     // Convert to registers string
-    let registers = tone_data_to_registers(&values_original);
+    let registers = editor_rows_to_registers(&values_original);
 
     // Convert back to tone data
-    let values_result = registers_to_tone_data(&registers).unwrap();
+    let values_result = registers_to_editor_rows(&registers).unwrap();
 
     // Verify key values are preserved
     assert_eq!(
@@ -443,8 +443,8 @@ fn test_registers_to_tone_data_roundtrip() {
     values_original[ROW_CH][CH_PARAM_FB] = 3;
 
     // Convert to registers and back
-    let registers = tone_data_to_registers(&values_original);
-    let values_roundtrip = registers_to_tone_data(&registers).unwrap();
+    let registers = editor_rows_to_registers(&values_original);
+    let values_roundtrip = registers_to_editor_rows(&registers).unwrap();
 
     // Verify all important values are preserved
     for row in 0..4 {
@@ -487,13 +487,13 @@ fn test_registers_to_tone_data_roundtrip() {
 #[test]
 fn test_registers_invalid_length() {
     // Test with invalid length (not a multiple of 4)
-    let result = registers_to_tone_data("204F2");
+    let result = registers_to_editor_rows("204F2");
     assert!(result.is_err(), "Should error on invalid length");
 }
 
 #[test]
 fn test_registers_invalid_hex() {
     // Test with invalid hex characters
-    let result = registers_to_tone_data("GGGG");
+    let result = registers_to_editor_rows("GGGG");
     assert!(result.is_err(), "Should error on invalid hex characters");
 }

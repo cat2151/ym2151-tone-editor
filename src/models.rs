@@ -38,17 +38,11 @@ pub const CH_PARAM_MAX: [u8; CH_PARAM_COUNT] = [
     127, // MIDI Note Number: 0-127 (60 = middle C)
 ];
 
-// Row names for operators (display order: M1, C1, M2, C2)
-pub const ROW_NAMES: [&str; GRID_HEIGHT] = ["M1", "C1", "M2", "C2", "CH"];
-
-// Display row to data row mapping for operators
-// Display shows: M1(row0), C1(row1), M2(row2), C2(row3)
-// Internal data: M1(row0), M2(row1), C1(row2), C2(row3)
-// So: Display row 0→Data row 0, Display row 1→Data row 2, Display row 2→Data row 1, Display row 3→Data row 3
-pub const DISPLAY_ROW_TO_DATA_ROW: [usize; 4] = [0, 2, 1, 3];
+// Row names for operators
+pub const ROW_NAMES: [&str; GRID_HEIGHT] = ["O1", "O2", "O3", "O4", "CH"];
 
 // Parameter column indices for operator rows (matching PARAM_NAMES order)
-// New order: SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS
+// order: SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS
 pub const PARAM_SM: usize = 0;
 pub const PARAM_TL: usize = 1;
 pub const PARAM_MUL: usize = 2;

@@ -182,7 +182,7 @@ fn test_load_gm_file_format() {
     values[3][PARAM_SM] = 1;
 
     // Generate a valid registers string
-    let registers = crate::register::tone_data_to_registers(&values);
+    let registers = crate::register::editor_rows_to_registers(&values);
 
     // Create a GM file manually with the valid registers string
     let json_content = format!(

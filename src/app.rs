@@ -72,19 +72,8 @@ impl App {
         }
     }
 
-    /// Get the data row index from the current cursor position (display row)
-    /// For operator rows (0-3), maps display row to data row
-    /// For CH row (4), returns ROW_CH
-    fn get_data_row(&self) -> usize {
-        if self.cursor_y < 4 {
-            DISPLAY_ROW_TO_DATA_ROW[self.cursor_y]
-        } else {
-            self.cursor_y
-        }
-    }
-
     pub fn increase_value(&mut self) {
-        let data_row = self.get_data_row();
+        let data_row = self.cursor_y;
         let current = self.values[data_row][self.cursor_x];
         let max = if self.cursor_y == ROW_CH && self.cursor_x < CH_PARAM_COUNT {
             CH_PARAM_MAX[self.cursor_x]
@@ -104,7 +93,7 @@ impl App {
     }
 
     pub fn decrease_value(&mut self) {
-        let data_row = self.get_data_row();
+        let data_row = self.cursor_y;
         let current = self.values[data_row][self.cursor_x];
         if current > 0 {
             self.values[data_row][self.cursor_x] = current - 1;
@@ -121,7 +110,7 @@ impl App {
     /// Increase the current parameter value by a specified amount
     /// Used for number key shortcuts (1-9 for +1 to +9, 0 for +10)
     pub fn increase_value_by(&mut self, amount: u8) {
-        let data_row = self.get_data_row();
+        let data_row = self.cursor_y;
         let current = self.values[data_row][self.cursor_x];
         let max = if self.cursor_y == ROW_CH && self.cursor_x < CH_PARAM_COUNT {
             CH_PARAM_MAX[self.cursor_x]
@@ -147,7 +136,7 @@ impl App {
     /// Decrease the current parameter value by a specified amount
     /// Used for SHIFT + number key shortcuts (SHIFT+1-9 for -1 to -9, SHIFT+0 for -10)
     pub fn decrease_value_by(&mut self, amount: u8) {
-        let data_row = self.get_data_row();
+        let data_row = self.cursor_y;
         let current = self.values[data_row][self.cursor_x];
 
         // Calculate new value, clamping to 0
@@ -166,7 +155,7 @@ impl App {
     }
 
     pub fn set_value_to_max(&mut self) {
-        let data_row = self.get_data_row();
+        let data_row = self.cursor_y;
         let max = if self.cursor_y == ROW_CH && self.cursor_x < CH_PARAM_COUNT {
             CH_PARAM_MAX[self.cursor_x]
         } else {
@@ -183,7 +172,7 @@ impl App {
     }
 
     pub fn set_value_to_min(&mut self) {
-        let data_row = self.get_data_row();
+        let data_row = self.cursor_y;
         self.values[data_row][self.cursor_x] = 0;
         #[cfg(windows)]
         audio::play_tone(
@@ -198,7 +187,7 @@ impl App {
         use std::collections::hash_map::RandomState;
         use std::hash::{BuildHasher, Hash, Hasher};
 
-        let data_row = self.get_data_row();
+        let data_row = self.cursor_y;
         let max = if self.cursor_y == ROW_CH && self.cursor_x < CH_PARAM_COUNT {
             CH_PARAM_MAX[self.cursor_x]
         } else {
@@ -324,7 +313,7 @@ impl App {
         };
 
         // Only update and play sound if the value actually changed
-        let data_row = self.get_data_row();
+        let data_row = self.cursor_y;
         if self.values[data_row][self.cursor_x] != new_value {
             self.values[data_row][self.cursor_x] = new_value;
             #[cfg(windows)]

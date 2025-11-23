@@ -48,7 +48,7 @@ pub fn load_from_json(filename: &str) -> io::Result<ToneData> {
     let json_string = fs::read_to_string(filename)?;
     let log: Ym2151Log = serde_json::from_str(&json_string).map_err(io::Error::other)?;
 
-    register::events_to_tone_data(&log.events)
+    register::json_events_to_editor_rows(&log.events)
 }
 
 /// Load the newest JSON file and convert to tone data
@@ -85,7 +85,7 @@ pub fn load_from_gm_file(filename: &str) -> io::Result<ToneData> {
     }
 
     let variation = &tone_file.variations[0];
-    register::registers_to_tone_data(&variation.registers)
+    register::registers_to_editor_rows(&variation.registers)
 }
 
 /// Save tone data to General MIDI tone file format
@@ -93,7 +93,7 @@ pub fn load_from_gm_file(filename: &str) -> io::Result<ToneData> {
 /// Creates a single variation with the current tone data
 pub fn save_to_gm_file(filename: &str, values: &ToneData, description: &str) -> io::Result<()> {
     // Convert tone data to registers hex string
-    let registers = register::tone_data_to_registers(values);
+    let registers = register::editor_rows_to_registers(values);
 
     // Get the current MIDI note from the tone data
     let note_number = values[crate::models::ROW_CH][crate::models::CH_PARAM_NOTE];

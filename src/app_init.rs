@@ -6,14 +6,15 @@ pub fn init_app(
     #[allow(unused_variables)] use_interactive_mode: bool,
     value_by_mouse_move: bool,
 ) -> App {
-    let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
-    values[0] = [1, 20, 1, 31, 10, 5, 5, 7, 0, 0, 0, 0];
-    values[1] = [1, 30, 1, 25, 8, 6, 4, 6, 0, 0, 0, 0];
-    values[2] = [1, 0, 2, 20, 6, 7, 3, 5, 0, 0, 0, 0];
-    values[3] = [1, 0, 1, 22, 7, 6, 4, 6, 0, 0, 0, 0];
-    values[4] = [4, 0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let mut editor_rows = [[0; GRID_WIDTH]; GRID_HEIGHT];
+    // order: SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS
+    editor_rows[0] = [1, 20, 1, 31, 10, 5, 5, 7, 0, 0, 0, 0];
+    editor_rows[1] = [1, 0, 0, 20, 6, 7, 3, 5, 0, 0, 0, 0];
+    editor_rows[2] = [1, 30, 1, 25, 8, 6, 4, 6, 0, 0, 0, 0];
+    editor_rows[3] = [1, 0, 1, 22, 7, 6, 4, 6, 0, 0, 0, 0];
+    editor_rows[4] = [4, 0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     let mut app = App {
-        values,
+        values: editor_rows,
         cursor_x: 0,
         cursor_y: 0,
         value_by_mouse_move,

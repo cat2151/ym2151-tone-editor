@@ -96,7 +96,7 @@ pub fn init_interactive_mode(values: &ToneData) -> Result<(), Box<dyn std::error
 #[cfg(windows)]
 fn send_all_registers(values: &ToneData) {
     // Get all YM2151 events for the current tone
-    let events = register::to_ym2151_events(values);
+    let events = register::editor_rows_to_ym2151_events(values);
 
     log_verbose(&format!(
         "send_all_registers: Creating JSON with {} register writes",
@@ -149,9 +149,8 @@ fn send_interactive_update(values: &ToneData, cursor_x: usize, cursor_y: usize) 
 #[cfg(windows)]
 fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_index: usize) {
     let channel: u8 = 0; // We use channel 0
-    const DATA_ROW_TO_SLOT: [usize; 4] = [0, 1, 2, 3];
-    let hw_slot = DATA_ROW_TO_SLOT[data_row];
-    let op_offset = hw_slot * 8 + channel as usize;
+    let reg = register::REG_FROM_O1_O4[data_row];
+    let op_offset = reg * 8 + channel as usize;
 
     // let _ = ym2151_log_play_server::client::clear_schedule();
 
@@ -414,7 +413,7 @@ fn add_key_off(events: &mut Vec<Ym2151Event>, channel: u8) {
 
 /// Helper function to add KEY_ON register to events
 #[cfg(windows)]
-fn add_key_on(values: &ToneData, events: &mut Vec<Ym2151Event>) {
+pub fn add_key_on(values: &ToneData, events: &mut Vec<Ym2151Event>) {
     let channel = 0; // We use channel 0
 
     // Calculate slot mask based on which operators are enabled
