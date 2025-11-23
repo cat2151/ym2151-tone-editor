@@ -1,4 +1,4 @@
-Last updated: 2025-11-23
+Last updated: 2025-11-24
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -204,6 +204,12 @@ Last updated: 2025-11-23
 - _config.yml
 - docs/KEYBINDS.ja.md
 - generated-docs/project-overview-generated-prompt.md
+- issue-notes/100.md
+- issue-notes/101.md
+- issue-notes/95.md
+- issue-notes/96.md
+- issue-notes/97.md
+- issue-notes/99.md
 - src/app.rs
 - src/app_init.rs
 - src/audio.rs
@@ -225,33 +231,95 @@ Last updated: 2025-11-23
 - ym2151-tone-editor.toml.example
 
 ## 現在のオープンIssues
-オープン中のIssueはありません
+## [Issue #100](../issue-notes/100.md): CTRL+Oで、GM000 json variations をfzfに与えて、カーソルのある行の variationsを演奏し、ENTERでそのvariationsをtone editorに読み込む。仮仕様。検証用。
+[issue-notes/100.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/100.md)
+
+...
+ラベル: 
+--- issue-notes/100.md の内容 ---
+
+```markdown
+# issue CTRL+Oで、GM000 json variations をfzfに与えて、カーソルのある行の variationsを演奏し、ENTERでそのvariationsをtone editorに読み込む。仮仕様。検証用。 #100
+[issues #100](https://github.com/cat2151/ym2151-tone-editor/issues/100)
+
+
+
+```
+
+## [Issue #99](../issue-notes/99.md): CTRL+Sで、音色データを GM000 jsonのvariationsの末尾に追記保存する。仮仕様。検証用。
+[issue-notes/99.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/99.md)
+
+...
+ラベル: 
+--- issue-notes/99.md の内容 ---
+
+```markdown
+# issue CTRL+Sで、音色データを GM000 jsonのvariationsの末尾に追記保存する。仮仕様。検証用。 #99
+[issues #99](https://github.com/cat2151/ym2151-tone-editor/issues/99)
+
+
+
+```
 
 ## ドキュメントで言及されているファイルの内容
+### .github/actions-tmp/issue-notes/9.md
+```md
+# issue 関数コールグラフhtmlビジュアライズが0件なので、原因を可視化する #9
+[issues #9](https://github.com/cat2151/github-actions/issues/9)
 
+# agentに修正させたり、人力で修正したりした
+- agentがハルシネーションし、いろいろ根の深いバグにつながる、エラー隠蔽などを仕込んでいたため、検知が遅れた
+- 詳しくはcommit logを参照のこと
+- WSL + actの環境を少し変更、act起動時のコマンドライン引数を変更し、generated-docsをmountする（ほかはデフォルト挙動であるcpだけにする）ことで、デバッグ情報をコンテナ外に出力できるようにし、デバッグを効率化した
+
+# test green
+
+# closeとする
+
+```
+
+### issue-notes/100.md
+```md
+# issue CTRL+Oで、GM000 json variations をfzfに与えて、カーソルのある行の variationsを演奏し、ENTERでそのvariationsをtone editorに読み込む。仮仕様。検証用。 #100
+[issues #100](https://github.com/cat2151/ym2151-tone-editor/issues/100)
+
+
+
+```
+
+### issue-notes/99.md
+```md
+# issue CTRL+Sで、音色データを GM000 jsonのvariationsの末尾に追記保存する。仮仕様。検証用。 #99
+[issues #99](https://github.com/cat2151/ym2151-tone-editor/issues/99)
+
+
+
+```
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-a60fb3c JSON送信エラー時、verbose logにも出力するようにした
-adcefeb JSON送信エラー時、エラー内容を表示してすぐ終了するようにした
-c6376a6 verbose logのtimestamp表示を人間が読みやすいものにした
-0b6027c ignore : ym2151_tone.json
-cf166a3 演奏はインタラクティブモードをデフォルトにし、従来のものは--legacy-play-modeとした
-f7324fc コマンドライン引数ミスはエラーで落とすように修正
-7eb8640 app初期化時、3通りのどの初期化をしたか、log_verboseするようにした
-ae45814 app初期化処理をapp_init.rsへ切り出した
-1c61eb5 空のissue-noteを削除
-19895c7  ビルドが通るよう修正（agentがLinuxで、windowsだとビルド通らないcode、を書いたと判断）
+82d4cf9 clippy
+953f838 fix #97
+df8a1bf fix #101
+85cc29c Add issue note for #101 [auto]
+7957fc7 Add issue note for #100 [auto]
+c5aa138 Add issue note for #99 [auto]
+f787bd1 Add issue note for #97 [auto]
+f994d9b Auto-translate README.ja.md to README.md [auto]
+d6c3663 状況を反映
+91d69ad keybinds(default)修正。agentは英語キーボード前提のbindで生成していたので、日本語キーボード用にした
 
 ### 変更されたファイル:
-.gitignore
-Cargo.lock
-Cargo.toml
+issue-notes/100.md
+issue-notes/101.md
+issue-notes/97.md
+issue-notes/99.md
+src/app.rs
 src/app_init.rs
 src/audio.rs
 src/main.rs
-tones/general_midi/000_AcousticGrand.json
+src/ui.rs
 
 
 ---
-Generated at: 2025-11-23 07:07:38 JST
+Generated at: 2025-11-24 07:07:55 JST

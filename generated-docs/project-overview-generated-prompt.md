@@ -1,4 +1,4 @@
-Last updated: 2025-11-23
+Last updated: 2025-11-24
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -84,7 +84,7 @@ YM2151（OPM）FM音源音色エディタ。Windows用。Rust TUI（テキスト
 - パラメータラベル付きでYM2151音色パラメータを編集
 - 11パラメータ × 5行（4オペレータ + 1チャンネル行）で表示
 - 視覚的なパラメータ名：DT、MUL、TL、KS、AR、D1R、D1L、D2R、RR、DT2、AMS
-- 矢印キー、`hjkl`（Vimスタイル）、または`wasd`キーでカーソルナビゲーション
+- 矢印キーでカーソルナビゲーション
 - PageUp/PageDownまたは`e`/`q`キーで値の増減（パラメータ最大値を尊重）
 - Home（最大）、End（最小）、R（ランダム）での高速値設定
 - `P`または`SPACE`キーで編集中の音色を再生（パラメータ値を変更せずに音を確認）
@@ -93,9 +93,7 @@ YM2151（OPM）FM音源音色エディタ。Windows用。Rust TUI（テキスト
 
 ## YM2151音色データ形式
 
-このエディタは、YM2151レジスタマップに基づく暫定的な音色データ形式を使用します：
-
-### Parameters (11 columns)
+### Parameters
 
 | Parameter | Name | Range | Description |
 |-----------|------|-------|-------------|
@@ -146,30 +144,15 @@ cargo run
 
 エディタは2つのモードで動作します：
 
-#### レガシーモード（デフォルト）
-
-デフォルトでは、エディタは`send_json`を使用して名前付きパイプ経由で完全な音色データをJSON形式で送信します。パラメータが変更されるたびに、新しいJSON全体が送信されます。
-
-```bash
-cargo run
-```
-
-#### インタラクティブモード（新機能）
+#### インタラクティブモード（デフォルト）
 
 インタラクティブモードでは、サーバーが継続的にオーディオをストリーミングし、パラメータ変更時にレジスタ書き込みコマンドのみを送信します。これにより、より効率的でスムーズな音声フィードバックが提供されます。
 
-```bash
-cargo run -- --use-client-interactive-mode-access
-```
+#### レガシーモード
 
-インタラクティブモードを有効にするには：
-- エディタは起動時に`start_interactive()`を呼び出し、サーバー上で継続的なオーディオストリーミングを開始します
-- パラメータ変更時に`write_register()`を使用して、影響を受けるYM2151レジスタのみを更新します
-- 終了時に`stop_interactive()`を呼び出し、オーディオストリーミングを停止します
+デフォルトでは、エディタは`send_json`を使用して名前付きパイプ経由で完全な音色データをJSON形式で送信します。パラメータが変更されるたびに、新しいJSON全体が送信されます。
 
-**注意**: ライブラリの`ensure_server_ready()`関数は、必要に応じたインストールを含むすべてのサーバー管理を処理します。
-
-### モード比較
+### 比較
 
 | 特徴 | レガシーモード | インタラクティブモード |
 |------|---------------|---------------------|
@@ -186,17 +169,12 @@ cargo run -- --use-client-interactive-mode-access
 |-----|--------|
 | **カーソル移動** | |
 | 矢印キー（←↓↑→） | それぞれの方向にカーソルを移動 |
-| `h` / `a` | カーソルを左に移動 |
-| `j` / `s` | カーソルを下に移動 |
-| `k` / `w` | カーソルを上に移動 |
-| `l` / `d` | カーソルを右に移動 |
 | **値の変更** | |
 | `PageUp` / `e` | カーソル位置の値を増加 |
 | `PageDown` / `q` | カーソル位置の値を減少 |
 | `+` / `.` | 値を1増やす |
 | `-` / `,` | 値を1減らす |
 | `Shift` + `.` (`>`) | 値を10増やす |
-| `Shift` + `-` (`_`) | 値を10減らす |
 | `Shift` + `,` (`<`) | 値を10減らす |
 | `Home` | 現在のパラメータの最大値に設定 |
 | `End` | 最小値（0）に設定 |
@@ -211,7 +189,6 @@ cargo run -- --use-client-interactive-mode-access
 
 | オプション | 説明 |
 |--------|-------------|
-| `--use-client-interactive-mode-access` | より効率的な音声フィードバックのためのインタラクティブモードを使用（継続的にオーディオをストリーミングし、レジスタ変更のみを送信） |
 | `--value-by-mouse-move` | レガシーマウス動作を有効化（マウスの左右移動でカーソル位置の値を変更） |
 
 ## 依存関係
@@ -387,6 +364,13 @@ cargo run -- --use-client-interactive-mode-access
 📁 docs/
   📖 KEYBINDS.ja.md
 📁 generated-docs/
+📁 issue-notes/
+  📖 100.md
+  📖 101.md
+  📖 95.md
+  📖 96.md
+  📖 97.md
+  📖 99.md
 📁 src/
   📄 app.rs
   📄 app_init.rs
@@ -421,6 +405,12 @@ cargo run -- --use-client-interactive-mode-access
 README.ja.md
 README.md
 docs/KEYBINDS.ja.md
+issue-notes/100.md
+issue-notes/101.md
+issue-notes/95.md
+issue-notes/96.md
+issue-notes/97.md
+issue-notes/99.md
 tones/general_midi/000_AcousticGrand.json
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
@@ -433,4 +423,4 @@ tones/general_midi/000_AcousticGrand.json
 
 
 ---
-Generated at: 2025-11-23 07:07:38 JST
+Generated at: 2025-11-24 07:07:54 JST
