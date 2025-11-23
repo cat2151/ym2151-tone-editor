@@ -7,6 +7,20 @@ use ratatui::{
     Frame,
 };
 
+pub fn get_operator_roles_for_alg(alg: u8) -> [bool; 4] {
+    match alg {
+        0 => [false, false, false, true], // O4のみキャリア
+        1 => [false, false, false, true], // O4のみキャリア
+        2 => [false, false, false, true], // O4のみキャリア
+        3 => [false, true, false, true],  // O2,O4キャリア
+        4 => [false, true, false, true],  // O2,O4キャリア
+        5 => [false, true, true, true],   // O2,O3,O4キャリア
+        6 => [false, true, true, true],   // O2,O3,O4キャリア
+        7 => [true, true, true, true],    // 全キャリア
+        _ => [false, false, false, false],
+    }
+}
+
 /// Get the color for a parameter based on its column index and row
 /// Returns the color to use for both the parameter name and value
 pub(crate) fn get_param_color(col: usize, is_ch_row: bool) -> Color {
@@ -113,12 +127,11 @@ pub fn ui(f: &mut Frame, app: &App) {
         f.render_widget(paragraph, area);
     }
 
+    let alg_value = app.values[ROW_CH][CH_PARAM_ALG];
+    let operator_roles = get_operator_roles_for_alg(alg_value);
     // Draw grid values with row labels for operators (rows 0-3)
-    // Display order: O1, O2, O3, O4
     for display_row in 0..4 {
-        // Check if this row's slot mask is enabled (SM is at index PARAM_SM)
         let slot_mask_enabled = app.values[display_row][PARAM_SM] != 0;
-
         // Draw row label (operator name)
         let row_label_area = Rect {
             x: inner.x,
@@ -128,27 +141,28 @@ pub fn ui(f: &mut Frame, app: &App) {
         };
         let row_name = ROW_NAMES[display_row];
         let row_label_color = if slot_mask_enabled {
-            Color::Yellow
+            if operator_roles[display_row] {
+                Color::White
+            } else {
+                Color::Green
+            }
         } else {
             Color::DarkGray
         };
         let row_label =
             Paragraph::new(Span::styled(row_name, Style::default().fg(row_label_color)));
         f.render_widget(row_label, row_label_area);
-
         // Draw values
         for col in 0..GRID_WIDTH {
             let value = app.values[display_row][col];
             let x = inner.x + row_label_width + (col as u16 * cell_width);
             let y = inner.y + label_offset + display_row as u16;
-
             let area = Rect {
                 x,
                 y,
                 width: cell_width,
                 height: cell_height,
             };
-
             let style = if app.cursor_x == col && app.cursor_y == display_row {
                 Style::default()
                     .fg(Color::Black)
@@ -156,13 +170,16 @@ pub fn ui(f: &mut Frame, app: &App) {
                     .add_modifier(Modifier::BOLD)
             } else {
                 let color = if slot_mask_enabled {
-                    get_param_color(col, false)
+                    if operator_roles[display_row] {
+                        Color::White
+                    } else {
+                        Color::Green
+                    }
                 } else {
-                    Color::DarkGray // Gray out disabled rows
+                    Color::DarkGray
                 };
                 Style::default().fg(color)
             };
-
             let text = format!("{:2}", value);
             let paragraph = Paragraph::new(Span::styled(text, style));
             f.render_widget(paragraph, area);
