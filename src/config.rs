@@ -86,9 +86,9 @@ impl Default for KeybindsConfig {
         keybinds.insert(".".to_string(), Action::IncreaseValueBy1);
         keybinds.insert(">".to_string(), Action::IncreaseValueBy10);
 
-        // "-" and "_" for decrease
+        // "-" and "=" for decrease
         keybinds.insert("-".to_string(), Action::DecreaseValueBy1);
-        keybinds.insert("_".to_string(), Action::DecreaseValueBy10);
+        keybinds.insert("=".to_string(), Action::DecreaseValueBy1); // +とセットで押す場合はどちらもSHIFTを押しながらの操作になると判断し、増減は10でなく1とした
 
         // "," and "<" for decrease
         keybinds.insert(",".to_string(), Action::DecreaseValueBy1);
@@ -100,15 +100,16 @@ impl Default for KeybindsConfig {
         keybinds.insert("7".to_string(), Action::IncreaseValueBy7);
         keybinds.insert("8".to_string(), Action::IncreaseValueBy8);
         keybinds.insert("9".to_string(), Action::IncreaseValueBy9);
-        keybinds.insert("0".to_string(), Action::IncreaseValueBy10);
+        // keybinds.insert("0".to_string(), Action::IncreaseValueBy10); // SHIFTを押しながらでも0なので混乱した。後回し
 
         // SHIFT + number keys for decrease
         keybinds.insert("%".to_string(), Action::DecreaseValueBy5); // Shift+5
-        keybinds.insert("^".to_string(), Action::DecreaseValueBy6); // Shift+6
-        keybinds.insert("&".to_string(), Action::DecreaseValueBy7); // Shift+7
-        keybinds.insert("*".to_string(), Action::DecreaseValueBy8); // Shift+8
-        keybinds.insert("(".to_string(), Action::DecreaseValueBy9); // Shift+9
-        keybinds.insert(")".to_string(), Action::DecreaseValueBy10); // Shift+0
+        keybinds.insert("&".to_string(), Action::DecreaseValueBy6); // Shift+6
+        keybinds.insert("\'".to_string(), Action::DecreaseValueBy7); // Shift+7
+        keybinds.insert("(".to_string(), Action::DecreaseValueBy8); // Shift+8
+        keybinds.insert(")".to_string(), Action::DecreaseValueBy9); // Shift+9
+
+        // keybinds.insert("0".to_string(), Action::DecreaseValueBy10); // Shift+0 → Shift+0も0なので意味がない。後回し
 
         // Play current tone
         keybinds.insert("p".to_string(), Action::PlayCurrentTone);

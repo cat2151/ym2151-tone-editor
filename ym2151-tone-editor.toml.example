@@ -1,4 +1,6 @@
 # YM2151 Tone Editor Keybinds Configuration
+#
+# 課題 : アプリdefaultのkeybindsが頻繁に破壊的変更されており、こちらは追いついていない。対策、様子見
 # 
 # This file allows you to customize keyboard shortcuts for the editor.
 # Format: "Key" = "action"
