@@ -253,10 +253,7 @@ pub fn events_to_tone_data(events: &[Ym2151Event]) -> io::Result<ToneData> {
 /// Convert tone data to JSON string in ym2151-log-play-server format
 pub fn to_json_string(values: &ToneData) -> Result<String, serde_json::Error> {
     let events = to_ym2151_events(values);
-    let log = Ym2151Log {
-        event_count: events.len(),
-        events,
-    };
+    let log = Ym2151Log { events };
     serde_json::to_string_pretty(&log)
 }
 

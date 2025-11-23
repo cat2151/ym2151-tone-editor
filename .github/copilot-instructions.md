@@ -34,7 +34,6 @@ const PARAM_MAX: [u8; GRID_WIDTH] = [7, 15, 99, 3, 31, ...]; // ハードウェ�
 プロジェクトは`ym2151-log-play-server`統合用の特定イベントログ構造を使用：
 ```rust
 struct Ym2151Event { time: u32, addr: String, data: String }
-struct Ym2151Log { event_count: usize, events: Vec<Ym2151Event> }
 ```
 
 ## 開発ワークフロー

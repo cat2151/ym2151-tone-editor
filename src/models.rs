@@ -84,7 +84,6 @@ pub struct Ym2151Event {
 /// JSON log structure for ym2151-log-play-server
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Ym2151Log {
-    pub event_count: usize,
     pub events: Vec<Ym2151Event>,
 }
 

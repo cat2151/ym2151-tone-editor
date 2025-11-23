@@ -104,10 +104,7 @@ fn send_all_registers(values: &ToneData) {
     ));
 
     // Create minimal JSON with these events
-    let log = Ym2151Log {
-        event_count: events.len(),
-        events,
-    };
+    let log = Ym2151Log { events };
 
     let json_string = match serde_json::to_string(&log) {
         Ok(json) => json,
@@ -156,13 +153,11 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
     let hw_slot = DATA_ROW_TO_SLOT[data_row];
     let op_offset = hw_slot * 8 + channel as usize;
 
-    // Clear any pending scheduled events first
-    let _ = ym2151_log_play_server::client::clear_schedule();
+    // let _ = ym2151_log_play_server::client::clear_schedule();
 
     let mut events = Vec::new();
 
-    // Add note-off at the beginning
-    send_note_off_register(&mut events, channel);
+    add_key_off(&mut events, channel);
 
     // Determine which register(s) to send based on the edited parameter
     match param_index {
@@ -284,18 +279,14 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
         }
     }
 
-    // Add note-on at the end
-    send_key_on_register(values, &mut events);
+    add_key_on(values, &mut events);
 
     if events.is_empty() {
         return;
     }
 
     // Create minimal JSON with only the affected register(s)
-    let log = Ym2151Log {
-        event_count: events.len(),
-        events,
-    };
+    let log = Ym2151Log { events };
 
     let json_string = match serde_json::to_string(&log) {
         Ok(json) => json,
@@ -304,11 +295,6 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
             std::process::exit(1);
         }
     };
-
-    log_verbose(&format!(
-        "send_operator_register_for_param: Sending JSON with {} event(s)",
-        log.event_count
-    ));
 
     // インタラクティブモードへJSON送信（失敗時はprintして即終了）
     match ym2151_log_play_server::client::play_json_interactive(&json_string) {
@@ -320,15 +306,13 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
 /// Send only the specific channel register(s) affected by a parameter change
 #[cfg(windows)]
 fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
-    let channel = 0; // We use channel 0
+    let channel = 0;
 
-    // Clear any pending scheduled events first
-    let _ = ym2151_log_play_server::client::clear_schedule();
+    // let _ = ym2151_log_play_server::client::clear_schedule();
 
     let mut events = Vec::new();
 
-    // Add note-off at the beginning
-    send_note_off_register(&mut events, channel);
+    add_key_off(&mut events, channel);
 
     // Determine which register(s) to send based on the edited parameter
     match param_index {
@@ -390,18 +374,14 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
         }
     }
 
-    // Add note-on at the end
-    send_key_on_register(values, &mut events);
+    add_key_on(values, &mut events);
 
     if events.is_empty() {
         return;
     }
 
     // Create minimal JSON with only the affected register(s)
-    let log = Ym2151Log {
-        event_count: events.len(),
-        events,
-    };
+    let log = Ym2151Log { events };
 
     let json_string = match serde_json::to_string(&log) {
         Ok(json) => json,
@@ -410,11 +390,6 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
             std::process::exit(1);
         }
     };
-
-    log_verbose(&format!(
-        "send_channel_register_for_param: Sending JSON with {} event(s)",
-        log.event_count
-    ));
 
     // インタラクティブモードへJSON送信（失敗時はprintして即終了）
     match ym2151_log_play_server::client::play_json_interactive(&json_string) {
@@ -425,7 +400,7 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
 
 /// Helper function to add KEY_OFF (note-off) register to events
 #[cfg(windows)]
-fn send_note_off_register(events: &mut Vec<Ym2151Event>, channel: u8) {
+fn add_key_off(events: &mut Vec<Ym2151Event>, channel: u8) {
     log_verbose(&format!(
         "  channel register: addr=0x08, data=0x{:02X} (KEY_OFF)",
         channel
@@ -439,7 +414,7 @@ fn send_note_off_register(events: &mut Vec<Ym2151Event>, channel: u8) {
 
 /// Helper function to add KEY_ON register to events
 #[cfg(windows)]
-fn send_key_on_register(values: &ToneData, events: &mut Vec<Ym2151Event>) {
+fn add_key_on(values: &ToneData, events: &mut Vec<Ym2151Event>) {
     let channel = 0; // We use channel 0
 
     // Calculate slot mask based on which operators are enabled

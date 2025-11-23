@@ -37,10 +37,8 @@ fn test_save_to_json_creates_valid_file() {
     let parsed: serde_json::Value = serde_json::from_str(&content).unwrap();
 
     // Verify structure
-    assert!(parsed.get("event_count").is_some());
     assert!(parsed.get("events").is_some());
     assert!(parsed["events"].is_array());
-    assert_eq!(parsed["event_count"].as_u64().unwrap(), 28);
 
     // Clean up
     std::fs::remove_file(filename).ok();

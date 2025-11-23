@@ -104,7 +104,6 @@ fn test_json_serialization() {
     assert!(json_result.is_ok());
 
     let json_string = json_result.unwrap();
-    assert!(json_string.contains("event_count"));
     assert!(json_string.contains("events"));
 }
 
