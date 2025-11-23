@@ -322,14 +322,14 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
             let rl_fb_con = 0xC0 | ((fb & 0x07) << 3) | (alg & 0x07);
             log_verbose(&format!(
                 "  channel register: addr=0x{:02X}, data=0x{:02X} (ALG={}, FB={})",
-                0x20 + channel as u8,
+                0x20 + channel,
                 rl_fb_con,
                 alg,
                 fb
             ));
             events.push(Ym2151Event {
                 time: 0.0,
-                addr: format!("0x{:02X}", 0x20 + channel as u8),
+                addr: format!("0x{:02X}", 0x20 + channel),
                 data: format!("0x{:02X}", rl_fb_con),
             });
         }
@@ -341,26 +341,26 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
             // KC - Register $28-$2F
             log_verbose(&format!(
                 "  channel register: addr=0x{:02X}, data=0x{:02X} (KC from MIDI note={})",
-                0x28 + channel as u8,
+                0x28 + channel,
                 kc,
                 midi_note
             ));
             events.push(Ym2151Event {
                 time: 0.0,
-                addr: format!("0x{:02X}", 0x28 + channel as u8),
+                addr: format!("0x{:02X}", 0x28 + channel),
                 data: format!("0x{:02X}", kc),
             });
 
             // KF - Register $30-$37
             log_verbose(&format!(
                 "  channel register: addr=0x{:02X}, data=0x{:02X} (KF from MIDI note={})",
-                0x30 + channel as u8,
+                0x30 + channel,
                 kf,
                 midi_note
             ));
             events.push(Ym2151Event {
                 time: 0.0,
-                addr: format!("0x{:02X}", 0x30 + channel as u8),
+                addr: format!("0x{:02X}", 0x30 + channel),
                 data: format!("0x{:02X}", kf),
             });
         }

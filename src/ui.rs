@@ -286,7 +286,7 @@ fn draw_virtual_pentatonic_keyboard_at_y(f: &mut Frame, app: &App, inner: Rect, 
         let octave = rel.div_euclid(5);
         let penta_idx = rel.rem_euclid(5);
         let note = center_note as i16 + octave * 12 + PENTA_INTERVALS[penta_idx as usize];
-        if note < 0 || note > 127 {
+        if !(0..=127).contains(&note) {
             continue;
         }
         let label = PENTA_LABELS[penta_idx as usize];
@@ -317,7 +317,7 @@ fn draw_virtual_pentatonic_keyboard_at_y(f: &mut Frame, app: &App, inner: Rect, 
     #[cfg(windows)]
     if let Some(note_num) = hovered_note {
         use crate::audio;
-        let mut preview_values = app.values.clone();
+        let mut preview_values = app.values;
         preview_values[ROW_CH][CH_PARAM_NOTE] = note_num;
         audio::play_tone(
             &preview_values,
