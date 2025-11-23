@@ -20,6 +20,7 @@ pub fn init_app(
         value_by_mouse_move,
         #[cfg(windows)]
         use_interactive_mode,
+        hovered_penta_x: None,
     };
     const GM_FILE_PATH: &str = "tones/general_midi/000_AcousticGrand.json";
     #[cfg(windows)]

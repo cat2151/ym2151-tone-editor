@@ -11,6 +11,7 @@ mod register;
 mod tests;
 mod ui;
 
+use crate::models::{CH_PARAM_ALG, ROW_CH};
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::sync::Mutex;
@@ -275,24 +276,40 @@ fn run_app<B: ratatui::backend::Backend>(
                 }
             }
             Event::Mouse(mouse) => {
-                if app.value_by_mouse_move {
-                    // Legacy mode: Handle mouse movement to update parameter value
-                    // Only responds to mouse movement within the terminal
-                    if mouse.kind == MouseEventKind::Moved {
-                        // Get terminal width from the current frame
-                        let terminal_width = terminal.size().map(|size| size.width).unwrap_or(80);
-                        app.update_value_from_mouse_x(mouse.column, terminal_width);
+                if mouse.kind == MouseEventKind::Moved {
+                    // ペンタトニック鍵盤ホバー座標を更新
+                    let term_size = terminal.size().unwrap_or(ratatui::prelude::Size {
+                        width: 80,
+                        height: 24,
+                    });
+                    // ui.rsのレイアウト計算を再現
+                    let inner_x = 1u16; // Block border
+                    let inner_y = 1u16;
+                    let inner = ratatui::layout::Rect {
+                        x: inner_x,
+                        y: inner_y,
+                        width: term_size.width - 2,
+                        height: term_size.height - 2,
+                    };
+                    let label_offset = 1u16;
+                    let ch_row_y = inner.y + label_offset + 5;
+                    let alg_value = app.values[ROW_CH][CH_PARAM_ALG];
+                    let diagram = crate::ui::get_algorithm_diagram(alg_value);
+                    let diagram_start_y = ch_row_y + 2;
+                    let penta_keyboard_y = diagram_start_y + diagram.len() as u16 + 1;
+                    app.update_hovered_penta_x(mouse.column, mouse.row, inner, penta_keyboard_y);
+                    // 旧モード: パラメータ値も更新
+                    if app.value_by_mouse_move {
+                        app.update_value_from_mouse_x(mouse.column, term_size.width);
                     }
                 } else {
                     // Default mode: Handle mouse wheel events at mouse pointer position
                     match mouse.kind {
                         MouseEventKind::ScrollUp => {
-                            // Move cursor to mouse position and increase value
                             app.move_cursor_to_mouse_position(mouse.column, mouse.row);
                             app.increase_value();
                         }
                         MouseEventKind::ScrollDown => {
-                            // Move cursor to mouse position and decrease value
                             app.move_cursor_to_mouse_position(mouse.column, mouse.row);
                             app.decrease_value();
                         }

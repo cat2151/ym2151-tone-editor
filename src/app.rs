@@ -10,14 +10,38 @@ pub struct App {
     pub value_by_mouse_move: bool,
     #[cfg(windows)]
     pub use_interactive_mode: bool,
+    /// ペンタトニック鍵盤のマウスホバー座標(Noneなら未ホバー)
+    pub hovered_penta_x: Option<usize>,
 }
 
 impl App {
+    /// 仮想ペンタトニック鍵盤上のマウス座標からホバーx座標を更新
+    /// ALG図直下の描画位置に合わせて判定
+    pub fn update_hovered_penta_x(
+        &mut self,
+        mouse_x: u16,
+        mouse_y: u16,
+        inner: ratatui::layout::Rect,
+        penta_keyboard_y: u16,
+    ) {
+        if mouse_y != penta_keyboard_y {
+            self.hovered_penta_x = None;
+            return;
+        }
+        if mouse_x >= inner.x && mouse_x < inner.x + inner.width {
+            let rel_x = mouse_x - inner.x;
+            self.hovered_penta_x = Some(rel_x as usize);
+        } else {
+            self.hovered_penta_x = None;
+        }
+    }
     pub fn new(
         #[allow(unused_variables)] use_interactive_mode: bool,
         value_by_mouse_move: bool,
     ) -> App {
-        crate::app_init::init_app(use_interactive_mode, value_by_mouse_move)
+        let mut app = crate::app_init::init_app(use_interactive_mode, value_by_mouse_move);
+        app.hovered_penta_x = None;
+        app
     }
 
     pub fn move_cursor_left(&mut self) {

@@ -268,4 +268,62 @@ pub fn ui(f: &mut Frame, app: &App) {
             f.render_widget(paragraph, area);
         }
     }
+
+    let penta_keyboard_y = diagram_start_y + diagram.len() as u16 + 1;
+    draw_virtual_pentatonic_keyboard_at_y(f, app, inner, penta_keyboard_y);
+}
+
+fn draw_virtual_pentatonic_keyboard_at_y(f: &mut Frame, app: &App, inner: Rect, keyboard_y: u16) {
+    let center_note = 60;
+    let width = inner.width as i16;
+    const PENTA_INTERVALS: [i16; 5] = [0, 2, 4, 7, 9];
+    const PENTA_LABELS: [&str; 5] = ["C", "D", "E", "G", "A"];
+
+    let center_x = width / 2;
+    let mut hovered_note: Option<u8> = None;
+    for x in 0..width {
+        let rel = x - center_x;
+        let octave = rel.div_euclid(5);
+        let penta_idx = rel.rem_euclid(5);
+        let note = center_note as i16 + octave * 12 + PENTA_INTERVALS[penta_idx as usize];
+        if note < 0 || note > 127 {
+            continue;
+        }
+        let label = PENTA_LABELS[penta_idx as usize];
+        let area = Rect {
+            x: inner.x + x as u16,
+            y: keyboard_y,
+            width: 1,
+            height: 1,
+        };
+        let is_hovered = match app.hovered_penta_x {
+            Some(hx) => hx == x as usize,
+            None => false,
+        };
+        if is_hovered {
+            hovered_note = Some(note as u8);
+        }
+        let style = if is_hovered {
+            Style::default()
+                .fg(Color::Magenta)
+                .add_modifier(Modifier::BOLD)
+        } else {
+            Style::default().fg(Color::Cyan)
+        };
+        let paragraph = Paragraph::new(Span::styled(label, style));
+        f.render_widget(paragraph, area);
+    }
+
+    #[cfg(windows)]
+    if let Some(note_num) = hovered_note {
+        use crate::audio;
+        let mut preview_values = app.values.clone();
+        preview_values[ROW_CH][CH_PARAM_NOTE] = note_num;
+        audio::play_tone(
+            &preview_values,
+            app.use_interactive_mode,
+            CH_PARAM_NOTE,
+            ROW_CH,
+        );
+    }
 }
