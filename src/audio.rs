@@ -65,16 +65,27 @@ fn send_json_update(values: &ToneData) {
 /// Starts continuous audio streaming on the server and sends initial tone data
 #[cfg(windows)]
 pub fn init_interactive_mode(values: &ToneData) -> Result<(), Box<dyn std::error::Error>> {
-    log_verbose("init_interactive_mode: Starting interactive mode");
+    let is_interactive =
+        match ym2151_log_play_server::client::get_interactive_mode_state_with_retry() {
+            Ok(val) => val,
+            Err(e) => {
+                let msg = format!(
+                    "get_interactive_mode_state_with_retry: サーバー状態取得失敗: {}",
+                    e
+                );
+                eprintln!("{}", msg);
+                log_verbose(&msg);
+                std::process::exit(1);
+            }
+        };
 
-    // Start interactive mode on the server
-    ym2151_log_play_server::client::start_interactive()?;
+    if !is_interactive {
+        log_verbose("init_interactive_mode: Starting interactive mode");
+        ym2151_log_play_server::client::start_interactive()?;
+    }
 
-    log_verbose("init_interactive_mode: Interactive mode started, sending all registers");
-
-    // Send all current register values to initialize the tone
+    log_verbose("init_interactive_mode: sending all registers");
     send_all_registers(values);
-
     log_verbose("init_interactive_mode: Initialization complete");
 
     Ok(())
