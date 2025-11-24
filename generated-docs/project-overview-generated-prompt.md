@@ -1,4 +1,4 @@
-Last updated: 2025-11-24
+Last updated: 2025-11-25
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -68,7 +68,7 @@ Last updated: 2025-11-24
   <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸-English-blue.svg" alt="English"></a>
 </p>
 
-YM2151（OPM）FM音源音色エディタ。Windows用。Rust TUI（テキストユーザーインターフェース）エディタ。
+YM2151（OPM）FM音源音色エディタ。Windows用。TUI。Rustで書かれています。
 
 ## 状況
 
@@ -76,20 +76,21 @@ YM2151（OPM）FM音源音色エディタ。Windows用。Rust TUI（テキスト
 
 - 今後の展望
     - ※すべて検証用の仮仕様であり、頻繁に破壊的変更をします
-    - 音色保存とGitHub管理に適したフォーマット。音色データ本体を1行100文字程度で記述。後述。
-    - 大幅なkeybind変更。後述。
+    - 音色保存とGitHub管理に適したセーブの仕組みを構築する。後述。
+    - 大幅なkeybind変更をする。後述。
 
 ## 機能
 
-- パラメータラベル付きでYM2151音色パラメータを編集
-- 11パラメータ × 5行（4オペレータ + 1チャンネル行）で表示
-- 視覚的なパラメータ名：DT、MUL、TL、KS、AR、D1R、D1L、D2R、RR、DT2、AMS
-- 矢印キーでカーソルナビゲーション
-- PageUp/PageDownまたは`e`/`q`キーで値の増減（パラメータ最大値を尊重）
-- Home（最大）、End（最小）、R（ランダム）での高速値設定
-- `P`または`SPACE`キーで編集中の音色を再生（パラメータ値を変更せずに音を確認）
+- YM2151音色パラメータを編集
+- マウスだけでも操作可
+- カーソルキーで移動、PageUp/PageDown/Home/Endで値を増減
+- `P`または`SPACE`キーで音色プレビュー
 - `ESC`キーで終了
-- 終了時に音色をjson保存し、次の起動時に最新jsonを読み込み
+- 終了時に音色を自動セーブし、次回に自動ロードして続きを編集可
+
+## コツ
+- 画面いっぱいに表示したいとき：
+  - Windows Terminalなら、`ALT+ENTER`や`F11`でウィンドウ最大化したあと、`CTRL`+`+`でフォントを拡大できます
 
 ## YM2151音色データ形式
 
@@ -367,6 +368,20 @@ cargo run
 📁 issue-notes/
   📖 100.md
   📖 101.md
+  📖 102.md
+  📖 103.md
+  📖 104.md
+  📖 105.md
+  📖 106.md
+  📖 107.md
+  📖 108.md
+  📖 109.md
+  📖 110.md
+  📖 111.md
+  📖 112.md
+  📖 113.md
+  📖 114.md
+  📖 115.md
   📖 95.md
   📖 96.md
   📖 97.md
@@ -407,6 +422,20 @@ README.md
 docs/KEYBINDS.ja.md
 issue-notes/100.md
 issue-notes/101.md
+issue-notes/102.md
+issue-notes/103.md
+issue-notes/104.md
+issue-notes/105.md
+issue-notes/106.md
+issue-notes/107.md
+issue-notes/108.md
+issue-notes/109.md
+issue-notes/110.md
+issue-notes/111.md
+issue-notes/112.md
+issue-notes/113.md
+issue-notes/114.md
+issue-notes/115.md
 issue-notes/95.md
 issue-notes/96.md
 issue-notes/97.md
@@ -423,4 +452,4 @@ tones/general_midi/000_AcousticGrand.json
 
 
 ---
-Generated at: 2025-11-24 07:07:54 JST
+Generated at: 2025-11-25 07:07:53 JST
