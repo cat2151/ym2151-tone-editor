@@ -1,4 +1,4 @@
-Last updated: 2025-11-25
+Last updated: 2025-11-26
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -1174,6 +1174,9 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
+e622b19 Auto-translate README.ja.md to README.md [auto]
+21812b3 Revise progress status and keybinds details
+710c921 Update project summaries (overview & development status) [auto]
 fb95e65 Update issue notes for issue #115
 96e501f Add issue note for #115 [auto]
 fd043ac 依存関係を更新
@@ -1181,18 +1184,19 @@ fd043ac 依存関係を更新
 ceb0418 fix #113
 0e389c6 #113 調査結果と分析を追加
 ea7e0ce Auto-translate README.ja.md to README.md [auto]
-b7114a9 Revise README.ja.md for better clarity and updates
-714c7ed Add issue note for #114 [auto]
-a211119 Add issue note for #113 [auto]
 
 ### 変更されたファイル:
 Cargo.lock
 Cargo.toml
+README.ja.md
 README.md
-issue-notes/113.md
+generated-docs/development-status-generated-prompt.md
+generated-docs/development-status.md
+generated-docs/project-overview-generated-prompt.md
+generated-docs/project-overview.md
 issue-notes/115.md
 src/midi_conversion.rs
 
 
 ---
-Generated at: 2025-11-25 07:07:53 JST
+Generated at: 2025-11-26 07:08:18 JST
