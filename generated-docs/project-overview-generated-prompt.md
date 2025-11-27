@@ -1,4 +1,4 @@
-Last updated: 2025-11-26
+Last updated: 2025-11-28
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -383,6 +383,7 @@ cargo run
   📖 113.md
   📖 114.md
   📖 115.md
+  📖 116.md
   📖 95.md
   📖 96.md
   📖 97.md
@@ -409,6 +410,7 @@ cargo run
 📁 tones/
   📁 general_midi/
     📊 000_AcousticGrand.json
+    📊 tone_names.json
 📄 ym2151-tone-editor.toml.example
 
 ## ファイル詳細分析
@@ -437,11 +439,13 @@ issue-notes/112.md
 issue-notes/113.md
 issue-notes/114.md
 issue-notes/115.md
+issue-notes/116.md
 issue-notes/95.md
 issue-notes/96.md
 issue-notes/97.md
 issue-notes/99.md
 tones/general_midi/000_AcousticGrand.json
+tones/general_midi/tone_names.json
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
 特に以下の点を重視してください：
@@ -453,4 +457,4 @@ tones/general_midi/000_AcousticGrand.json
 
 
 ---
-Generated at: 2025-11-26 07:08:18 JST
+Generated at: 2025-11-28 07:08:02 JST

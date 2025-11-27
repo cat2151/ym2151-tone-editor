@@ -1,4 +1,4 @@
-Last updated: 2025-11-26
+Last updated: 2025-11-28
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -220,6 +220,7 @@ Last updated: 2025-11-26
 - issue-notes/113.md
 - issue-notes/114.md
 - issue-notes/115.md
+- issue-notes/116.md
 - issue-notes/95.md
 - issue-notes/96.md
 - issue-notes/97.md
@@ -242,9 +243,25 @@ Last updated: 2025-11-26
 - src/tests/verbose_logging_tests.rs
 - src/ui.rs
 - tones/general_midi/000_AcousticGrand.json
+- tones/general_midi/tone_names.json
 - ym2151-tone-editor.toml.example
 
 ## 現在のオープンIssues
+## [Issue #116](../issue-notes/116.md): tone_names.json を作成し、GM000～GM127 を書く。用途は、json生成やrename、description生成や上書き等、音色名前文字列の管理を効率化する用
+[issue-notes/116.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/116.md)
+
+...
+ラベル: 
+--- issue-notes/116.md の内容 ---
+
+```markdown
+# issue tone_names.json を作成し、GM000～GM127 を書く。これを利用してjson生成やrename、description生成や上書き等、音色名前文字列の集約管理を効率化する #116
+[issues #116](https://github.com/cat2151/ym2151-tone-editor/issues/116)
+
+
+
+```
+
 ## [Issue #115](../issue-notes/115.md): AR 1のslow attack音色を仮想MIDI鍵盤で連続previewしていると、noteをまたいでattack envelopeが継続される
 [issue-notes/115.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/115.md)
 
@@ -387,21 +404,6 @@ Last updated: 2025-11-26
 ```markdown
 # issue Uキーで、detUne 1（DT1）にカーソルジャンプし、値を1増やす。SHIFTを押しながらだと1減らす #106
 [issues #106](https://github.com/cat2151/ym2151-tone-editor/issues/106)
-
-
-
-```
-
-## [Issue #105](../issue-notes/105.md): Lキーで、decay 1 Level（D1L）にカーソルジャンプし、値を1増やす。SHIFTを押しながらだと1減らす。default keybindsのLをこれに変更する
-[issue-notes/105.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/105.md)
-
-...
-ラベル: 
---- issue-notes/105.md の内容 ---
-
-```markdown
-# issue Eキーで、dEcay 1 level（D1L）にカーソルジャンプし、値を1増やす。SHIFTを押しながらだと1減らす。default keybindsのEをこれに変更する #105
-[issues #105](https://github.com/cat2151/ym2151-tone-editor/issues/105)
 
 
 
@@ -647,6 +649,87 @@ Last updated: 2025-11-26
         - それは別issueで、設定変更をマストでやるので、OKと判断する
 - これでagentによるメンテは十分しやすくなった、と判断する
 - closeとする
+
+```
+
+### .github/actions-tmp/issue-notes/16.md
+```md
+# issue issue-note / project-summary / translate / callgraph をtonejs-mml-to-jsonから呼び出す #16
+[issues #16](https://github.com/cat2151/github-actions/issues/16)
+
+# これまでの課題
+- issue-note / project-summary / translate / callgraph は、github-actions リポジトリ上ではtest greenである。
+- だが他のリポジトリにおいて動作するか？が可視化不足である。
+
+# 対策
+- issue-note / project-summary / translate / callgraph をtonejs-mml-to-jsonから呼び出す
+- 詳しく
+    - まず、現状、tonejs-mml-to-json でその4つのworkflowがどうなっているか、このmdに可視化する
+    - 例えば、既に呼び出している、呼び出していない、tonejs-mml-to-jsonにある古いworkflowを呼び出している
+
+# 調査結果
+- まず、現状、tonejs-mml-to-json でその4つのworkflowがどうなっているか、このmdに可視化する
+    - 結果：
+        - issue-note
+            - tonejs-mml-to-jsonにある古いworkflowを呼び出している
+        - project-summary
+            - tonejs-mml-to-jsonにある古いworkflowを呼び出している
+        - translate
+            - tonejs-mml-to-jsonにある古いworkflowを呼び出している
+        - callgraph
+            - tonejs-mml-to-jsonにある古いworkflowを呼び出している
+
+# どうする？
+- issue-note
+    - github-actions リポジトリにある、call-issue-note.yml をcpして使うようにする、まず単純cpして動くかを確認する
+- project-summary
+    - github-actions リポジトリにある、call-daily-project-summary.yml をcpして使うようにする、まず単純cpして動くかを確認する
+- translate
+    - github-actions リポジトリにある、call-translate-readme.yml をcpして使うようにする、まず単純cpして動くかを確認する
+- callgraph
+    - github-actions リポジトリにある、call-callgraph.yml をcpして使うようにする、まず単純cpして動くかを確認する
+
+# 状況
+- issue-note
+    - tonejs-mml-to-jsonリポジトリにて、test green
+    - issue-noteについては当issueのタスクは完了した、と判断する
+- project-summary
+    - tonejs-mml-to-jsonリポジトリにて、test green
+    - project-summaryについては当issueのタスクは完了した、と判断する
+
+# 状況
+- translate
+    - github-actions リポジトリにある、call-translate-readme.yml をcpして使うようにする、まず単純cpして動くかを確認する
+        - 状況
+            - 単純cpした
+            - ソース机上レビューした。OK
+            - トリガーはREADME.ja.mdのcommit
+            - testは省略とする
+            - もし今後README.ja.mdのcommit時にうまく動作しないとしても、そのとき対処すればOK、と判断する
+    - translateについては当issueのタスクは完了した、と判断する
+
+# どうする？
+- callgraph
+    - github-actions リポジトリにある、call-callgraph.yml をcpして使うようにする、まず単純cpして動くかを確認する
+
+# 結果
+- callgraph
+    - tonejs-mml-to-jsonリポジトリにて、test red
+    - logをみても情報不足なため、まずloggerを修正する
+    - 結果、わかった、運用ミス、対象srcの指定の考慮漏れ
+    - どうする？
+        - 対象srcを指定する。tonejs-mml-to-jsonリポジトリにて進める
+    - 結果
+        - test green
+    - callgraphについては当issueのタスクは完了した、と判断する
+
+# 状況
+- github-actions以外のリポジトリとして、
+    - tonejs-mml-to-jsonリポジトリにおいて、
+        - issue-note / project-summary / translate / callgraph がtest greenとなった。
+        - closeできる、と判断する。
+
+# closeとする
 
 ```
 
@@ -1070,15 +1153,6 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 
 ```
 
-### issue-notes/105.md
-```md
-# issue Eキーで、dEcay 1 level（D1L）にカーソルジャンプし、値を1増やす。SHIFTを押しながらだと1減らす。default keybindsのEをこれに変更する #105
-[issues #105](https://github.com/cat2151/ym2151-tone-editor/issues/105)
-
-
-
-```
-
 ### issue-notes/106.md
 ```md
 # issue Uキーで、detUne 1（DT1）にカーソルジャンプし、値を1増やす。SHIFTを押しながらだと1減らす #106
@@ -1172,8 +1246,157 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 
 ```
 
+### issue-notes/116.md
+```md
+# issue tone_names.json を作成し、GM000～GM127 を書く。これを利用してjson生成やrename、description生成や上書き等、音色名前文字列の集約管理を効率化する #116
+[issues #116](https://github.com/cat2151/ym2151-tone-editor/issues/116)
+
+
+
+```
+
+### tones/general_midi/tone_names.json
+```json
+// 取り急ぎeasymmlabcから持ってきたもの
+// あとで修正する
+{
+  ["PC000 Acoustic Grand Piano", `@000 v11 '>d1gb<f+'`],
+  ["PC001 Bright Acoustic Piano", `@001 v11 '>d1gb<f+'`],
+  ["PC002 Electric Grand Piano (usually modeled after Yamaha CP-70)", `@002 v11 '>d1gb<f+'`],
+  ["PC003 Honky-tonk Piano", `@003 v11 '>d1gb<f+'`],
+  ["PC004 Electric Piano 1 (usually a Rhodes or Wurlitzer)", `@004 v11 '>d1gb<f+'`],
+  ["PC005 Electric Piano 2 (usually an FM piano)", `@005 v11 '>d1gb<f+'`],
+  ["PC006 Harpsichord", `@006 v11 '>d1gb<f+'`],
+  ["PC007 Clavinet", `@007 v11 '>d1gb<f+'`],
+  ["PC008 Celesta", `@008 v11 '>d1gb<f+'`],
+  ["PC009 Glockenspiel", `@009l2gb<dg`],
+  ["PC010 Music Box", `@010 v11 '>d1gb<f+'`],
+  ["PC011 Vibraphone", `@011 v11 '>d1gb<f+'`],
+  ["PC012 Marimba", `@012 v11 '>d1gb<f+'`],
+  ["PC013 Xylophone", `@013 v11 '>d1gb<f+'`],
+  ["PC014 Tubular Bells", `@014 >g1 b1`],
+  ["PC015 Dulcimer", `@015 v11 '>d1gb<f+'`],
+  ["PC016 Drawbar Organ", `@016 v11 '>d1gb<f+'`],
+  ["PC017 Percussive Organ", `@017 v11 '>d1gb<f+'`],
+  ["PC018 Rock Organ", `@018 v11 '>d1gb<f+'`],
+  ["PC019 Church Organ", `@019 v11 '>d1gb<f+'`],
+  ["PC020 Reed Organ", `@020 v11 '>d1gb<f+'`],
+  ["PC021 Accordion", `@021 v11 '>d1gb<f+'`],
+  ["PC022 Harmonica", `@022 v11 '>d1gb<f+'`],
+  ["PC023 Bandoneon", `@023 v11 '>d1gb<f+'`],
+  ["PC024 Acoustic Guitar (nylon)", `@024 v11 '>d1gb<f+'`],
+  ["PC025 Acoustic Guitar (steel)", `@025 v11 '>d1gb<f+'`],
+  ["PC026 Electric Guitar (jazz)", `@026 v11 '>d1gb<f+'`],
+  ["PC027 Electric Guitar (clean)", `@027 v11 '>d1gb<f+'`],
+  ["PC028 Electric Guitar (muted)", `@028 v11 '>d1gb<f+'`],
+  ["PC029 Electric Guitar (overdrive)", `@029 v11 '>d1g'`],
+  ["PC030 Electric Guitar (distortion)", `@030 v11 '>>c+1g+'`],
+  ["PC031 Electric Guitar (harmonics)", `@031 c+1`],
+  ["PC032 Acoustic Bass", `@032>d1`],
+  ["PC033 Electric Bass (finger)", `@033>d1`],
+  ["PC034 Electric Bass (picked)", `@034>d1`],
+  ["PC035 Electric Bass (fretless)", `@035>d1`],
+  ["PC036 Slap Bass 1", `@036>d1`],
+  ["PC037 Slap Bass 2", `@037>d1`],
+  ["PC038 Synth Bass 1", `@038>d1`],
+  ["PC039 Synth Bass 2", `@039>d1`],
+  ["PC040 Violin", `@040 v13 '<d1g'`],
+  ["PC041 Viola", `@041 v13 'd1g'`],
+  ["PC042 Cello", `@042>d1`],
+  ["PC043 Contrabass", `@043>>d1`],
+  ["PC044 Tremolo Strings", `@044 v11 '>d1gb<f+'`],
+  ["PC045 Pizzicato Strings", `@045l4cegb`],
+  ["PC046 Orchestral Harp", `@046l4cegb`],
+  ["PC047 Timpani", `@047 t l4 >>[gd]4`],
+  ["PC048 String Ensemble 1", `@048 v11 '>d1gb<f+'`],
+  ["PC049 String Ensemble 2", `@049 v11 '>d1gb<f+'`],
+  ["PC050 Synth Strings 1", `@050 v11 '>d1gb<f+'`],
+  ["PC051 Synth Strings 2", `@051 v11 '>d1gb<f+'`],
+  ["PC052 Choir Aahs", `@052 v11 '>d1gb<f+'`],
+  ["PC053 Voice Oohs", `@053 v11 '>d1gb<f+'`],
+  ["PC054 Synth Voice", `@054 v11 '>d1gb<f+'`],
+  ["PC055 Orchestra Hit", `@055 t150 <c2>b-2a2g2`],
+  ["PC056 Trumpet", `@056 v11 'd1gb<f+'`],
+  ["PC057 Trombone", `@057>d1`],
+  ["PC058 Tuba", `@058 >>d1`],
+  ["PC059 Muted Trumpet", `@059 v11 'd1gb<f+'`],
+  ["PC060 French Horn", `@060 v11 '>d1gb<f+'`],
+  ["PC061 Brass Section", `@061 v11 '>d1gb<f+'`],
+  ["PC062 Synth Brass 1", `@062 v11 '>d1gb<f+'`],
+  ["PC063 Synth Brass 2", `@063 v11 '>d1gb<f+'`],
+  ["PC064 Soprano Sax", `@064 v11 'd1gb<f+'`],
+  ["PC065 Alto Sax", `@065 v11 '>d1gb<f+'`],
+  ["PC066 Tenor Sax", `@066>d1`],
+  ["PC067 Baritone Sax", `@067>d1`],
+  ["PC068 Oboe", `@068 v11 'd1gb<f+'`],
+  ["PC069 English Horn", `@069 v11 '>d1gb<f+'`],
+  ["PC070 Bassoon", `@070 v11 '>d1gb<f+'`],
+  ["PC071 Clarinet", `@071 v11 'd1gb<f+'`],
+  ["PC072 Piccolo", `@072 v11 '<d1gb<f+'`],
+  ["PC073 Flute", `@073 v11 'd1gb<f+'`],
+  ["PC074 Recorder", `@074 v11 'd1gb<f+'`],
+  ["PC075 Pan Flute", `@075 v11 'd1gb<f+'`],
+  ["PC076 Blown bottle", `@076 v11 'd1gb<f+'`],
+  ["PC077 Shakuhachi", `@077<d1`],
+  ["PC078 Whistle", `@078<d1`],
+  ["PC079 Ocarina", `@079<d1`],
+  ["PC080 Lead 1 (square)", `@080 v11 '>d1gb<f+'`],
+  ["PC081 Lead 2 (sawtooth)", `@081 v11 '>d1gb<f+'`],
+  ["PC082 Lead 3 (calliope)", `@082 v11 '>d1gb<f+'`],
+  ["PC083 Lead 4 (chiff)", `@083 v11 '>d1gb<f+'`],
+  ["PC084 Lead 5 (charang)", `@084 v11 '>d1gb<f+'`],
+  ["PC085 Lead 6 (voice)", `@085 v11 '>d1gb<f+'`],
+  ["PC086 Lead 7 (fifths)", `@086 v11 l1 d 'dd+' 'de' 'df' 'df+' 'dg' 'dg+' 'da' 'da+' 'db' 'd<c' 'd<c+' 'd<d'`],
+  ["PC087 Lead 8 (bass and lead) 404", `@087c1`], // 404
+  ["PC088 Pad 1 (new age)", `@088 v11 '>d1gb<f+'`],
+  ["PC089 Pad 2 (warm)", `@089 v11 '>d1gb<f+'`],
+  ["PC090 Pad 3 (polysynth)", `@090 v11 '>d1gb<f+'`],
+  ["PC091 Pad 4 (choir)", `@091 v11 '>d1gb<f+'`],
+  ["PC092 Pad 5 (bowed glass)", `@092 v11 '>d1gb<f+'`],
+  ["PC093 Pad 6 (metallic)", `@093 v11 '>d1gb<f+'`],
+  ["PC094 Pad 7 (halo)", `@094 v11 '>d1gb<f+'`],
+  ["PC095 Pad 8 (sweep)", `@095 v11 '>d1gb<f+'`],
+  ["PC096 FX 1 (rain)", `@096 v11 '>d1gb<f+'`],
+  ["PC097 FX 2 (soundtrack)", `@097 l2 v14 'da+' 'da' 'df+' 'df' 'c+e' 'c1d+'`],
+  ["PC098 FX 3 (crystal)", `@098dgb<f+`],
+  ["PC099 FX 4 (atmosphere)", `@099 v11 '>d1gb<f+'`],
+  ["PC100 FX 5 (brightness)", `@100 v11 '>d1gb<f+'`],
+  ["PC101 FX 6 (goblins)", `@101 v11 '>d1gb<f+'`],
+  ["PC102 FX 7 (echoes)", `@102 v11 '>d1gb<f+'`],
+  ["PC103 FX 8 (sci-fi)", `@103 v11 '>d1gb<f+'`],
+  ["PC104 Sitar", `@104>a<da2`],
+  ["PC105 Banjo", `@105 v11 '>d1gb<f+'`],
+  ["PC106 Shamisen", `@106>d1`],
+  ["PC107 Koto", `@107 t150 l8bafe>bafe`],
+  ["PC108 Kalimba", `@108>dgb<f+`],
+  ["PC109 Bag pipe", `@109dgb<f+`],
+  ["PC110 Fiddle", `@110dgb<f+`],
+  ["PC111 Shanai", `@111dgb<f+`],
+  ["PC112 Tinkle Bell", `@112dgb<f+`],
+  ["PC113 Agogo", `@113>dgb<f+`],
+  ["PC114 Steel Drums", `@114>dgb<f+`],
+  ["PC115 Woodblock", `@115d1`],
+  ["PC116 Taiko", `@116d1`],
+  ["PC117 Melodic Tom", `@117 t150 g16g16c8>g8c8>g8c`],
+  ["PC118 Synth Drum", `@118 t150 g16g16c8>g8c8>g8c`],
+  ["PC119 Reverse Cymbal", `@119c1`],
+  ["PC120 Guitar Fret Noise", `@120c1`],
+  ["PC121 Breath Noise", `@121c1`],
+  ["PC122 Seashore", `@122c1`],
+  ["PC123 Bird Tweet", `@123c1`],
+  ["PC124 Telephone Ring", `@124c1`],
+  ["PC125 Helicopter", `@125c1`],
+  ["PC126 Applause", `@126c1`],
+  ["PC127 Gunshot", `@127c1`],
+}
+
+```
+
 ## 最近の変更（過去7日間）
 ### コミット履歴:
+3e2e764 Create tone_names.json with MIDI instrument tones
+132f03b Add issue note for #116 [auto]
+825ce41 Update project summaries (overview & development status) [auto]
 e622b19 Auto-translate README.ja.md to README.md [auto]
 21812b3 Revise progress status and keybinds details
 710c921 Update project summaries (overview & development status) [auto]
@@ -1181,13 +1404,8 @@ fb95e65 Update issue notes for issue #115
 96e501f Add issue note for #115 [auto]
 fd043ac 依存関係を更新
 4155fb1 load時、regからmidi noteへの逆変換でoctaveミスっていたのを修正
-ceb0418 fix #113
-0e389c6 #113 調査結果と分析を追加
-ea7e0ce Auto-translate README.ja.md to README.md [auto]
 
 ### 変更されたファイル:
-Cargo.lock
-Cargo.toml
 README.ja.md
 README.md
 generated-docs/development-status-generated-prompt.md
@@ -1195,8 +1413,9 @@ generated-docs/development-status.md
 generated-docs/project-overview-generated-prompt.md
 generated-docs/project-overview.md
 issue-notes/115.md
-src/midi_conversion.rs
+issue-notes/116.md
+tones/general_midi/tone_names.json
 
 
 ---
-Generated at: 2025-11-26 07:08:18 JST
+Generated at: 2025-11-28 07:08:02 JST
