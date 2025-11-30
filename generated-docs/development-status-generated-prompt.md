@@ -1,4 +1,4 @@
-Last updated: 2025-11-30
+Last updated: 2025-12-01
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -1392,6 +1392,9 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
+3c99ed3 Auto-translate README.ja.md to README.md [auto]
+b687d83 Update README.ja.md for clarity and new sections
+9f4cdaa Update project summaries (overview & development status) [auto]
 e8e0c22 取り急ぎ最低限JSONとして認識されるformatにした。もっと自己記述的にするかは今後検討する
 85a5ce8 Update project summaries (overview & development status) [auto]
 3e2e764 Create tone_names.json with MIDI instrument tones
@@ -1399,9 +1402,6 @@ e8e0c22 取り急ぎ最低限JSONとして認識されるformatにした。も�
 825ce41 Update project summaries (overview & development status) [auto]
 e622b19 Auto-translate README.ja.md to README.md [auto]
 21812b3 Revise progress status and keybinds details
-710c921 Update project summaries (overview & development status) [auto]
-fb95e65 Update issue notes for issue #115
-96e501f Add issue note for #115 [auto]
 
 ### 変更されたファイル:
 README.ja.md
@@ -1415,4 +1415,4 @@ tones/general_midi/tone_names.json
 
 
 ---
-Generated at: 2025-11-30 07:07:50 JST
+Generated at: 2025-12-01 07:07:56 JST
