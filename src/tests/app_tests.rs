@@ -1350,3 +1350,124 @@ fn test_adsr_shortcuts_ignore_ch_row() {
     // Cursor should move to the parameter column, but stay on CH row
     assert_eq!(app.cursor_y, ROW_CH, "Cursor should stay on CH row");
 }
+
+#[test]
+fn test_jump_to_mul_and_increase() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 0, column 0
+    app.cursor_x = 0;
+    app.cursor_y = 0;
+
+    // Set initial MUL value
+    app.values[0][PARAM_MUL] = 5;
+
+    // Jump to MUL and increase
+    app.jump_to_mul_and_increase();
+
+    // Verify cursor moved to MUL column
+    assert_eq!(app.cursor_x, PARAM_MUL, "Cursor should move to MUL column");
+    assert_eq!(app.cursor_y, 0, "Cursor should stay on same row");
+
+    // Verify MUL value increased
+    assert_eq!(
+        app.values[0][PARAM_MUL], 6,
+        "MUL should increase from 5 to 6"
+    );
+}
+
+#[test]
+fn test_jump_to_mul_and_decrease() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 1, column 5
+    app.cursor_x = 5;
+    app.cursor_y = 1;
+
+    // Set initial MUL value for display row 1 (data row 2)
+    app.values[2][PARAM_MUL] = 10;
+
+    // Jump to MUL and decrease
+    app.jump_to_mul_and_decrease();
+
+    // Verify cursor moved to MUL column
+    assert_eq!(app.cursor_x, PARAM_MUL, "Cursor should move to MUL column");
+    assert_eq!(app.cursor_y, 1, "Cursor should stay on same row");
+
+    // Verify MUL value decreased
+    assert_eq!(
+        app.values[2][PARAM_MUL], 9,
+        "MUL should decrease from 10 to 9"
+    );
+}
+
+#[test]
+fn test_jump_to_mul_clamps_to_max() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 0
+    app.cursor_x = 0;
+    app.cursor_y = 0;
+
+    // Set MUL to max value (15)
+    app.values[0][PARAM_MUL] = PARAM_MAX[PARAM_MUL];
+
+    // Jump to MUL and try to increase
+    app.jump_to_mul_and_increase();
+
+    // Verify MUL value did not exceed max
+    assert_eq!(
+        app.values[0][PARAM_MUL], PARAM_MAX[PARAM_MUL],
+        "MUL should not exceed max value (15)"
+    );
+}
+
+#[test]
+fn test_jump_to_mul_clamps_to_min() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 2
+    app.cursor_x = 5;
+    app.cursor_y = 2;
+
+    // Set MUL to min value for display row 2 (data row 1)
+    app.values[1][PARAM_MUL] = 0;
+
+    // Jump to MUL and try to decrease
+    app.jump_to_mul_and_decrease();
+
+    // Verify MUL value did not go below min
+    assert_eq!(
+        app.values[1][PARAM_MUL], 0,
+        "MUL should not go below min (0)"
+    );
+}
+
+#[test]
+fn test_mul_shortcuts_ignore_ch_row() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to CH row
+    app.cursor_x = 0;
+    app.cursor_y = ROW_CH;
+
+    // Store initial values
+    let initial_values = app.values;
+
+    // Try to use MUL shortcuts on CH row - they should be ignored
+    app.jump_to_mul_and_increase();
+    assert_eq!(
+        app.values, initial_values,
+        "MUL shortcut should not modify values on CH row"
+    );
+
+    app.jump_to_mul_and_decrease();
+    assert_eq!(
+        app.values, initial_values,
+        "MUL shortcut should not modify values on CH row"
+    );
+
+    // Cursor should move to the MUL column, but stay on CH row
+    assert_eq!(app.cursor_y, ROW_CH, "Cursor should stay on CH row");
+    assert_eq!(app.cursor_x, PARAM_MUL, "Cursor should move to MUL column");
+}
