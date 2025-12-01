@@ -127,6 +127,7 @@ fn main() -> Result<(), io::Error> {
         enable_verbose_logging();
         log_verbose("Verbose logging enabled");
     }
+    #[cfg(windows)]
     ym2151_log_play_server::client::init_client(verbose);
 
     let keybinds_config = KeybindsConfig::load_or_default();
