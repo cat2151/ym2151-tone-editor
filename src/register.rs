@@ -3,7 +3,8 @@ use crate::models::*;
 use std::io;
 
 /// Helper function to add KEY_ON register to events
-/// This is platform-independent and used for generating register data
+/// This is platform-independent and used for generating register data.
+/// Note: A similar function exists in audio.rs for Windows with additional logging.
 fn add_key_on(values: &ToneData, events: &mut Vec<Ym2151Event>) {
     let channel = 0; // We use channel 0
 
