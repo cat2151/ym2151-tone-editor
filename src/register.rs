@@ -1,7 +1,31 @@
-use crate::audio::add_key_on;
 use crate::midi_conversion::{kc_to_midi_note, midi_to_kc_kf};
 use crate::models::*;
 use std::io;
+
+/// Helper function to add KEY_ON register to events
+/// This is platform-independent and used for generating register data.
+/// Note: A similar function exists in audio.rs for Windows with additional logging.
+fn add_key_on(values: &ToneData, events: &mut Vec<Ym2151Event>) {
+    let channel = 0; // We use channel 0
+
+    // Calculate slot mask based on which operators are enabled
+    let sm0 = values[0][PARAM_SM];
+    let sm1 = values[1][PARAM_SM];
+    let sm2 = values[2][PARAM_SM];
+    let sm3 = values[3][PARAM_SM];
+
+    let slot_mask = if sm0 != 0 { 0x08 } else { 0 }
+        | if sm1 != 0 { 0x10 } else { 0 }
+        | if sm2 != 0 { 0x20 } else { 0 }
+        | if sm3 != 0 { 0x40 } else { 0 };
+
+    let key_on = slot_mask | channel as u8;
+    events.push(Ym2151Event {
+        time: 0.0,
+        addr: "0x08".to_string(),
+        data: format!("0x{:02X}", key_on),
+    });
+}
 
 // YM2151 hardware operator register order: O1, O3, O2, O4
 // We display as: O1, O2, O3, O4 (reordered for user-friendly layout)

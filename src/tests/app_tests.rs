@@ -1471,3 +1471,115 @@ fn test_mul_shortcuts_ignore_ch_row() {
     assert_eq!(app.cursor_y, ROW_CH, "Cursor should stay on CH row");
     assert_eq!(app.cursor_x, PARAM_MUL, "Cursor should move to MUL column");
 }
+
+#[test]
+fn test_jump_to_sm_and_increase() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 0, column 5
+    app.cursor_x = 5;
+    app.cursor_y = 0;
+
+    // Set initial SM value
+    app.values[0][PARAM_SM] = 0;
+
+    // Jump to SM and increase
+    app.jump_to_sm_and_increase();
+
+    // Verify cursor moved to SM column
+    assert_eq!(app.cursor_x, PARAM_SM, "Cursor should move to SM column");
+    assert_eq!(app.cursor_y, 0, "Cursor should stay on same row");
+
+    // Verify SM value increased
+    assert_eq!(app.values[0][PARAM_SM], 1, "SM should increase from 0 to 1");
+}
+
+#[test]
+fn test_jump_to_sm_and_decrease() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 1, column 3
+    app.cursor_x = 3;
+    app.cursor_y = 1;
+
+    // Set initial SM value for row 1
+    app.values[1][PARAM_SM] = 1;
+
+    // Jump to SM and decrease
+    app.jump_to_sm_and_decrease();
+
+    // Verify cursor moved to SM column
+    assert_eq!(app.cursor_x, PARAM_SM, "Cursor should move to SM column");
+    assert_eq!(app.cursor_y, 1, "Cursor should stay on same row");
+
+    // Verify SM value decreased
+    assert_eq!(app.values[1][PARAM_SM], 0, "SM should decrease from 1 to 0");
+}
+
+#[test]
+fn test_jump_to_sm_clamps_to_max() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 0
+    app.cursor_x = 5;
+    app.cursor_y = 0;
+
+    // Set SM to max value (1)
+    app.values[0][PARAM_SM] = PARAM_MAX[PARAM_SM];
+
+    // Jump to SM and try to increase
+    app.jump_to_sm_and_increase();
+
+    // Verify SM value did not exceed max
+    assert_eq!(
+        app.values[0][PARAM_SM], PARAM_MAX[PARAM_SM],
+        "SM should not exceed max value (1)"
+    );
+}
+
+#[test]
+fn test_jump_to_sm_clamps_to_min() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 2
+    app.cursor_x = 5;
+    app.cursor_y = 2;
+
+    // Set SM to min value for row 2
+    app.values[2][PARAM_SM] = 0;
+
+    // Jump to SM and try to decrease
+    app.jump_to_sm_and_decrease();
+
+    // Verify SM value did not go below min
+    assert_eq!(app.values[2][PARAM_SM], 0, "SM should not go below min (0)");
+}
+
+#[test]
+fn test_sm_shortcuts_ignore_ch_row() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to CH row
+    app.cursor_x = 1;
+    app.cursor_y = ROW_CH;
+
+    // Store initial values
+    let initial_values = app.values;
+
+    // Try to use SM shortcuts on CH row - they should be ignored
+    app.jump_to_sm_and_increase();
+    assert_eq!(
+        app.values, initial_values,
+        "SM shortcut should not modify values on CH row"
+    );
+
+    app.jump_to_sm_and_decrease();
+    assert_eq!(
+        app.values, initial_values,
+        "SM shortcut should not modify values on CH row"
+    );
+
+    // Cursor should move to the SM column, but stay on CH row
+    assert_eq!(app.cursor_y, ROW_CH, "Cursor should stay on CH row");
+    assert_eq!(app.cursor_x, PARAM_SM, "Cursor should move to SM column");
+}

@@ -570,6 +570,28 @@ impl App {
         }
     }
 
+    /// Jump to SM (Slot Mask) parameter and increase its value (stays on current row)
+    pub fn jump_to_sm_and_increase(&mut self) {
+        // SM is at column index PARAM_SM
+        self.cursor_x = PARAM_SM;
+
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < 4 {
+            self.increase_value();
+        }
+    }
+
+    /// Jump to SM (Slot Mask) parameter and decrease its value (stays on current row)
+    pub fn jump_to_sm_and_decrease(&mut self) {
+        // SM is at column index PARAM_SM
+        self.cursor_x = PARAM_SM;
+
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < 4 {
+            self.decrease_value();
+        }
+    }
+
     /// Cleanup - stop interactive mode if active
     #[cfg(windows)]
     pub fn cleanup(&self) {
