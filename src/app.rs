@@ -548,6 +548,28 @@ impl App {
         }
     }
 
+    /// Jump to MUL parameter and increase its value (stays on current row)
+    pub fn jump_to_mul_and_increase(&mut self) {
+        // MUL is at column index PARAM_MUL
+        self.cursor_x = PARAM_MUL;
+
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < 4 {
+            self.increase_value();
+        }
+    }
+
+    /// Jump to MUL parameter and decrease its value (stays on current row)
+    pub fn jump_to_mul_and_decrease(&mut self) {
+        // MUL is at column index PARAM_MUL
+        self.cursor_x = PARAM_MUL;
+
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < 4 {
+            self.decrease_value();
+        }
+    }
+
     /// Cleanup - stop interactive mode if active
     #[cfg(windows)]
     pub fn cleanup(&self) {
