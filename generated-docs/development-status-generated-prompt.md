@@ -1,4 +1,4 @@
-Last updated: 2025-12-01
+Last updated: 2025-12-02
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -161,6 +161,7 @@ Last updated: 2025-12-01
 - .github/actions-tmp/generated-docs/project-overview-generated-prompt.md
 - .github/actions-tmp/generated-docs/project-overview.md
 - .github/actions-tmp/generated-docs/style.css
+- .github/actions-tmp/googled947dc864c270e07.html
 - .github/actions-tmp/issue-notes/10.md
 - .github/actions-tmp/issue-notes/11.md
 - .github/actions-tmp/issue-notes/12.md
@@ -204,6 +205,7 @@ Last updated: 2025-12-01
 - _config.yml
 - docs/KEYBINDS.ja.md
 - generated-docs/project-overview-generated-prompt.md
+- googled947dc864c270e07.html
 - issue-notes/100.md
 - issue-notes/101.md
 - issue-notes/102.md
@@ -247,21 +249,6 @@ Last updated: 2025-12-01
 - ym2151-tone-editor.toml.example
 
 ## 現在のオープンIssues
-## [Issue #116](../issue-notes/116.md): tone_names.json を作成し、GM000～GM127 を書く。用途は、json生成やrename、description生成や上書き等、音色名前文字列の管理を効率化する用
-[issue-notes/116.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/116.md)
-
-...
-ラベル: 
---- issue-notes/116.md の内容 ---
-
-```markdown
-# issue tone_names.json を作成し、GM000～GM127 を書く。これを利用してjson生成やrename、description生成や上書き等、音色名前文字列の集約管理を効率化する #116
-[issues #116](https://github.com/cat2151/ym2151-tone-editor/issues/116)
-
-
-
-```
-
 ## [Issue #115](../issue-notes/115.md): AR 1のslow attack音色を仮想MIDI鍵盤で連続previewしていると、noteをまたいでattack envelopeが継続される
 [issue-notes/115.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/115.md)
 
@@ -404,6 +391,21 @@ Last updated: 2025-12-01
 ```markdown
 # issue Uキーで、detUne 1（DT1）にカーソルジャンプし、値を1増やす。SHIFTを押しながらだと1減らす #106
 [issues #106](https://github.com/cat2151/ym2151-tone-editor/issues/106)
+
+
+
+```
+
+## [Issue #105](../issue-notes/105.md): Lキーで、decay 1 Level（D1L）にカーソルジャンプし、値を1増やす。SHIFTを押しながらだと1減らす。default keybindsのLをこれに変更する
+[issue-notes/105.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/105.md)
+
+...
+ラベル: 
+--- issue-notes/105.md の内容 ---
+
+```markdown
+# issue Eキーで、dEcay 1 level（D1L）にカーソルジャンプし、値を1増やす。SHIFTを押しながらだと1減らす。default keybindsのEをこれに変更する #105
+[issues #105](https://github.com/cat2151/ym2151-tone-editor/issues/105)
 
 
 
@@ -649,87 +651,6 @@ Last updated: 2025-12-01
         - それは別issueで、設定変更をマストでやるので、OKと判断する
 - これでagentによるメンテは十分しやすくなった、と判断する
 - closeとする
-
-```
-
-### .github/actions-tmp/issue-notes/16.md
-```md
-# issue issue-note / project-summary / translate / callgraph をtonejs-mml-to-jsonから呼び出す #16
-[issues #16](https://github.com/cat2151/github-actions/issues/16)
-
-# これまでの課題
-- issue-note / project-summary / translate / callgraph は、github-actions リポジトリ上ではtest greenである。
-- だが他のリポジトリにおいて動作するか？が可視化不足である。
-
-# 対策
-- issue-note / project-summary / translate / callgraph をtonejs-mml-to-jsonから呼び出す
-- 詳しく
-    - まず、現状、tonejs-mml-to-json でその4つのworkflowがどうなっているか、このmdに可視化する
-    - 例えば、既に呼び出している、呼び出していない、tonejs-mml-to-jsonにある古いworkflowを呼び出している
-
-# 調査結果
-- まず、現状、tonejs-mml-to-json でその4つのworkflowがどうなっているか、このmdに可視化する
-    - 結果：
-        - issue-note
-            - tonejs-mml-to-jsonにある古いworkflowを呼び出している
-        - project-summary
-            - tonejs-mml-to-jsonにある古いworkflowを呼び出している
-        - translate
-            - tonejs-mml-to-jsonにある古いworkflowを呼び出している
-        - callgraph
-            - tonejs-mml-to-jsonにある古いworkflowを呼び出している
-
-# どうする？
-- issue-note
-    - github-actions リポジトリにある、call-issue-note.yml をcpして使うようにする、まず単純cpして動くかを確認する
-- project-summary
-    - github-actions リポジトリにある、call-daily-project-summary.yml をcpして使うようにする、まず単純cpして動くかを確認する
-- translate
-    - github-actions リポジトリにある、call-translate-readme.yml をcpして使うようにする、まず単純cpして動くかを確認する
-- callgraph
-    - github-actions リポジトリにある、call-callgraph.yml をcpして使うようにする、まず単純cpして動くかを確認する
-
-# 状況
-- issue-note
-    - tonejs-mml-to-jsonリポジトリにて、test green
-    - issue-noteについては当issueのタスクは完了した、と判断する
-- project-summary
-    - tonejs-mml-to-jsonリポジトリにて、test green
-    - project-summaryについては当issueのタスクは完了した、と判断する
-
-# 状況
-- translate
-    - github-actions リポジトリにある、call-translate-readme.yml をcpして使うようにする、まず単純cpして動くかを確認する
-        - 状況
-            - 単純cpした
-            - ソース机上レビューした。OK
-            - トリガーはREADME.ja.mdのcommit
-            - testは省略とする
-            - もし今後README.ja.mdのcommit時にうまく動作しないとしても、そのとき対処すればOK、と判断する
-    - translateについては当issueのタスクは完了した、と判断する
-
-# どうする？
-- callgraph
-    - github-actions リポジトリにある、call-callgraph.yml をcpして使うようにする、まず単純cpして動くかを確認する
-
-# 結果
-- callgraph
-    - tonejs-mml-to-jsonリポジトリにて、test red
-    - logをみても情報不足なため、まずloggerを修正する
-    - 結果、わかった、運用ミス、対象srcの指定の考慮漏れ
-    - どうする？
-        - 対象srcを指定する。tonejs-mml-to-jsonリポジトリにて進める
-    - 結果
-        - test green
-    - callgraphについては当issueのタスクは完了した、と判断する
-
-# 状況
-- github-actions以外のリポジトリとして、
-    - tonejs-mml-to-jsonリポジトリにおいて、
-        - issue-note / project-summary / translate / callgraph がtest greenとなった。
-        - closeできる、と判断する。
-
-# closeとする
 
 ```
 
@@ -1153,6 +1074,15 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 
 ```
 
+### issue-notes/105.md
+```md
+# issue Eキーで、dEcay 1 level（D1L）にカーソルジャンプし、値を1増やす。SHIFTを押しながらだと1減らす。default keybindsのEをこれに変更する #105
+[issues #105](https://github.com/cat2151/ym2151-tone-editor/issues/105)
+
+
+
+```
+
 ### issue-notes/106.md
 ```md
 # issue Uキーで、detUne 1（DT1）にカーソルジャンプし、値を1増やす。SHIFTを押しながらだと1減らす #106
@@ -1246,173 +1176,33 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 
 ```
 
-### issue-notes/116.md
-```md
-# issue tone_names.json を作成し、GM000～GM127 を書く。これを利用してjson生成やrename、description生成や上書き等、音色名前文字列の集約管理を効率化する #116
-[issues #116](https://github.com/cat2151/ym2151-tone-editor/issues/116)
-
-
-
-```
-
-### tones/general_midi/tone_names.json
-```json
-[
-  ["GM000 Acoustic Grand Piano", "@000 v11 '>d1gb<f+'"],
-  ["GM001 Bright Acoustic Piano", "@001 v11 '>d1gb<f+'"],
-  ["GM002 Electric Grand Piano (usually modeled after Yamaha CP-70)", "@002 v11 '>d1gb<f+'"],
-  ["GM003 Honky-tonk Piano", "@003 v11 '>d1gb<f+'"],
-  ["GM004 Electric Piano 1 (usually a Rhodes or Wurlitzer)", "@004 v11 '>d1gb<f+'"],
-  ["GM005 Electric Piano 2 (usually an FM piano)", "@005 v11 '>d1gb<f+'"],
-  ["GM006 Harpsichord", "@006 v11 '>d1gb<f+'"],
-  ["GM007 Clavinet", "@007 v11 '>d1gb<f+'"],
-  ["GM008 Celesta", "@008 v11 '>d1gb<f+'"],
-  ["GM009 Glockenspiel", "@009l2gb<dg"],
-  ["GM010 Music Box", "@010 v11 '>d1gb<f+'"],
-  ["GM011 Vibraphone", "@011 v11 '>d1gb<f+'"],
-  ["GM012 Marimba", "@012 v11 '>d1gb<f+'"],
-  ["GM013 Xylophone", "@013 v11 '>d1gb<f+'"],
-  ["GM014 Tubular Bells", "@014 >g1 b1"],
-  ["GM015 Dulcimer", "@015 v11 '>d1gb<f+'"],
-  ["GM016 Drawbar Organ", "@016 v11 '>d1gb<f+'"],
-  ["GM017 Percussive Organ", "@017 v11 '>d1gb<f+'"],
-  ["GM018 Rock Organ", "@018 v11 '>d1gb<f+'"],
-  ["GM019 Church Organ", "@019 v11 '>d1gb<f+'"],
-  ["GM020 Reed Organ", "@020 v11 '>d1gb<f+'"],
-  ["GM021 Accordion", "@021 v11 '>d1gb<f+'"],
-  ["GM022 Harmonica", "@022 v11 '>d1gb<f+'"],
-  ["GM023 Bandoneon", "@023 v11 '>d1gb<f+'"],
-  ["GM024 Acoustic Guitar (nylon)", "@024 v11 '>d1gb<f+'"],
-  ["GM025 Acoustic Guitar (steel)", "@025 v11 '>d1gb<f+'"],
-  ["GM026 Electric Guitar (jazz)", "@026 v11 '>d1gb<f+'"],
-  ["GM027 Electric Guitar (clean)", "@027 v11 '>d1gb<f+'"],
-  ["GM028 Electric Guitar (muted)", "@028 v11 '>d1gb<f+'"],
-  ["GM029 Electric Guitar (overdrive)", "@029 v11 '>d1g'"],
-  ["GM030 Electric Guitar (distortion)", "@030 v11 '>>c+1g+'"],
-  ["GM031 Electric Guitar (harmonics)", "@031 c+1"],
-  ["GM032 Acoustic Bass", "@032>d1"],
-  ["GM033 Electric Bass (finger)", "@033>d1"],
-  ["GM034 Electric Bass (picked)", "@034>d1"],
-  ["GM035 Electric Bass (fretless)", "@035>d1"],
-  ["GM036 Slap Bass 1", "@036>d1"],
-  ["GM037 Slap Bass 2", "@037>d1"],
-  ["GM038 Synth Bass 1", "@038>d1"],
-  ["GM039 Synth Bass 2", "@039>d1"],
-  ["GM040 Violin", "@040 v13 '<d1g'"],
-  ["GM041 Viola", "@041 v13 'd1g'"],
-  ["GM042 Cello", "@042>d1"],
-  ["GM043 Contrabass", "@043>>d1"],
-  ["GM044 Tremolo Strings", "@044 v11 '>d1gb<f+'"],
-  ["GM045 Pizzicato Strings", "@045l4cegb"],
-  ["GM046 Orchestral Harp", "@046l4cegb"],
-  ["GM047 Timpani", "@047 t l4 >>[gd]4"],
-  ["GM048 String Ensemble 1", "@048 v11 '>d1gb<f+'"],
-  ["GM049 String Ensemble 2", "@049 v11 '>d1gb<f+'"],
-  ["GM050 Synth Strings 1", "@050 v11 '>d1gb<f+'"],
-  ["GM051 Synth Strings 2", "@051 v11 '>d1gb<f+'"],
-  ["GM052 Choir Aahs", "@052 v11 '>d1gb<f+'"],
-  ["GM053 Voice Oohs", "@053 v11 '>d1gb<f+'"],
-  ["GM054 Synth Voice", "@054 v11 '>d1gb<f+'"],
-  ["GM055 Orchestra Hit", "@055 t150 <c2>b-2a2g2"],
-  ["GM056 Trumpet", "@056 v11 'd1gb<f+'"],
-  ["GM057 Trombone", "@057>d1"],
-  ["GM058 Tuba", "@058 >>d1"],
-  ["GM059 Muted Trumpet", "@059 v11 'd1gb<f+'"],
-  ["GM060 French Horn", "@060 v11 '>d1gb<f+'"],
-  ["GM061 Brass Section", "@061 v11 '>d1gb<f+'"],
-  ["GM062 Synth Brass 1", "@062 v11 '>d1gb<f+'"],
-  ["GM063 Synth Brass 2", "@063 v11 '>d1gb<f+'"],
-  ["GM064 Soprano Sax", "@064 v11 'd1gb<f+'"],
-  ["GM065 Alto Sax", "@065 v11 '>d1gb<f+'"],
-  ["GM066 Tenor Sax", "@066>d1"],
-  ["GM067 Baritone Sax", "@067>d1"],
-  ["GM068 Oboe", "@068 v11 'd1gb<f+'"],
-  ["GM069 English Horn", "@069 v11 '>d1gb<f+'"],
-  ["GM070 Bassoon", "@070 v11 '>d1gb<f+'"],
-  ["GM071 Clarinet", "@071 v11 'd1gb<f+'"],
-  ["GM072 Piccolo", "@072 v11 '<d1gb<f+'"],
-  ["GM073 Flute", "@073 v11 'd1gb<f+'"],
-  ["GM074 Recorder", "@074 v11 'd1gb<f+'"],
-  ["GM075 Pan Flute", "@075 v11 'd1gb<f+'"],
-  ["GM076 Blown bottle", "@076 v11 'd1gb<f+'"],
-  ["GM077 Shakuhachi", "@077<d1"],
-  ["GM078 Whistle", "@078<d1"],
-  ["GM079 Ocarina", "@079<d1"],
-  ["GM080 Lead 1 (square)", "@080 v11 '>d1gb<f+'"],
-  ["GM081 Lead 2 (sawtooth)", "@081 v11 '>d1gb<f+'"],
-  ["GM082 Lead 3 (calliope)", "@082 v11 '>d1gb<f+'"],
-  ["GM083 Lead 4 (chiff)", "@083 v11 '>d1gb<f+'"],
-  ["GM084 Lead 5 (charang)", "@084 v11 '>d1gb<f+'"],
-  ["GM085 Lead 6 (voice)", "@085 v11 '>d1gb<f+'"],
-  ["GM086 Lead 7 (fifths)", "@086 v11 l1 d 'dd+' 'de' 'df' 'df+' 'dg' 'dg+' 'da' 'da+' 'db' 'd<c' 'd<c+' 'd<d'"],
-  ["GM087 Lead 8 (bass and lead) 404", "@087c1"], // 404
-  ["GM088 Pad 1 (new age)", "@088 v11 '>d1gb<f+'"],
-  ["GM089 Pad 2 (warm)", "@089 v11 '>d1gb<f+'"],
-  ["GM090 Pad 3 (polysynth)", "@090 v11 '>d1gb<f+'"],
-  ["GM091 Pad 4 (choir)", "@091 v11 '>d1gb<f+'"],
-  ["GM092 Pad 5 (bowed glass)", "@092 v11 '>d1gb<f+'"],
-  ["GM093 Pad 6 (metallic)", "@093 v11 '>d1gb<f+'"],
-  ["GM094 Pad 7 (halo)", "@094 v11 '>d1gb<f+'"],
-  ["GM095 Pad 8 (sweep)", "@095 v11 '>d1gb<f+'"],
-  ["GM096 FX 1 (rain)", "@096 v11 '>d1gb<f+'"],
-  ["GM097 FX 2 (soundtrack)", "@097 l2 v14 'da+' 'da' 'df+' 'df' 'c+e' 'c1d+'"],
-  ["GM098 FX 3 (crystal)", "@098dgb<f+"],
-  ["GM099 FX 4 (atmosphere)", "@099 v11 '>d1gb<f+'"],
-  ["GM100 FX 5 (brightness)", "@100 v11 '>d1gb<f+'"],
-  ["GM101 FX 6 (goblins)", "@101 v11 '>d1gb<f+'"],
-  ["GM102 FX 7 (echoes)", "@102 v11 '>d1gb<f+'"],
-  ["GM103 FX 8 (sci-fi)", "@103 v11 '>d1gb<f+'"],
-  ["GM104 Sitar", "@104>a<da2"],
-  ["GM105 Banjo", "@105 v11 '>d1gb<f+'"],
-  ["GM106 Shamisen", "@106>d1"],
-  ["GM107 Koto", "@107 t150 l8bafe>bafe"],
-  ["GM108 Kalimba", "@108>dgb<f+"],
-  ["GM109 Bag pipe", "@109dgb<f+"],
-  ["GM110 Fiddle", "@110dgb<f+"],
-  ["GM111 Shanai", "@111dgb<f+"],
-  ["GM112 Tinkle Bell", "@112dgb<f+"],
-  ["GM113 Agogo", "@113>dgb<f+"],
-  ["GM114 Steel Drums", "@114>dgb<f+"],
-  ["GM115 Woodblock", "@115d1"],
-  ["GM116 Taiko", "@116d1"],
-  ["GM117 Melodic Tom", "@117 t150 g16g16c8>g8c8>g8c"],
-  ["GM118 Synth Drum", "@118 t150 g16g16c8>g8c8>g8c"],
-  ["GM119 Reverse Cymbal", "@119c1"],
-  ["GM120 Guitar Fret Noise", "@120c1"],
-  ["GM121 Breath Noise", "@121c1"],
-  ["GM122 Seashore", "@122c1"],
-  ["GM123 Bird Tweet", "@123c1"],
-  ["GM124 Telephone Ring", "@124c1"],
-  ["GM125 Helicopter", "@125c1"],
-  ["GM126 Applause", "@126c1"],
-  ["GM127 Gunshot", "@127c1"]
-]
-
-```
-
 ## 最近の変更（過去7日間）
 ### コミット履歴:
+7c2fc80 Merge pull request #117 from cat2151/copilot/add-cursor-jump-for-m-key
+cc4956b Google検索にindexさせる用
+cd5f520 Google検索にindexさせる用
+8542d07 Add MUL parameter jump shortcuts (m/M keys)
+ff61ad9 Initial plan
+417f7c3 Update project summaries (overview & development status) [auto]
 3c99ed3 Auto-translate README.ja.md to README.md [auto]
 b687d83 Update README.ja.md for clarity and new sections
 9f4cdaa Update project summaries (overview & development status) [auto]
 e8e0c22 取り急ぎ最低限JSONとして認識されるformatにした。もっと自己記述的にするかは今後検討する
-85a5ce8 Update project summaries (overview & development status) [auto]
-3e2e764 Create tone_names.json with MIDI instrument tones
-132f03b Add issue note for #116 [auto]
-825ce41 Update project summaries (overview & development status) [auto]
-e622b19 Auto-translate README.ja.md to README.md [auto]
-21812b3 Revise progress status and keybinds details
 
 ### 変更されたファイル:
 README.ja.md
 README.md
+_config.yml
 generated-docs/development-status-generated-prompt.md
 generated-docs/development-status.md
 generated-docs/project-overview-generated-prompt.md
 generated-docs/project-overview.md
-issue-notes/116.md
-tones/general_midi/tone_names.json
+googled947dc864c270e07.html
+src/app.rs
+src/config.rs
+src/main.rs
+src/tests/app_tests.rs
 
 
 ---
-Generated at: 2025-12-01 07:07:56 JST
+Generated at: 2025-12-02 07:07:49 JST

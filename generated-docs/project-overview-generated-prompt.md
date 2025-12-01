@@ -1,4 +1,4 @@
-Last updated: 2025-12-01
+Last updated: 2025-12-02
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -371,6 +371,7 @@ cargo run
 📁 docs/
   📖 KEYBINDS.ja.md
 📁 generated-docs/
+🌐 googled947dc864c270e07.html
 📁 issue-notes/
   📖 100.md
   📖 101.md
@@ -419,7 +420,9 @@ cargo run
 📄 ym2151-tone-editor.toml.example
 
 ## ファイル詳細分析
-
+**googled947dc864c270e07.html** (1行, 53バイト)
+  - 関数: なし
+  - インポート: なし
 
 ## 関数呼び出し階層
 関数呼び出し階層を分析できませんでした
@@ -428,6 +431,7 @@ cargo run
 README.ja.md
 README.md
 docs/KEYBINDS.ja.md
+googled947dc864c270e07.html
 issue-notes/100.md
 issue-notes/101.md
 issue-notes/102.md
@@ -462,4 +466,4 @@ tones/general_midi/tone_names.json
 
 
 ---
-Generated at: 2025-12-01 07:07:55 JST
+Generated at: 2025-12-02 07:07:49 JST
