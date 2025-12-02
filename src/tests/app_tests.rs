@@ -1934,3 +1934,124 @@ fn test_dt_shortcuts_ignore_ch_row() {
     assert_eq!(app.cursor_y, ROW_CH, "Cursor should stay on CH row");
     assert_eq!(app.cursor_x, PARAM_DT, "Cursor should move to DT column");
 }
+
+#[test]
+fn test_jump_to_dt2_and_increase() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 0, column 0
+    app.cursor_x = 0;
+    app.cursor_y = 0;
+
+    // Set initial DT2 value
+    app.values[0][PARAM_DT2] = 1;
+
+    // Jump to DT2 and increase
+    app.jump_to_dt2_and_increase();
+
+    // Verify cursor moved to DT2 column
+    assert_eq!(app.cursor_x, PARAM_DT2, "Cursor should move to DT2 column");
+    assert_eq!(app.cursor_y, 0, "Cursor should stay on same row");
+
+    // Verify DT2 value increased
+    assert_eq!(
+        app.values[0][PARAM_DT2], 2,
+        "DT2 should increase from 1 to 2"
+    );
+}
+
+#[test]
+fn test_jump_to_dt2_and_decrease() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 1, column 3
+    app.cursor_x = 3;
+    app.cursor_y = 1;
+
+    // Set initial DT2 value for row 1
+    app.values[1][PARAM_DT2] = 2;
+
+    // Jump to DT2 and decrease
+    app.jump_to_dt2_and_decrease();
+
+    // Verify cursor moved to DT2 column
+    assert_eq!(app.cursor_x, PARAM_DT2, "Cursor should move to DT2 column");
+    assert_eq!(app.cursor_y, 1, "Cursor should stay on same row");
+
+    // Verify DT2 value decreased
+    assert_eq!(
+        app.values[1][PARAM_DT2], 1,
+        "DT2 should decrease from 2 to 1"
+    );
+}
+
+#[test]
+fn test_jump_to_dt2_clamps_to_max() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 0
+    app.cursor_x = 0;
+    app.cursor_y = 0;
+
+    // Set DT2 to max value (3)
+    app.values[0][PARAM_DT2] = PARAM_MAX[PARAM_DT2];
+
+    // Jump to DT2 and try to increase
+    app.jump_to_dt2_and_increase();
+
+    // Verify DT2 value did not exceed max
+    assert_eq!(
+        app.values[0][PARAM_DT2], PARAM_MAX[PARAM_DT2],
+        "DT2 should not exceed max value (3)"
+    );
+}
+
+#[test]
+fn test_jump_to_dt2_clamps_to_min() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 2
+    app.cursor_x = 0;
+    app.cursor_y = 2;
+
+    // Set DT2 to min value for row 2
+    app.values[2][PARAM_DT2] = 0;
+
+    // Jump to DT2 and try to decrease
+    app.jump_to_dt2_and_decrease();
+
+    // Verify DT2 value did not go below min
+    assert_eq!(
+        app.values[2][PARAM_DT2], 0,
+        "DT2 should not go below min (0)"
+    );
+}
+
+#[test]
+fn test_dt2_shortcuts_ignore_ch_row() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to CH row
+    app.cursor_x = 1;
+    app.cursor_y = ROW_CH;
+
+    // Store initial values
+    let initial_values = app.values;
+
+    // Try to use DT2 shortcuts on CH row - they should be ignored
+    app.jump_to_dt2_and_increase();
+    assert_eq!(
+        app.values, initial_values,
+        "DT2 shortcut should not modify values on CH row"
+    );
+
+    app.jump_to_dt2_and_decrease();
+    assert_eq!(
+        app.values, initial_values,
+        "DT2 shortcut should not modify values on CH row"
+    );
+
+    // Cursor should move to the DT2 column, but stay on CH row
+    assert_eq!(app.cursor_y, ROW_CH, "Cursor should stay on CH row");
+    assert_eq!(app.cursor_x, PARAM_DT2, "Cursor should move to DT2 column");
+}

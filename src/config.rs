@@ -65,6 +65,8 @@ pub enum Action {
     JumpToD1lAndDecrease,
     JumpToDtAndIncrease,
     JumpToDtAndDecrease,
+    JumpToDt2AndIncrease,
+    JumpToDt2AndDecrease,
     Exit,
 }
 
@@ -180,6 +182,10 @@ impl Default for KeybindsConfig {
         // DT (Detune 1) shortcuts (jump to current row's DT parameter)
         keybinds.insert("u".to_string(), Action::JumpToDtAndIncrease);
         keybinds.insert("U".to_string(), Action::JumpToDtAndDecrease);
+
+        // DT2 (Detune 2) shortcuts (jump to current row's DT2 parameter)
+        keybinds.insert("n".to_string(), Action::JumpToDt2AndIncrease);
+        keybinds.insert("N".to_string(), Action::JumpToDt2AndDecrease);
 
         // Exit
         keybinds.insert("Esc".to_string(), Action::Exit);
