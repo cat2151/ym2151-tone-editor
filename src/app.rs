@@ -614,6 +614,28 @@ impl App {
         }
     }
 
+    /// Jump to D1L (Decay 1 Level) parameter and increase its value (stays on current row)
+    pub fn jump_to_d1l_and_increase(&mut self) {
+        // D1L is at column index PARAM_D1L
+        self.cursor_x = PARAM_D1L;
+
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < ROW_CH {
+            self.increase_value();
+        }
+    }
+
+    /// Jump to D1L (Decay 1 Level) parameter and decrease its value (stays on current row)
+    pub fn jump_to_d1l_and_decrease(&mut self) {
+        // D1L is at column index PARAM_D1L
+        self.cursor_x = PARAM_D1L;
+
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < ROW_CH {
+            self.decrease_value();
+        }
+    }
+
     /// Cleanup - stop interactive mode if active
     #[cfg(windows)]
     pub fn cleanup(&self) {
