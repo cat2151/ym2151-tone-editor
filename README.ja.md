@@ -294,8 +294,9 @@ cargo run
     - ただし値の増減としても有力なので、今後keybind変更も想定する。
 ## プレビューにMMLを使う方法について整理する
 - プレビューMML to SMF段
-  - `mmlabc-to-smf-rust` ライブラリに、プレビューMMLをわたす
+  - `mmlabc-to-smf-rust` ライブラリに、プレビューMMLをわたし、smfを得る
   - 備忘、この時点で音色データをわたすのは複雑なので後回しにする。いずれはマストの想定
 - log生成段
   - `smf-to-ym2151log-rust` ライブラリの、smf to log関数について、
-    - 「`smf`と`音色データ`」を引数で渡す
+    - 「`smf`と`音色データ`」を引数で渡し、logを得る
+    - 方法 : https://github.com/cat2151/smf-to-ym2151log-rust/pull/46
