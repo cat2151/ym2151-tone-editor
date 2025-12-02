@@ -1583,3 +1583,121 @@ fn test_sm_shortcuts_ignore_ch_row() {
     assert_eq!(app.cursor_y, ROW_CH, "Cursor should stay on CH row");
     assert_eq!(app.cursor_x, PARAM_SM, "Cursor should move to SM column");
 }
+
+#[test]
+fn test_jump_to_tl_and_increase() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 0, column 5
+    app.cursor_x = 5;
+    app.cursor_y = 0;
+
+    // Set initial TL value
+    app.values[0][PARAM_TL] = 50;
+
+    // Jump to TL and increase
+    app.jump_to_tl_and_increase();
+
+    // Verify cursor moved to TL column
+    assert_eq!(app.cursor_x, PARAM_TL, "Cursor should move to TL column");
+    assert_eq!(app.cursor_y, 0, "Cursor should stay on same row");
+
+    // Verify TL value increased
+    assert_eq!(
+        app.values[0][PARAM_TL], 51,
+        "TL should increase from 50 to 51"
+    );
+}
+
+#[test]
+fn test_jump_to_tl_and_decrease() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 1, column 3
+    app.cursor_x = 3;
+    app.cursor_y = 1;
+
+    // Set initial TL value for row 1
+    app.values[1][PARAM_TL] = 75;
+
+    // Jump to TL and decrease
+    app.jump_to_tl_and_decrease();
+
+    // Verify cursor moved to TL column
+    assert_eq!(app.cursor_x, PARAM_TL, "Cursor should move to TL column");
+    assert_eq!(app.cursor_y, 1, "Cursor should stay on same row");
+
+    // Verify TL value decreased
+    assert_eq!(
+        app.values[1][PARAM_TL], 74,
+        "TL should decrease from 75 to 74"
+    );
+}
+
+#[test]
+fn test_jump_to_tl_clamps_to_max() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 0
+    app.cursor_x = 5;
+    app.cursor_y = 0;
+
+    // Set TL to max value (99)
+    app.values[0][PARAM_TL] = PARAM_MAX[PARAM_TL];
+
+    // Jump to TL and try to increase
+    app.jump_to_tl_and_increase();
+
+    // Verify TL value did not exceed max
+    assert_eq!(
+        app.values[0][PARAM_TL], PARAM_MAX[PARAM_TL],
+        "TL should not exceed max value (99)"
+    );
+}
+
+#[test]
+fn test_jump_to_tl_clamps_to_min() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 2
+    app.cursor_x = 5;
+    app.cursor_y = 2;
+
+    // Set TL to min value for row 2
+    app.values[2][PARAM_TL] = 0;
+
+    // Jump to TL and try to decrease
+    app.jump_to_tl_and_decrease();
+
+    // Verify TL value did not go below min
+    assert_eq!(app.values[2][PARAM_TL], 0, "TL should not go below min (0)");
+}
+
+#[test]
+fn test_tl_shortcuts_ignore_ch_row() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to CH row
+    app.cursor_x = 1;
+    app.cursor_y = ROW_CH;
+
+    // Store initial values
+    let initial_values = app.values;
+
+    // Try to use TL shortcuts on CH row - they should be ignored
+    app.jump_to_tl_and_increase();
+    assert_eq!(
+        app.values, initial_values,
+        "TL shortcut should not modify values on CH row"
+    );
+
+    app.jump_to_tl_and_decrease();
+    assert_eq!(
+        app.values, initial_values,
+        "TL shortcut should not modify values on CH row"
+    );
+
+    // Cursor should move to the TL column, but stay on CH row
+    assert_eq!(app.cursor_y, ROW_CH, "Cursor should stay on CH row");
+    assert_eq!(app.cursor_x, PARAM_TL, "Cursor should move to TL column");
+}
