@@ -318,7 +318,17 @@ fn run_app<B: ratatui::backend::Backend>(
                     let diagram = crate::ui::get_algorithm_diagram(alg_value);
                     let diagram_start_y = ch_row_y + 2;
                     let penta_keyboard_y = diagram_start_y + diagram.len() as u16 + 1;
-                    app.update_hovered_penta_x(mouse.column, mouse.row, inner, penta_keyboard_y);
+                    // Only update hover if keyboard is within terminal bounds
+                    if penta_keyboard_y < term_size.height - 1 {
+                        app.update_hovered_penta_x(
+                            mouse.column,
+                            mouse.row,
+                            inner,
+                            penta_keyboard_y,
+                        );
+                    } else {
+                        app.hovered_penta_x = None;
+                    }
                     // 旧モード: パラメータ値も更新
                     if app.value_by_mouse_move {
                         app.update_value_from_mouse_x(mouse.column, term_size.width);

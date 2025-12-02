@@ -270,7 +270,10 @@ pub fn ui(f: &mut Frame, app: &App) {
     }
 
     let penta_keyboard_y = diagram_start_y + diagram.len() as u16 + 1;
-    draw_virtual_pentatonic_keyboard_at_y(f, app, inner, penta_keyboard_y);
+    // Only draw keyboard if it fits within terminal bounds
+    if penta_keyboard_y < size.height - 1 {
+        draw_virtual_pentatonic_keyboard_at_y(f, app, inner, penta_keyboard_y);
+    }
 }
 
 fn draw_virtual_pentatonic_keyboard_at_y(f: &mut Frame, app: &App, inner: Rect, keyboard_y: u16) {
