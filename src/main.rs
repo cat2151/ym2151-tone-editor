@@ -227,6 +227,8 @@ fn run_app<B: ratatui::backend::Backend>(
                                 Action::PlayCurrentTone => app.play_current_tone(),
                                 Action::IncreaseFb => app.increase_fb(),
                                 Action::DecreaseFb => app.decrease_fb(),
+                                Action::IncreaseAlg => app.increase_alg(),
+                                Action::DecreaseAlg => app.decrease_alg(),
                                 Action::MoveCursorLeft => app.move_cursor_left(),
                                 Action::MoveCursorRight => app.move_cursor_right(),
                                 Action::MoveCursorUp => app.move_cursor_up(),
