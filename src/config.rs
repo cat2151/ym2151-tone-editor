@@ -59,6 +59,8 @@ pub enum Action {
     JumpToMulAndDecrease,
     JumpToSmAndIncrease,
     JumpToSmAndDecrease,
+    JumpToTlAndIncrease,
+    JumpToTlAndDecrease,
     Exit,
 }
 
@@ -163,6 +165,10 @@ impl Default for KeybindsConfig {
         // SM (Slot Mask) shortcuts (jump to current row's SM parameter)
         keybinds.insert("o".to_string(), Action::JumpToSmAndIncrease);
         keybinds.insert("O".to_string(), Action::JumpToSmAndDecrease);
+
+        // TL (Total Level) shortcuts (jump to current row's TL parameter)
+        keybinds.insert("t".to_string(), Action::JumpToTlAndIncrease);
+        keybinds.insert("T".to_string(), Action::JumpToTlAndDecrease);
 
         // Exit
         keybinds.insert("Esc".to_string(), Action::Exit);

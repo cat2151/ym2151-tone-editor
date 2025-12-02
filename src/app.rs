@@ -592,6 +592,28 @@ impl App {
         }
     }
 
+    /// Jump to TL (Total Level) parameter and increase its value (stays on current row)
+    pub fn jump_to_tl_and_increase(&mut self) {
+        // TL is at column index PARAM_TL
+        self.cursor_x = PARAM_TL;
+
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < 4 {
+            self.increase_value();
+        }
+    }
+
+    /// Jump to TL (Total Level) parameter and decrease its value (stays on current row)
+    pub fn jump_to_tl_and_decrease(&mut self) {
+        // TL is at column index PARAM_TL
+        self.cursor_x = PARAM_TL;
+
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < 4 {
+            self.decrease_value();
+        }
+    }
+
     /// Cleanup - stop interactive mode if active
     #[cfg(windows)]
     pub fn cleanup(&self) {
