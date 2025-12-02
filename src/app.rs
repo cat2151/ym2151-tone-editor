@@ -658,6 +658,28 @@ impl App {
         }
     }
 
+    /// Jump to DT2 (Detune 2) parameter and increase its value (stays on current row)
+    pub fn jump_to_dt2_and_increase(&mut self) {
+        // DT2 is at column index PARAM_DT2
+        self.cursor_x = PARAM_DT2;
+
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < ROW_CH {
+            self.increase_value();
+        }
+    }
+
+    /// Jump to DT2 (Detune 2) parameter and decrease its value (stays on current row)
+    pub fn jump_to_dt2_and_decrease(&mut self) {
+        // DT2 is at column index PARAM_DT2
+        self.cursor_x = PARAM_DT2;
+
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < ROW_CH {
+            self.decrease_value();
+        }
+    }
+
     /// Cleanup - stop interactive mode if active
     #[cfg(windows)]
     pub fn cleanup(&self) {
