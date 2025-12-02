@@ -419,7 +419,7 @@ impl App {
     }
 
     /// Move cursor to ALG parameter and increase its value
-    /// This is triggered by 'G' key
+    /// This is triggered by 'g' key
     pub fn increase_alg(&mut self) {
         // Move cursor to ALG position (row 4, column 0)
         self.cursor_y = ROW_CH;
@@ -441,7 +441,7 @@ impl App {
     }
 
     /// Move cursor to ALG parameter and decrease its value
-    /// This is triggered by 'Shift+G' key
+    /// This is triggered by 'G' key (Shift+g)
     pub fn decrease_alg(&mut self) {
         // Move cursor to ALG position (row 4, column 0)
         self.cursor_y = ROW_CH;
