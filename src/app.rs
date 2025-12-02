@@ -770,7 +770,7 @@ impl App {
     /// Jump to Note Number parameter and increase its value
     /// This is triggered by 'j' key
     pub fn jump_to_note_and_increase(&mut self) {
-        // Move cursor to Note position (row 4, column 2)
+        // Move cursor to Note position (CH row, Note column)
         self.cursor_y = ROW_CH;
         self.cursor_x = CH_PARAM_NOTE;
 
@@ -792,7 +792,7 @@ impl App {
     /// Jump to Note Number parameter and decrease its value
     /// This is triggered by 'J' key (Shift+j)
     pub fn jump_to_note_and_decrease(&mut self) {
-        // Move cursor to Note position (row 4, column 2)
+        // Move cursor to Note position (CH row, Note column)
         self.cursor_y = ROW_CH;
         self.cursor_x = CH_PARAM_NOTE;
 
