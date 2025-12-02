@@ -1,4 +1,4 @@
-Last updated: 2025-12-02
+Last updated: 2025-12-03
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -466,4 +466,4 @@ tones/general_midi/tone_names.json
 
 
 ---
-Generated at: 2025-12-02 07:07:49 JST
+Generated at: 2025-12-03 07:08:15 JST
