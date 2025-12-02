@@ -67,6 +67,8 @@ pub enum Action {
     JumpToDtAndDecrease,
     JumpToDt2AndIncrease,
     JumpToDt2AndDecrease,
+    JumpToKsAndIncrease,
+    JumpToKsAndDecrease,
     Exit,
 }
 
@@ -137,7 +139,6 @@ impl Default for KeybindsConfig {
         keybinds.insert("Left".to_string(), Action::MoveCursorLeft);
         keybinds.insert("j".to_string(), Action::MoveCursorDown);
         keybinds.insert("Down".to_string(), Action::MoveCursorDown);
-        keybinds.insert("k".to_string(), Action::MoveCursorUp);
         keybinds.insert("Up".to_string(), Action::MoveCursorUp);
         keybinds.insert("Right".to_string(), Action::MoveCursorRight);
 
@@ -186,6 +187,10 @@ impl Default for KeybindsConfig {
         // DT2 (Detune 2) shortcuts (jump to current row's DT2 parameter)
         keybinds.insert("n".to_string(), Action::JumpToDt2AndIncrease);
         keybinds.insert("N".to_string(), Action::JumpToDt2AndDecrease);
+
+        // KS (Key Scaling) shortcuts (jump to current row's KS parameter)
+        keybinds.insert("k".to_string(), Action::JumpToKsAndIncrease);
+        keybinds.insert("K".to_string(), Action::JumpToKsAndDecrease);
 
         // Exit
         keybinds.insert("Esc".to_string(), Action::Exit);

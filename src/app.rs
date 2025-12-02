@@ -680,6 +680,28 @@ impl App {
         }
     }
 
+    /// Jump to KS (Key Scaling) parameter and increase its value (stays on current row)
+    pub fn jump_to_ks_and_increase(&mut self) {
+        // KS is at column index PARAM_KS
+        self.cursor_x = PARAM_KS;
+
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < ROW_CH {
+            self.increase_value();
+        }
+    }
+
+    /// Jump to KS (Key Scaling) parameter and decrease its value (stays on current row)
+    pub fn jump_to_ks_and_decrease(&mut self) {
+        // KS is at column index PARAM_KS
+        self.cursor_x = PARAM_KS;
+
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < ROW_CH {
+            self.decrease_value();
+        }
+    }
+
     /// Cleanup - stop interactive mode if active
     #[cfg(windows)]
     pub fn cleanup(&self) {
