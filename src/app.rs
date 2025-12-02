@@ -620,7 +620,7 @@ impl App {
         self.cursor_x = PARAM_D1L;
 
         // Only apply to operator rows, not CH row
-        if self.cursor_y < 4 {
+        if self.cursor_y < ROW_CH {
             self.increase_value();
         }
     }
@@ -631,7 +631,7 @@ impl App {
         self.cursor_x = PARAM_D1L;
 
         // Only apply to operator rows, not CH row
-        if self.cursor_y < 4 {
+        if self.cursor_y < ROW_CH {
             self.decrease_value();
         }
     }

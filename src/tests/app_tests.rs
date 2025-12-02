@@ -1788,7 +1788,10 @@ fn test_jump_to_d1l_clamps_to_min() {
     app.jump_to_d1l_and_decrease();
 
     // Verify D1L value did not go below min
-    assert_eq!(app.values[2][PARAM_D1L], 0, "D1L should not go below min (0)");
+    assert_eq!(
+        app.values[2][PARAM_D1L], 0,
+        "D1L should not go below min (0)"
+    );
 }
 
 #[test]
