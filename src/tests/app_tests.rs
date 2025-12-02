@@ -684,6 +684,154 @@ fn test_decrease_fb_moves_cursor_from_operator_row() {
 }
 
 #[test]
+fn test_increase_alg() {
+    let mut app = App::new(false, false);
+
+    // Set initial cursor position somewhere else
+    app.cursor_x = 0;
+    app.cursor_y = 0;
+
+    // Set initial ALG value
+    app.values[ROW_CH][CH_PARAM_ALG] = 3;
+
+    // Call increase_alg
+    app.increase_alg();
+
+    // Verify cursor moved to ALG position
+    assert_eq!(
+        app.cursor_x, CH_PARAM_ALG,
+        "Cursor X should move to ALG column"
+    );
+    assert_eq!(app.cursor_y, ROW_CH, "Cursor Y should move to CH row");
+
+    // Verify ALG value increased
+    assert_eq!(
+        app.values[ROW_CH][CH_PARAM_ALG], 4,
+        "ALG should increase from 3 to 4"
+    );
+
+    // Test boundary: increase at max should not exceed
+    app.values[ROW_CH][CH_PARAM_ALG] = CH_PARAM_MAX[CH_PARAM_ALG]; // Set to max (7)
+    app.increase_alg();
+    assert_eq!(
+        app.values[ROW_CH][CH_PARAM_ALG], CH_PARAM_MAX[CH_PARAM_ALG],
+        "ALG should not exceed max value (7)"
+    );
+
+    // Verify cursor still at ALG position
+    assert_eq!(
+        app.cursor_x, CH_PARAM_ALG,
+        "Cursor X should remain at ALG column"
+    );
+    assert_eq!(app.cursor_y, ROW_CH, "Cursor Y should remain at CH row");
+}
+
+#[test]
+fn test_decrease_alg() {
+    let mut app = App::new(false, false);
+
+    // Set initial cursor position somewhere else
+    app.cursor_x = 5;
+    app.cursor_y = 2;
+
+    // Set initial ALG value
+    app.values[ROW_CH][CH_PARAM_ALG] = 5;
+
+    // Call decrease_alg
+    app.decrease_alg();
+
+    // Verify cursor moved to ALG position
+    assert_eq!(
+        app.cursor_x, CH_PARAM_ALG,
+        "Cursor X should move to ALG column"
+    );
+    assert_eq!(app.cursor_y, ROW_CH, "Cursor Y should move to CH row");
+
+    // Verify ALG value decreased
+    assert_eq!(
+        app.values[ROW_CH][CH_PARAM_ALG], 4,
+        "ALG should decrease from 5 to 4"
+    );
+
+    // Test boundary: decrease at 0 should not go negative
+    app.values[ROW_CH][CH_PARAM_ALG] = 0;
+    app.decrease_alg();
+    assert_eq!(
+        app.values[ROW_CH][CH_PARAM_ALG], 0,
+        "ALG should not go below 0"
+    );
+
+    // Verify cursor still at ALG position
+    assert_eq!(
+        app.cursor_x, CH_PARAM_ALG,
+        "Cursor X should remain at ALG column"
+    );
+    assert_eq!(app.cursor_y, ROW_CH, "Cursor Y should remain at CH row");
+}
+
+#[test]
+fn test_increase_alg_moves_cursor_from_operator_row() {
+    let mut app = App::new(false, false);
+
+    // Start with cursor on operator row
+    app.cursor_x = PARAM_MUL;
+    app.cursor_y = 1; // C1 row
+
+    // Set initial ALG value
+    app.values[ROW_CH][CH_PARAM_ALG] = 2;
+
+    // Call increase_alg
+    app.increase_alg();
+
+    // Verify cursor moved to ALG position
+    assert_eq!(
+        app.cursor_x, CH_PARAM_ALG,
+        "Cursor X should move to ALG column from operator row"
+    );
+    assert_eq!(
+        app.cursor_y, ROW_CH,
+        "Cursor Y should move to CH row from operator row"
+    );
+
+    // Verify ALG value increased
+    assert_eq!(
+        app.values[ROW_CH][CH_PARAM_ALG], 3,
+        "ALG should increase from 2 to 3"
+    );
+}
+
+#[test]
+fn test_decrease_alg_moves_cursor_from_operator_row() {
+    let mut app = App::new(false, false);
+
+    // Start with cursor on operator row
+    app.cursor_x = PARAM_AR;
+    app.cursor_y = 3; // C2 row
+
+    // Set initial ALG value
+    app.values[ROW_CH][CH_PARAM_ALG] = 6;
+
+    // Call decrease_alg
+    app.decrease_alg();
+
+    // Verify cursor moved to ALG position
+    assert_eq!(
+        app.cursor_x, CH_PARAM_ALG,
+        "Cursor X should move to ALG column from operator row"
+    );
+    assert_eq!(
+        app.cursor_y, ROW_CH,
+        "Cursor Y should move to CH row from operator row"
+    );
+
+    // Verify ALG value decreased
+    assert_eq!(
+        app.values[ROW_CH][CH_PARAM_ALG], 5,
+        "ALG should decrease from 6 to 5"
+    );
+}
+
+#[test]
 fn test_increase_value_by() {
     let mut app = App::new(false, false);
 

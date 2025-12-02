@@ -418,6 +418,49 @@ impl App {
         }
     }
 
+    /// Move cursor to ALG parameter and increase its value
+    /// This is triggered by 'G' key
+    pub fn increase_alg(&mut self) {
+        // Move cursor to ALG position (row 4, column 0)
+        self.cursor_y = ROW_CH;
+        self.cursor_x = CH_PARAM_ALG;
+
+        // Increase ALG value
+        let current = self.values[ROW_CH][CH_PARAM_ALG];
+        let max = CH_PARAM_MAX[CH_PARAM_ALG];
+        if current < max {
+            self.values[ROW_CH][CH_PARAM_ALG] = current + 1;
+            #[cfg(windows)]
+            audio::play_tone(
+                &self.values,
+                self.use_interactive_mode,
+                self.cursor_x,
+                self.cursor_y,
+            );
+        }
+    }
+
+    /// Move cursor to ALG parameter and decrease its value
+    /// This is triggered by 'Shift+G' key
+    pub fn decrease_alg(&mut self) {
+        // Move cursor to ALG position (row 4, column 0)
+        self.cursor_y = ROW_CH;
+        self.cursor_x = CH_PARAM_ALG;
+
+        // Decrease ALG value
+        let current = self.values[ROW_CH][CH_PARAM_ALG];
+        if current > 0 {
+            self.values[ROW_CH][CH_PARAM_ALG] = current - 1;
+            #[cfg(windows)]
+            audio::play_tone(
+                &self.values,
+                self.use_interactive_mode,
+                self.cursor_x,
+                self.cursor_y,
+            );
+        }
+    }
+
     /// Jump to operator row and increase value at current column
     pub fn jump_to_operator_and_increase(&mut self, operator_row: usize) {
         if operator_row >= 4 {

@@ -35,6 +35,8 @@ pub enum Action {
     PlayCurrentTone,
     IncreaseFb,
     DecreaseFb,
+    IncreaseAlg,
+    DecreaseAlg,
     MoveCursorLeft,
     MoveCursorRight,
     MoveCursorUp,
@@ -135,6 +137,10 @@ impl Default for KeybindsConfig {
         // FB shortcuts
         keybinds.insert("f".to_string(), Action::IncreaseFb);
         keybinds.insert("F".to_string(), Action::DecreaseFb);
+
+        // ALG shortcuts
+        keybinds.insert("g".to_string(), Action::IncreaseAlg);
+        keybinds.insert("G".to_string(), Action::DecreaseAlg);
 
         // Cursor movement
         keybinds.insert("h".to_string(), Action::MoveCursorLeft);
