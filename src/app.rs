@@ -767,6 +767,49 @@ impl App {
         }
     }
 
+    /// Jump to Note Number parameter and increase its value
+    /// This is triggered by 'j' key
+    pub fn jump_to_note_and_increase(&mut self) {
+        // Move cursor to Note position (CH row, Note column)
+        self.cursor_y = ROW_CH;
+        self.cursor_x = CH_PARAM_NOTE;
+
+        // Increase Note value
+        let current = self.values[ROW_CH][CH_PARAM_NOTE];
+        let max = CH_PARAM_MAX[CH_PARAM_NOTE];
+        if current < max {
+            self.values[ROW_CH][CH_PARAM_NOTE] = current + 1;
+            #[cfg(windows)]
+            audio::play_tone(
+                &self.values,
+                self.use_interactive_mode,
+                self.cursor_x,
+                self.cursor_y,
+            );
+        }
+    }
+
+    /// Jump to Note Number parameter and decrease its value
+    /// This is triggered by 'J' key (Shift+j)
+    pub fn jump_to_note_and_decrease(&mut self) {
+        // Move cursor to Note position (CH row, Note column)
+        self.cursor_y = ROW_CH;
+        self.cursor_x = CH_PARAM_NOTE;
+
+        // Decrease Note value
+        let current = self.values[ROW_CH][CH_PARAM_NOTE];
+        if current > 0 {
+            self.values[ROW_CH][CH_PARAM_NOTE] = current - 1;
+            #[cfg(windows)]
+            audio::play_tone(
+                &self.values,
+                self.use_interactive_mode,
+                self.cursor_x,
+                self.cursor_y,
+            );
+        }
+    }
+
     /// Cleanup - stop interactive mode if active
     #[cfg(windows)]
     pub fn cleanup(&self) {

@@ -73,6 +73,8 @@ pub enum Action {
     JumpToKsAndDecrease,
     JumpToAmsAndIncrease,
     JumpToAmsAndDecrease,
+    JumpToNoteAndIncrease,
+    JumpToNoteAndDecrease,
     Exit,
 }
 
@@ -145,8 +147,11 @@ impl Default for KeybindsConfig {
         // Cursor movement
         keybinds.insert("h".to_string(), Action::MoveCursorLeft);
         keybinds.insert("Left".to_string(), Action::MoveCursorLeft);
-        keybinds.insert("j".to_string(), Action::MoveCursorDown);
         keybinds.insert("Down".to_string(), Action::MoveCursorDown);
+
+        // Note Number shortcuts (jump to CH row's Note parameter)
+        keybinds.insert("j".to_string(), Action::JumpToNoteAndIncrease);
+        keybinds.insert("J".to_string(), Action::JumpToNoteAndDecrease);
         keybinds.insert("Up".to_string(), Action::MoveCursorUp);
         keybinds.insert("Right".to_string(), Action::MoveCursorRight);
 
