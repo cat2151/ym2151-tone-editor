@@ -1701,3 +1701,121 @@ fn test_tl_shortcuts_ignore_ch_row() {
     assert_eq!(app.cursor_y, ROW_CH, "Cursor should stay on CH row");
     assert_eq!(app.cursor_x, PARAM_TL, "Cursor should move to TL column");
 }
+
+#[test]
+fn test_jump_to_d1l_and_increase() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 0, column 0
+    app.cursor_x = 0;
+    app.cursor_y = 0;
+
+    // Set initial D1L value
+    app.values[0][PARAM_D1L] = 7;
+
+    // Jump to D1L and increase
+    app.jump_to_d1l_and_increase();
+
+    // Verify cursor moved to D1L column
+    assert_eq!(app.cursor_x, PARAM_D1L, "Cursor should move to D1L column");
+    assert_eq!(app.cursor_y, 0, "Cursor should stay on same row");
+
+    // Verify D1L value increased
+    assert_eq!(
+        app.values[0][PARAM_D1L], 8,
+        "D1L should increase from 7 to 8"
+    );
+}
+
+#[test]
+fn test_jump_to_d1l_and_decrease() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 1, column 3
+    app.cursor_x = 3;
+    app.cursor_y = 1;
+
+    // Set initial D1L value for row 1
+    app.values[1][PARAM_D1L] = 10;
+
+    // Jump to D1L and decrease
+    app.jump_to_d1l_and_decrease();
+
+    // Verify cursor moved to D1L column
+    assert_eq!(app.cursor_x, PARAM_D1L, "Cursor should move to D1L column");
+    assert_eq!(app.cursor_y, 1, "Cursor should stay on same row");
+
+    // Verify D1L value decreased
+    assert_eq!(
+        app.values[1][PARAM_D1L], 9,
+        "D1L should decrease from 10 to 9"
+    );
+}
+
+#[test]
+fn test_jump_to_d1l_clamps_to_max() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 0
+    app.cursor_x = 0;
+    app.cursor_y = 0;
+
+    // Set D1L to max value (15)
+    app.values[0][PARAM_D1L] = PARAM_MAX[PARAM_D1L];
+
+    // Jump to D1L and try to increase
+    app.jump_to_d1l_and_increase();
+
+    // Verify D1L value did not exceed max
+    assert_eq!(
+        app.values[0][PARAM_D1L], PARAM_MAX[PARAM_D1L],
+        "D1L should not exceed max value (15)"
+    );
+}
+
+#[test]
+fn test_jump_to_d1l_clamps_to_min() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to operator row 2
+    app.cursor_x = 0;
+    app.cursor_y = 2;
+
+    // Set D1L to min value for row 2
+    app.values[2][PARAM_D1L] = 0;
+
+    // Jump to D1L and try to decrease
+    app.jump_to_d1l_and_decrease();
+
+    // Verify D1L value did not go below min
+    assert_eq!(app.values[2][PARAM_D1L], 0, "D1L should not go below min (0)");
+}
+
+#[test]
+fn test_d1l_shortcuts_ignore_ch_row() {
+    let mut app = App::new(false, false);
+
+    // Set cursor to CH row
+    app.cursor_x = 1;
+    app.cursor_y = ROW_CH;
+
+    // Store initial values
+    let initial_values = app.values;
+
+    // Try to use D1L shortcuts on CH row - they should be ignored
+    app.jump_to_d1l_and_increase();
+    assert_eq!(
+        app.values, initial_values,
+        "D1L shortcut should not modify values on CH row"
+    );
+
+    app.jump_to_d1l_and_decrease();
+    assert_eq!(
+        app.values, initial_values,
+        "D1L shortcut should not modify values on CH row"
+    );
+
+    // Cursor should move to the D1L column, but stay on CH row
+    assert_eq!(app.cursor_y, ROW_CH, "Cursor should stay on CH row");
+    assert_eq!(app.cursor_x, PARAM_D1L, "Cursor should move to D1L column");
+}

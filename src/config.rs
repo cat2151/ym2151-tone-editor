@@ -61,6 +61,8 @@ pub enum Action {
     JumpToSmAndDecrease,
     JumpToTlAndIncrease,
     JumpToTlAndDecrease,
+    JumpToD1lAndIncrease,
+    JumpToD1lAndDecrease,
     Exit,
 }
 
@@ -133,7 +135,6 @@ impl Default for KeybindsConfig {
         keybinds.insert("Down".to_string(), Action::MoveCursorDown);
         keybinds.insert("k".to_string(), Action::MoveCursorUp);
         keybinds.insert("Up".to_string(), Action::MoveCursorUp);
-        keybinds.insert("l".to_string(), Action::MoveCursorRight);
         keybinds.insert("Right".to_string(), Action::MoveCursorRight);
 
         // Jump to operator row and increase value
@@ -169,6 +170,10 @@ impl Default for KeybindsConfig {
         // TL (Total Level) shortcuts (jump to current row's TL parameter)
         keybinds.insert("t".to_string(), Action::JumpToTlAndIncrease);
         keybinds.insert("T".to_string(), Action::JumpToTlAndDecrease);
+
+        // D1L (Decay 1 Level) shortcuts (jump to current row's D1L parameter)
+        keybinds.insert("l".to_string(), Action::JumpToD1lAndIncrease);
+        keybinds.insert("L".to_string(), Action::JumpToD1lAndDecrease);
 
         // Exit
         keybinds.insert("Esc".to_string(), Action::Exit);

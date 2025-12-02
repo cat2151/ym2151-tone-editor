@@ -269,6 +269,8 @@ fn run_app<B: ratatui::backend::Backend>(
                                 Action::JumpToSmAndDecrease => app.jump_to_sm_and_decrease(),
                                 Action::JumpToTlAndIncrease => app.jump_to_tl_and_increase(),
                                 Action::JumpToTlAndDecrease => app.jump_to_tl_and_decrease(),
+                                Action::JumpToD1lAndIncrease => app.jump_to_d1l_and_increase(),
+                                Action::JumpToD1lAndDecrease => app.jump_to_d1l_and_decrease(),
                                 Action::Exit => {
                                     // Save tone data to JSON before exiting
                                     app.save_to_json()?;
