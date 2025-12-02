@@ -69,6 +69,8 @@ pub enum Action {
     JumpToDt2AndDecrease,
     JumpToKsAndIncrease,
     JumpToKsAndDecrease,
+    JumpToAmsAndIncrease,
+    JumpToAmsAndDecrease,
     Exit,
 }
 
@@ -191,6 +193,10 @@ impl Default for KeybindsConfig {
         // KS (Key Scaling) shortcuts (jump to current row's KS parameter)
         keybinds.insert("k".to_string(), Action::JumpToKsAndIncrease);
         keybinds.insert("K".to_string(), Action::JumpToKsAndDecrease);
+
+        // AMS (Amplitude Modulation Sensitivity) shortcuts (jump to current row's AMS parameter)
+        keybinds.insert("i".to_string(), Action::JumpToAmsAndIncrease);
+        keybinds.insert("I".to_string(), Action::JumpToAmsAndDecrease);
 
         // Exit
         keybinds.insert("Esc".to_string(), Action::Exit);

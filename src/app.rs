@@ -702,6 +702,28 @@ impl App {
         }
     }
 
+    /// Jump to AMS (Amplitude Modulation Sensitivity) parameter and increase its value (stays on current row)
+    pub fn jump_to_ams_and_increase(&mut self) {
+        // AMS is at column index PARAM_AMS
+        self.cursor_x = PARAM_AMS;
+
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < ROW_CH {
+            self.increase_value();
+        }
+    }
+
+    /// Jump to AMS (Amplitude Modulation Sensitivity) parameter and decrease its value (stays on current row)
+    pub fn jump_to_ams_and_decrease(&mut self) {
+        // AMS is at column index PARAM_AMS
+        self.cursor_x = PARAM_AMS;
+
+        // Only apply to operator rows, not CH row
+        if self.cursor_y < ROW_CH {
+            self.decrease_value();
+        }
+    }
+
     /// Cleanup - stop interactive mode if active
     #[cfg(windows)]
     pub fn cleanup(&self) {
