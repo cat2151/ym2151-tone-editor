@@ -159,6 +159,7 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
     add_key_off(&mut events, channel, values);
 
     // Determine which register(s) to send based on the edited parameter
+    // All these events happen after 5ms delay (time: 0.005)
     match param_index {
         PARAM_SM => {
             // SM affects KEY_ON register, which is handled at the end
@@ -174,7 +175,7 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
                 tl
             ));
             events.push(Ym2151Event {
-                time: 0.0,
+                time: 0.005,
                 addr: format!("0x{:02X}", 0x60 + op_offset as u8),
                 data: format!("0x{:02X}", tl & 0x7F),
             });
@@ -192,7 +193,7 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
                 mul
             ));
             events.push(Ym2151Event {
-                time: 0.0,
+                time: 0.005,
                 addr: format!("0x{:02X}", 0x40 + op_offset as u8),
                 data: format!("0x{:02X}", dt_mul),
             });
@@ -210,7 +211,7 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
                 ar
             ));
             events.push(Ym2151Event {
-                time: 0.0,
+                time: 0.005,
                 addr: format!("0x{:02X}", 0x80 + op_offset as u8),
                 data: format!("0x{:02X}", ks_ar),
             });
@@ -228,7 +229,7 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
                 d1r
             ));
             events.push(Ym2151Event {
-                time: 0.0,
+                time: 0.005,
                 addr: format!("0x{:02X}", 0xA0 + op_offset as u8),
                 data: format!("0x{:02X}", ams_d1r),
             });
@@ -246,7 +247,7 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
                 d2r
             ));
             events.push(Ym2151Event {
-                time: 0.0,
+                time: 0.005,
                 addr: format!("0x{:02X}", 0xC0 + op_offset as u8),
                 data: format!("0x{:02X}", dt2_d2r),
             });
@@ -264,7 +265,7 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
                 rr
             ));
             events.push(Ym2151Event {
-                time: 0.0,
+                time: 0.005,
                 addr: format!("0x{:02X}", 0xE0 + op_offset as u8),
                 data: format!("0x{:02X}", d1l_rr),
             });
@@ -314,6 +315,7 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
     add_key_off(&mut events, channel, values);
 
     // Determine which register(s) to send based on the edited parameter
+    // All these events happen after 5ms delay (time: 0.005)
     match param_index {
         CH_PARAM_ALG | CH_PARAM_FB => {
             // RL, FB, CON (Algorithm) - Register $20-$27 (shared register)
@@ -328,7 +330,7 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
                 fb
             ));
             events.push(Ym2151Event {
-                time: 0.0,
+                time: 0.005,
                 addr: format!("0x{:02X}", 0x20 + channel),
                 data: format!("0x{:02X}", rl_fb_con),
             });
@@ -346,7 +348,7 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
                 midi_note
             ));
             events.push(Ym2151Event {
-                time: 0.0,
+                time: 0.005,
                 addr: format!("0x{:02X}", 0x28 + channel),
                 data: format!("0x{:02X}", kc),
             });
@@ -359,7 +361,7 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
                 midi_note
             ));
             events.push(Ym2151Event {
-                time: 0.0,
+                time: 0.005,
                 addr: format!("0x{:02X}", 0x30 + channel),
                 data: format!("0x{:02X}", kf),
             });
@@ -403,34 +405,22 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
 fn add_key_off(events: &mut Vec<Ym2151Event>, channel: u8, values: &ToneData) {
     // Set D2R=15 for all operators to decay envelope to 0 before next note
     // This prevents envelope continuation across notes (issue #115)
-    for row_id in 0..4 {
-        let reg = register::REG_FROM_O1_O4[row_id];
-        let op_offset = reg * 8 + channel as usize;
+    let d2r_events = register::generate_d2r_15_events(values, channel as usize, 0.0);
 
-        // Get current DT2 value from values to preserve it
-        let dt2 = values[row_id][PARAM_DT2];
-        // Set D2R to 15 (maximum decay rate)
-        let dt2_d2r = ((dt2 & 0x03) << 6) | 0x0F;
-
+    for event in &d2r_events {
         log_verbose(&format!(
-            "  operator register: addr=0x{:02X}, data=0x{:02X} (DT2={}, D2R=15 for envelope reset)",
-            0xC0 + op_offset as u8,
-            dt2_d2r,
-            dt2
+            "  operator register: addr={}, data={} (D2R=15 for envelope reset)",
+            event.addr, event.data
         ));
-        events.push(Ym2151Event {
-            time: 0.0,
-            addr: format!("0x{:02X}", 0xC0 + op_offset as u8),
-            data: format!("0x{:02X}", dt2_d2r),
-        });
     }
+    events.extend(d2r_events);
 
     log_verbose(&format!(
         "  channel register: addr=0x08, data=0x{:02X} (KEY_OFF)",
         channel
     ));
     events.push(Ym2151Event {
-        time: 0.005, // Wait 5ms for envelope to decay to 0
+        time: 0.0,
         addr: "0x08".to_string(),
         data: format!("0x{:02X}", channel), // KEY_OFF: no slot mask, just channel
     });
@@ -458,7 +448,7 @@ pub fn add_key_on(values: &ToneData, events: &mut Vec<Ym2151Event>) {
         key_on, slot_mask
     ));
     events.push(Ym2151Event {
-        time: 0.0,
+        time: 0.005,
         addr: "0x08".to_string(),
         data: format!("0x{:02X}", key_on),
     });

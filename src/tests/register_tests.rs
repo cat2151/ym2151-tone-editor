@@ -551,6 +551,11 @@ fn test_envelope_reset_events() {
         "Should have exactly 4 D2R register writes"
     );
 
+    // Check D2R events at time 0.0
+    for d2r_event in &d2r_events {
+        assert_eq!(d2r_event.time, 0.0, "D2R=15 events should be at time 0.0");
+    }
+
     // Check the first D2R write (operator 0, register 0xC0)
     let first_d2r = d2r_events[0];
     let data = u8::from_str_radix(first_d2r.data.trim_start_matches("0x"), 16).unwrap();
@@ -561,15 +566,38 @@ fn test_envelope_reset_events() {
     );
     assert_eq!((data >> 6) & 0x03, 1, "DT2 should be preserved as 1");
 
-    // Verify KEY_OFF event with timing
-    let key_off_event = events.iter().find(|e| e.addr == "0x08" && e.time > 0.0);
-    assert!(
-        key_off_event.is_some(),
-        "Should have KEY_OFF event with delay"
+    // Verify KEY_OFF event at time 0.0
+    let key_off_events: Vec<_> = events
+        .iter()
+        .filter(|e| e.addr == "0x08" && e.time == 0.0)
+        .collect();
+    assert_eq!(
+        key_off_events.len(),
+        1,
+        "Should have exactly one KEY_OFF event at time 0.0"
     );
-    let key_off = key_off_event.unwrap();
-    assert_eq!(key_off.time, 0.005, "KEY_OFF should have 5ms delay");
-    assert_eq!(key_off.data, "0x00", "KEY_OFF should be for channel 0");
+    assert_eq!(
+        key_off_events[0].data, "0x00",
+        "KEY_OFF should be for channel 0"
+    );
+
+    // Verify tone settings and KEY_ON are at time 0.005
+    let delayed_events: Vec<_> = events.iter().filter(|e| e.time == 0.005).collect();
+    assert!(
+        !delayed_events.is_empty(),
+        "Should have events at time 0.005 (tone settings and KEY_ON)"
+    );
+
+    // Verify KEY_ON is at time 0.005
+    let key_on_events: Vec<_> = events
+        .iter()
+        .filter(|e| e.addr == "0x08" && e.time == 0.005)
+        .collect();
+    assert_eq!(
+        key_on_events.len(),
+        1,
+        "Should have exactly one KEY_ON event at time 0.005"
+    );
 
     // Verify total event count: envelope reset events + normal events
     let normal_events = crate::register::editor_rows_to_ym2151_events(&values);
