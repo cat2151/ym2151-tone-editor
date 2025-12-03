@@ -379,6 +379,17 @@ impl App {
         Ok(())
     }
 
+    /// Append current tone data as a new variation to GM file
+    /// This is triggered by CTRL+S
+    pub fn save_to_gm_variations(&self) -> std::io::Result<()> {
+        const GM_FILE_PATH: &str = "tones/general_midi/000_AcousticGrand.json";
+
+        // Append to GM format variations array
+        file_ops::append_to_gm_file(GM_FILE_PATH, &self.values, "Edited Tone")?;
+
+        Ok(())
+    }
+
     /// Play the current tone without modifying any parameters
     /// This is triggered by 'P' or 'SPACE' key
     pub fn play_current_tone(&self) {
