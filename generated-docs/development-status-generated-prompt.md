@@ -1,4 +1,4 @@
-Last updated: 2025-12-03
+Last updated: 2025-12-04
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -223,6 +223,7 @@ Last updated: 2025-12-03
 - issue-notes/114.md
 - issue-notes/115.md
 - issue-notes/116.md
+- issue-notes/130.md
 - issue-notes/95.md
 - issue-notes/96.md
 - issue-notes/97.md
@@ -249,43 +250,31 @@ Last updated: 2025-12-03
 - ym2151-tone-editor.toml.example
 
 ## 現在のオープンIssues
-## [Issue #115](../issue-notes/115.md): AR 1のslow attack音色を仮想MIDI鍵盤で連続previewしていると、noteをまたいでattack envelopeが継続される
-[issue-notes/115.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/115.md)
+## [Issue #131](../issue-notes/131.md): Refactor: Replace magic number 0.005 with configurable envelope_delay_seconds
+The envelope delay time (5ms) was hardcoded as `0.005` in 20 locations across audio and register modules, violating DRY.
 
-...
+## Changes
+
+**Configuration system:**
+- Added `DEFAULT_ENVELOPE_DELAY_SECONDS = 0.005` constant in `models.rs`
+- Extended `Config` with `AudioConfig` structure containing `envelo...
 ラベル: 
---- issue-notes/115.md の内容 ---
+--- issue-notes/131.md の内容 ---
 
 ```markdown
-# issue AR 1のslow attack音色を仮想MIDI鍵盤で連続previewしていると、noteをまたいでattack envelopeが継続される #115
-[issues #115](https://github.com/cat2151/ym2151-tone-editor/issues/115)
-
-# 何が困るの？
-- user側でattack envelope継続のon/offを選べない
-
-# 分析
-- YM2151の仕様として、envelopeの振幅は、release後の次のattackにも維持される
-- envelope継続offを実現する方法として、以下が知られている：
-  - D2R=15でkey offし、数ms待つことで、envelope振幅を0まで下げる
-  - のちattackすれば、envelope振幅0からattackできる
-
-# 対策案
-- 送信JSON内容を変更する
-  - JSON先頭のkey offの前に、D2R=15を追加する
-  - key offの後の時刻は、0.0でなく0.005秒等にする（値は仮。検証してチューニングすればよい）
 
 ```
 
-## [Issue #114](../issue-notes/114.md): A,D,S,Rキーなど、今カーソルジャンプできる項目の左隣に、押すキーのガイドを表示する、左隣は仮（あとで設定変更可の予定）
-[issue-notes/114.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/114.md)
+## [Issue #130](../issue-notes/130.md): PR 129 において、時刻0.005が多数の場所でマジックナンバーとして書かれておりDRY違反
+[issue-notes/130.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/130.md)
 
 ...
 ラベル: 
---- issue-notes/114.md の内容 ---
+--- issue-notes/130.md の内容 ---
 
 ```markdown
-# issue A,D,S,Rキーなど、今カーソルジャンプできる項目の左隣に、押すキーのガイドを表示する、左隣は仮（あとで設定変更可の予定） #114
-[issues #114](https://github.com/cat2151/ym2151-tone-editor/issues/114)
+# issue PR 129 において、時刻0.005が多数の場所でマジックナンバーとして書かれておりDRY違反 #130
+[issues #130](https://github.com/cat2151/ym2151-tone-editor/issues/130)
 
 
 
@@ -322,308 +311,31 @@ Last updated: 2025-12-03
 ```
 
 ## ドキュメントで言及されているファイルの内容
-### .github/actions-tmp/issue-notes/14.md
+### .github/actions-tmp/issue-notes/30.md
 ```md
 {% raw %}
-# issue Development Status のdocument生成において、最初の小さな一歩 を実現する用のプロンプト生成がされなくなっている #14
-[issues #14](https://github.com/cat2151/github-actions/issues/14)
+# issue 進捗状況生成時、issueに紐付くissue-notesがないときエラー終了してしまう #30
+[issues #30](https://github.com/cat2151/github-actions/issues/30)
 
-## 何が困るの？
-- #11の場合
-- 期待値
-    - 最初の小さな一歩 : [Issue #11]のtranslateについて、現在の処理フローを確認し、外部プロジェクトから利用する際にどのような情報（翻訳対象のファイルパス、ターゲット言語設定など）が必要となるかを明確にする。これにより、再利用可能なワークフロー設計の基礎を築く。
-    - 最初の小さな一歩をagentに実行させるためのプロンプト : 現在のGitHub Actions翻訳ワークフロー（translate-readme.yml、call-translate-readme.yml、translate-readme.cjs）を分析し、外部プロジェクトから利用する際に必要となる設定項目を洗い出してください。具体的には、以下の観点から調査し、markdown形式でまとめてください：1) 必須入力パラメータ（現在はtarget-branchのみ） 2) 必須シークレット（GEMINI_API_KEY） 3) ファイル配置の前提条件（README.ja.md の存在、配置場所） 4) 翻訳対象ファイル名の制約（現在はREADME固定） 5) ブランチ・トリガー設定の制約 6) 外部プロジェクトでの利用時に追加で必要となりそうな設定項目の提案
-- 実際の結果
-    - 最初の小さな一歩: [Issue #11]のtranslateについて、現在の処理フローを確認し、外部プロジェクトから利用する際にどのような情報（翻訳対象のファイルパス、ターゲット言語設定など）が必要となるかを明確にする。これにより、再利用可能なワークフロー設計の基礎を築く。
+# 何が困るの？
+- 生成されない
 
-## close条件
-- 期待値のように、Agent実行プロンプト、が生成されること
+# 分析
+- issue紐付くissue-notesが存在しないことは普通にある
+- 今回も、そうなっていることを確認済み
+    - issue 1～8はissue-notesがあった
+    - 当該のissue 9は、issue本体のコメントに書いて進行していた
+        - issue-notesの仕組みを使う前に書いたissueなので、そうなっていた
+- こうするのがよい
+    - エラーにならず、空文字として扱う
 
-## agentに修正させた
-- development-status.md を修正させた
-- test green
+# close条件
+- 当該部分で落ちなくなること
+    - 当該部分とは：
+    - https://github.com/cat2151/fighting-game-button-challenge
+        - issue 9
 
-## closeとする
 
-{% endraw %}
-```
-
-### .github/actions-tmp/issue-notes/15.md
-```md
-{% raw %}
-# issue project_summary scripts cjs を分解し、できるだけ1ファイル200行未満にし、agentによるメンテをしやすくする #15
-[issues #15](https://github.com/cat2151/github-actions/issues/15)
-
-# 状況
-- agentに、最初の小さな一歩のAgent実行プロンプトを実行させた
-- 結果、以下を得た：
-    - project_summary_cjs_analysis.md
-- どうする？
-    - 次の一手をagentに生成させてみる（翌日の日次バッチで自動生成させる）
-- 結果
-    - 生成させたpromptをレビューした
-    - promptを修正した
-    - agentに投げた
-    - 結果、GitUtils.cjsを切り出しできた
-    - それをリファクタリングミスがないかチェックさせた
-    - agentによるチェック結果は合格だった
-- どうする？
-    - 次の一手をagentに生成させてみる（翌日の日次バッチで自動生成させる）
-- 結果
-    - 生成させたpromptをレビューした
-        - promptの対象ファイルから project_summary_cjs_analysis.md が漏れていることがわかったので修正した
-    - promptを修正した
-    - agentに投げた
-    - 結果、FileSystemUtils.cjsを切り出しできた
-    - それをリファクタリングミスがないかチェックさせた
-    - agentによるチェック結果は合格だった
-- どうする？
-    - 次の一手をagentに生成させてみる（翌日の日次バッチで自動生成させる）
-- 結果
-    - 生成させたpromptをレビューした
-    - 今回は低品質、NG、と判断した
-    - 判断基準は、project_summary_cjs_analysis.md と乖離してしまっている点。今回はハルシネーションを含んだplanである、と判断した
-    - 人力でpromptを書き、planさせ、plan結果をレビューし、agentに投げた
-    - 結果、CodeAnalyzer.cjsとProjectAnalyzer.cjsを切り出しできた
-- どうする？
-    - 次の一手をagentに生成させてみる（翌日の日次バッチで自動生成させる）
-    - 備考、課題、Geminiに生成させているdocumentは2つある。かなり位置づけが違うものである。
-        - projectのソースファイル分析。
-        - projectのissues分析。
-        - この2つについて、class, cjs, yml まで分割をするかを、あとで検討する。
-        - おそらく、class分割どまりとし、ソースファイル分析結果をissues分析の参考資料としてGeminiのcontextに与える改善をする、がよい、と想定しておく。
-- 課題、エラーで落ちた。昨日は落ちてない。
-    - 原因、昨日のagentのリファクタリング時に、ハルシネーションで、
-        - codeが破壊されていた
-        - run メソッドが削除されていた
-        - 一つ前のrevisionにはrun メソッドがあった
-        - ほかにもcode破壊があったのかは不明、調査省略、明日の日次バッチをtestと調査として利用するつもり
-- どうする？
-    - 単純に一つ前のrevisionからrun メソッドを復活させ、明日の日次バッチをtestと調査として利用する
-- 再発防止策は？
-    - ノーアイデア。昨日それなりにagentにチェックをさせたはずだが根本的な大きなミスが発生していた。
-    - 構文チェックは通っていたが、問題を検知できなかった。
-    - チェックが機能していない、あるいは機能として不足している。
-    - 分析。変更量が大きかったぶんミスのリスクが増えていた。
-    - 対策案。もっと小さく一歩ずつ変更させる。
-    - 対策案。リファクタリング時、いきなりメソッド削除をさせない。
-        - まず全cjsの全メソッドのlistをさせる。
-        - のち、削除対象の重複メソッドのlistをさせる。
-        - そして削除planをさせる。
-        - のち、削除させる。
-        - さらに削除後のメソッドlistをさせる。
-        - そして削除しすぎていないかを削除前後のlist比較でチェックさせる。
-        - これでrunまで削除してしまうのを防止できるかもしれない。
-        - これは人力からみると、おかしな話である。人力なら1つずつ移動をするだけであり、ミスのしようがない。
-        - LLMの典型的なハルシネーション問題の一つである、と認識する
-- 結果は？
-    - test green
-    - run メソッドの人力復活は成功した
-    - 日次バッチで生成した次の一手のpromptを投げた
-    - リファクタリング成功した。ProjectSummaryGenerator を切り出した
-- どうする？
-    - 次の一手をagentに生成させてみる（agentに投げるpromptを、翌日の日次バッチで自動生成させる）
-- 結果
-    - 先に、2つのdocument生成を、1つずつ生成できるよう疎結合にリファクタリング、をしたほうがよさそう
-    - agentにそれを投げた
-    - 成功した、と判断する
-    - 課題、`BaseSummaryGenerator.cjs` は、baseの機能と、`ProjectOverviewGenerator.cjs`専用の機能とが混ざっている。
-        - baseに集約すべきは、`ProjectSummaryCoordinator.cjs`と`ProjectOverviewGenerator.cjs`とが必ずどちらも使う機能、である、と考える。
-        - 対策、明日以降それをagentに投げる
-    - `project_summary_cjs_analysis.md` は削除とする。役目が完了した、と判断する。リファクタリング前のソース構造の分析documentであり、今は存在しているとわかりづらくなる。シンプル優先のため削除とする。
-- どうする？
-    - 次の一手をagentに生成させてみる（agentに投げるpromptを、翌日の日次バッチで自動生成させる）
-- 結果
-    - test green
-    - `BaseSummaryGenerator.cjs` を切り出したのは成功した、と判断する
-    - `BaseSummaryGenerator.cjs` を2分割するため、agentにplanさせた
-    - レビューした
-    - agentに2分割させた
-    - レビューした。OKと判断する
-- どうする？
-    - 次の一手をagentに生成させてみる（agentに投げるpromptを、翌日の日次バッチで自動生成させる）
-- 結果
-    - test green
-    - `BaseSummaryGenerator.cjs` を2分割は成功した、と判断する
-    - issue track機能構造をリファクタリングし、以下にする
-        - development status generator : baseを継承する
-        - issue tracker : 汎用関数群
-    - agentに実施させた
-    - レビューした。OKと判断する
-- どうする？
-    - 次の一手をagentに生成させてみる（agentに投げるpromptを、翌日の日次バッチで自動生成させる）
-- 結果
-    - test green
-    - DevelopmentStatusGeneratorとissue trackerのリファクタリングは成功した、と判断する
-    - ProjectOverview生成機能のリファクタリングをする
-    - agentに実施させた
-    - レビューした。OKと判断する
-- どうする？
-    - 次の一手をagentに生成させてみる（agentに投げるpromptを、翌日の日次バッチで自動生成させる）
-- 結果
-    - test green
-    - ProjectOverview生成機能のリファクタリングは成功した、と判断する
-    - 課題、overviewと、developmentStatusとが混在し、dirが読みづらい。
-    - 対策、shared/、overview/、development/、の3つのdirに切り分ける
-    - agentに分析、planさせ、レビューし、planさせ、実施させた
-    - レビューした。OKと判断する
-- どうする？
-    - 次の一手をagentに生成させてみる（agentに投げるpromptを、翌日の日次バッチで自動生成させる）
-- 結果
-    - test green
-    - shared/、overview/、development/、の3つのdirに切り分けるリファクタリングは成功した、と判断する
-    - agentに、agentがメンテしやすいか？の観点からレビューさせた
-    - 詳細は割愛
-        - `> 最優先で取り組むべきは 設定管理の一元化 と エラーハンドリングの統一 です。これにより、Agentにとって予測可能で理解しやすいコードベースになります。`
-        - それは別issueで、設定変更をマストでやるので、OKと判断する
-- これでagentによるメンテは十分しやすくなった、と判断する
-- closeとする
-
-{% endraw %}
-```
-
-### .github/actions-tmp/issue-notes/4.md
-```md
-{% raw %}
-# issue GitHub Actions「project概要生成」を共通ワークフロー化する #4
-[issues #4](https://github.com/cat2151/github-actions/issues/4)
-
-# prompt
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-このymlファイルを、以下の2つのファイルに分割してください。
-1. 共通ワークフロー       cat2151/github-actions/.github/workflows/daily-project-summary.yml
-2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-daily-project-summary.yml
-まずplanしてください
-```
-
-# 結果、あちこちハルシネーションのあるymlが生成された
-- agentの挙動があからさまにハルシネーション
-    - インデントが修正できない、「失敗した」という
-    - 構文誤りを認識できない
-- 人力で修正した
-
-# このagentによるセルフレビューが信頼できないため、別のLLMによるセカンドオピニオンを試す
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
-
---- 呼び出し元
-
-name: Call Daily Project Summary
-
-on:
-  schedule:
-    # 日本時間 07:00 (UTC 22:00 前日)
-    - cron: '0 22 * * *'
-  workflow_dispatch:
-
-jobs:
-  call-daily-project-summary:
-    uses: cat2151/github-actions/.github/workflows/daily-project-summary.yml
-    secrets:
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-
---- 共通ワークフロー
-name: Daily Project Summary
-on:
-  workflow_call:
-
-jobs:
-  generate-summary:
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-      issues: read
-      pull-requests: read
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0  # 履歴を取得するため
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: |
-          # 一時的なディレクトリで依存関係をインストール
-          mkdir -p /tmp/summary-deps
-          cd /tmp/summary-deps
-          npm init -y
-          npm install @google/generative-ai @octokit/rest
-          # generated-docsディレクトリを作成
-          mkdir -p $GITHUB_WORKSPACE/generated-docs
-
-      - name: Generate project summary
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          NODE_PATH: /tmp/summary-deps/node_modules
-        run: |
-          node .github/scripts/generate-project-summary.cjs
-
-      - name: Check for generated summaries
-        id: check_summaries
-        run: |
-          if [ -f "generated-docs/project-overview.md" ] && [ -f "generated-docs/development-status.md" ]; then
-            echo "summaries_generated=true" >> $GITHUB_OUTPUT
-          else
-            echo "summaries_generated=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Commit and push summaries
-        if: steps.check_summaries.outputs.summaries_generated == 'true'
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          # package.jsonの変更のみリセット（generated-docsは保持）
-          git restore package.json 2>/dev/null || true
-          # サマリーファイルのみを追加
-          git add generated-docs/project-overview.md
-          git add generated-docs/development-status.md
-          git commit -m "Update project summaries (overview & development status)"
-          git push
-
-      - name: Summary generation result
-        run: |
-          if [ "${{ steps.check_summaries.outputs.summaries_generated }}" == "true" ]; then
-            echo "✅ Project summaries updated successfully"
-            echo "📊 Generated: project-overview.md & development-status.md"
-          else
-            echo "ℹ️ No summaries generated (likely no user commits in the last 24 hours)"
-          fi
-```
-
-# 上記promptで、2つのLLMにレビューさせ、合格した
-
-# 細部を、先行する2つのymlを参照に手直しした
-
-# ローカルtestをしてからcommitできるとよい。方法を検討する
-- ローカルtestのメリット
-    - 素早く修正のサイクルをまわせる
-    - ムダにgit historyを汚さない
-        - これまでの事例：「実装したつもり」「エラー。修正したつもり」「エラー。修正したつもり」...（以降エラー多数）
-- 方法
-    - ※検討、WSL + act を環境構築済みである。test可能であると判断する
-    - 呼び出し元のURLをコメントアウトし、相対パス記述にする
-    - ※備考、テスト成功すると結果がcommit pushされる。それでよしとする
-- 結果
-    - OK
-    - secretsを簡略化できるか試した、できなかった、現状のsecrets記述が今わかっている範囲でベストと判断する
-    - OK
-
-# test green
-
-# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
-
-# closeとする
 
 {% endraw %}
 ```
@@ -657,36 +369,13 @@ jobs:
 {% endraw %}
 ```
 
-### issue-notes/114.md
+### issue-notes/130.md
 ```md
 {% raw %}
-# issue A,D,S,Rキーなど、今カーソルジャンプできる項目の左隣に、押すキーのガイドを表示する、左隣は仮（あとで設定変更可の予定） #114
-[issues #114](https://github.com/cat2151/ym2151-tone-editor/issues/114)
+# issue PR 129 において、時刻0.005が多数の場所でマジックナンバーとして書かれておりDRY違反 #130
+[issues #130](https://github.com/cat2151/ym2151-tone-editor/issues/130)
 
 
-
-{% endraw %}
-```
-
-### issue-notes/115.md
-```md
-{% raw %}
-# issue AR 1のslow attack音色を仮想MIDI鍵盤で連続previewしていると、noteをまたいでattack envelopeが継続される #115
-[issues #115](https://github.com/cat2151/ym2151-tone-editor/issues/115)
-
-# 何が困るの？
-- user側でattack envelope継続のon/offを選べない
-
-# 分析
-- YM2151の仕様として、envelopeの振幅は、release後の次のattackにも維持される
-- envelope継続offを実現する方法として、以下が知られている：
-  - D2R=15でkey offし、数ms待つことで、envelope振幅を0まで下げる
-  - のちattackすれば、envelope振幅0からattackできる
-
-# 対策案
-- 送信JSON内容を変更する
-  - JSON先頭のkey offの前に、D2R=15を追加する
-  - key offの後の時刻は、0.0でなく0.005秒等にする（値は仮。検証してチューニングすればよい）
 
 {% endraw %}
 ```
@@ -702,26 +391,138 @@ jobs:
 {% endraw %}
 ```
 
+### src/models.rs
+```rs
+{% raw %}
+use serde::{Deserialize, Serialize};
+
+// Grid dimensions for the UI layout
+pub const GRID_WIDTH: usize = 12;
+pub const GRID_HEIGHT: usize = 5;
+
+// Parameter names for each column
+// New order: SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS
+pub const PARAM_NAMES: [&str; GRID_WIDTH] = [
+    "SM", "TL", "MUL", "AR", "D1R", "D1L", "D2R", "RR", "DT", "DT2", "KS", "AMS",
+];
+
+// CH row has 3 parameters: ALG, FB, and MIDI note number
+pub const CH_PARAM_COUNT: usize = 3;
+pub const CH_PARAM_NAMES: [&str; CH_PARAM_COUNT] = ["ALG", "FB", "Note"];
+
+// Maximum values for each parameter (respecting YM2151 bit ranges)
+// New order: SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS
+pub const PARAM_MAX: [u8; GRID_WIDTH] = [
+    1,  // SM (SlotMask): 0 or 1
+    99, // TL: 7 bits (0-127, limited to 99 for display)
+    15, // MUL: 4 bits (0-15)
+    31, // AR: 5 bits (0-31)
+    31, // D1R: 5 bits (0-31)
+    15, // D1L: 4 bits (0-15)
+    15, // D2R: 4 bits (0-15)
+    15, // RR: 4 bits (0-15)
+    7,  // DT: 3 bits (0-7)
+    3,  // DT2: 2 bits (0-3)
+    3,  // KS: 2 bits (0-3)
+    3,  // AMS: 2 bits (0-3)
+];
+
+// Maximum values for CH row parameters
+pub const CH_PARAM_MAX: [u8; CH_PARAM_COUNT] = [
+    7,   // ALG: 3 bits (0-7) - Algorithm
+    7,   // FB: 3 bits (0-7) - Feedback
+    127, // MIDI Note Number: 0-127 (60 = middle C)
+];
+
+// Row names for operators
+pub const ROW_NAMES: [&str; GRID_HEIGHT] = ["O1", "O2", "O3", "O4", "CH"];
+
+// Parameter column indices for operator rows (matching PARAM_NAMES order)
+// order: SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS
+pub const PARAM_SM: usize = 0;
+pub const PARAM_TL: usize = 1;
+pub const PARAM_MUL: usize = 2;
+pub const PARAM_AR: usize = 3;
+pub const PARAM_D1R: usize = 4;
+pub const PARAM_D1L: usize = 5;
+pub const PARAM_D2R: usize = 6;
+pub const PARAM_RR: usize = 7;
+pub const PARAM_DT: usize = 8;
+pub const PARAM_DT2: usize = 9;
+pub const PARAM_KS: usize = 10;
+pub const PARAM_AMS: usize = 11;
+
+// Parameter column indices for CH row (matching CH_PARAM_NAMES order)
+pub const CH_PARAM_ALG: usize = 0;
+pub const CH_PARAM_FB: usize = 1;
+pub const CH_PARAM_NOTE: usize = 2;
+
+// Row index for channel settings
+pub const ROW_CH: usize = 4;
+
+/// Type alias for tone data grid
+pub type ToneData = [[u8; GRID_WIDTH]; GRID_HEIGHT];
+
+/// JSON event structure for ym2151-log-play-server
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Ym2151Event {
+    pub time: f64,
+    pub addr: String,
+    pub data: String,
+}
+
+/// JSON log structure for ym2151-log-play-server
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Ym2151Log {
+    pub events: Vec<Ym2151Event>,
+}
+
+/// Tone variation structure for General MIDI tone files
+/// Represents a single tone variation with optional MML or note number for playback
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ToneVariation {
+    pub description: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mml: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub note_number: Option<u8>,
+    pub registers: String,
+}
+
+/// Tone file structure for General MIDI tone files
+/// Contains a description and array of tone variations
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ToneFile {
+    pub description: String,
+    pub variations: Vec<ToneVariation>,
+}
+
+{% endraw %}
+```
+
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-d1d8a4e Merge pull request #127 from cat2151/copilot/fix-app-crash-on-alg7-selection
-757a08d Fix ALG7 crash by adding bounds check for pentatonic keyboard y-coordinate
-38e88f1 Initial plan
-75bed20 Merge pull request #126 from cat2151/copilot/add-keybind-for-note-number
-b6f9180 Fix comments to reference constants instead of hardcoded values
-7fef751 Add J key binding to jump to Note Number and change value
-b0f2e1a Initial plan
-3bde1e3 Merge pull request #125 from cat2151/copilot/jump-to-alg-and-adjust-value
-f735f60 fix: Correct comments for ALG key bindings
-68a3b3b feat: Add G key to jump to ALG and adjust value
+5a6ee19 Add issue note for #130 [auto]
+c3dcb25 Merge pull request #129 from cat2151/copilot/fix-attack-envelope-preview
+79a1222 Fix timing and eliminate code duplication per review feedback
+75d0140 Use HashSet for better performance in test
+8c69509 Improve test robustness based on code review feedback
+a6eca20 Add test for envelope reset functionality
+6494b87 Fix envelope continuation across notes in audio preview (issue #115)
+231762a Initial plan
+eb65ad6 Merge pull request #128 from cat2151/copilot/add-key-guide-display
+0ed44a4 Add keybinding guide letters to parameter display
 
 ### 変更されたファイル:
-src/app.rs
-src/config.rs
-src/main.rs
-src/tests/app_tests.rs
+README.ja.md
+README.md
+issue-notes/130.md
+src/audio.rs
+src/register.rs
+src/tests/register_tests.rs
+src/tests/ui_tests.rs
 src/ui.rs
 
 
 ---
-Generated at: 2025-12-03 07:08:15 JST
+Generated at: 2025-12-04 07:08:57 JST
