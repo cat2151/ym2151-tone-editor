@@ -8,7 +8,10 @@ fn test_gm_file_exists_and_valid() {
     let tone_file: crate::models::ToneFile =
         serde_json::from_str(&json_string).expect("GM file should be valid JSON");
 
-    assert!(!tone_file.variations.is_empty(), "GM file should have at least one variation");
+    assert!(
+        !tone_file.variations.is_empty(),
+        "GM file should have at least one variation"
+    );
     assert_eq!(tone_file.description, "Acoustic Grand Piano");
 }
 
@@ -40,7 +43,7 @@ fn test_open_variation_selector_action_exists() {
     use crate::config::{Action, Config};
 
     let config = Config::default();
-    
+
     // Verify CTRL+O is mapped to OpenVariationSelector
     assert_eq!(
         config.get_action("Ctrl+o"),

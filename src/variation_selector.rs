@@ -54,6 +54,23 @@ pub fn open_variation_selector() -> io::Result<Option<ToneData>> {
                             let variation = &tone_file.variations[idx - 1];
                             let tone_data =
                                 register::registers_to_editor_rows(&variation.registers)?;
+                            
+                            // Validate tone data dimensions
+                            if tone_data.len() != crate::models::GRID_HEIGHT {
+                                return Err(io::Error::new(
+                                    io::ErrorKind::InvalidData,
+                                    "Invalid tone data: incorrect number of rows",
+                                ));
+                            }
+                            for row in tone_data.iter() {
+                                if row.len() != crate::models::GRID_WIDTH {
+                                    return Err(io::Error::new(
+                                        io::ErrorKind::InvalidData,
+                                        "Invalid tone data: incorrect row width",
+                                    ));
+                                }
+                            }
+                            
                             return Ok(Some(tone_data));
                         }
                     }
