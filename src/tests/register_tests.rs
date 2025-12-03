@@ -526,7 +526,8 @@ fn test_envelope_reset_events() {
     values[ROW_CH][CH_PARAM_ALG] = 4;
     values[ROW_CH][CH_PARAM_FB] = 0;
 
-    let events = editor_rows_to_ym2151_events_with_envelope_reset(&values);
+    let events =
+        editor_rows_to_ym2151_events_with_envelope_reset(&values, DEFAULT_ENVELOPE_DELAY_SECONDS);
 
     // The first 4 events should be D2R=15 writes
     // Verify D2R=15 is set for all operators using calculated addresses
@@ -581,22 +582,27 @@ fn test_envelope_reset_events() {
         "KEY_OFF should be for channel 0"
     );
 
-    // Verify tone settings and KEY_ON are at time 0.005
-    let delayed_events: Vec<_> = events.iter().filter(|e| e.time == 0.005).collect();
+    // Verify tone settings and KEY_ON are at the default envelope delay time
+    let delayed_events: Vec<_> = events
+        .iter()
+        .filter(|e| e.time == DEFAULT_ENVELOPE_DELAY_SECONDS)
+        .collect();
     assert!(
         !delayed_events.is_empty(),
-        "Should have events at time 0.005 (tone settings and KEY_ON)"
+        "Should have events at time {} (tone settings and KEY_ON)",
+        DEFAULT_ENVELOPE_DELAY_SECONDS
     );
 
-    // Verify KEY_ON is at time 0.005
+    // Verify KEY_ON is at the default envelope delay time
     let key_on_events: Vec<_> = events
         .iter()
-        .filter(|e| e.addr == "0x08" && e.time == 0.005)
+        .filter(|e| e.addr == "0x08" && e.time == DEFAULT_ENVELOPE_DELAY_SECONDS)
         .collect();
     assert_eq!(
         key_on_events.len(),
         1,
-        "Should have exactly one KEY_ON event at time 0.005"
+        "Should have exactly one KEY_ON event at time {}",
+        DEFAULT_ENVELOPE_DELAY_SECONDS
     );
 
     // Verify total event count: envelope reset events + normal events

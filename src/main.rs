@@ -48,7 +48,7 @@ pub fn enable_verbose_logging() {
 
 use app::App;
 use clap::{Arg, Command};
-use config::KeybindsConfig;
+use config::Config;
 use crossterm::{
     event::{
         self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, KeyModifiers,
@@ -130,7 +130,7 @@ fn main() -> Result<(), io::Error> {
     #[cfg(windows)]
     ym2151_log_play_server::client::init_client(verbose);
 
-    let keybinds_config = KeybindsConfig::load_or_default();
+    let config = Config::load_or_default();
     let use_interactive_mode = !legacy_play_mode;
 
     #[cfg(windows)]
@@ -149,7 +149,11 @@ fn main() -> Result<(), io::Error> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let mut app = App::new(use_interactive_mode, value_by_mouse_move);
+    let mut app = App::new(
+        use_interactive_mode,
+        value_by_mouse_move,
+        config.audio.envelope_delay_seconds,
+    );
 
     #[cfg(windows)]
     {
@@ -160,7 +164,7 @@ fn main() -> Result<(), io::Error> {
         }
     }
 
-    let res = run_app(&mut terminal, &mut app, &keybinds_config);
+    let res = run_app(&mut terminal, &mut app, &config);
 
     disable_raw_mode()?;
     execute!(
@@ -180,7 +184,7 @@ fn main() -> Result<(), io::Error> {
 fn run_app<B: ratatui::backend::Backend>(
     terminal: &mut Terminal<B>,
     app: &mut App,
-    keybinds_config: &KeybindsConfig,
+    config: &Config,
 ) -> io::Result<()> {
     loop {
         terminal.draw(|f| {
@@ -196,7 +200,7 @@ fn run_app<B: ratatui::backend::Backend>(
                     // Convert key to string for config lookup
                     if let Some(key_string) = key_to_string(key.code, key.modifiers) {
                         // Look up action in config
-                        if let Some(action) = keybinds_config.get_action(&key_string) {
+                        if let Some(action) = config.get_action(&key_string) {
                             use config::Action;
                             match action {
                                 Action::DecreaseValue => app.decrease_value(),

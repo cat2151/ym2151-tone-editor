@@ -12,6 +12,9 @@ pub struct App {
     pub use_interactive_mode: bool,
     /// ペンタトニック鍵盤のマウスホバー座標(Noneなら未ホバー)
     pub hovered_penta_x: Option<usize>,
+    /// Envelope delay in seconds before tone parameters are set (default: 0.005)
+    #[allow(dead_code)] // Used on Windows builds for audio playback
+    pub envelope_delay_seconds: f64,
 }
 
 impl App {
@@ -38,8 +41,13 @@ impl App {
     pub fn new(
         #[allow(unused_variables)] use_interactive_mode: bool,
         value_by_mouse_move: bool,
+        envelope_delay_seconds: f64,
     ) -> App {
-        let mut app = crate::app_init::init_app(use_interactive_mode, value_by_mouse_move);
+        let mut app = crate::app_init::init_app(
+            use_interactive_mode,
+            value_by_mouse_move,
+            envelope_delay_seconds,
+        );
         app.hovered_penta_x = None;
         app
     }
@@ -112,6 +120,7 @@ impl App {
                 self.use_interactive_mode,
                 self.cursor_x,
                 self.cursor_y,
+                self.envelope_delay_seconds,
             );
         }
     }
@@ -127,6 +136,7 @@ impl App {
                 self.use_interactive_mode,
                 self.cursor_x,
                 self.cursor_y,
+                self.envelope_delay_seconds,
             );
         }
     }
@@ -153,6 +163,7 @@ impl App {
                 self.use_interactive_mode,
                 self.cursor_x,
                 self.cursor_y,
+                self.envelope_delay_seconds,
             );
         }
     }
@@ -174,6 +185,7 @@ impl App {
                 self.use_interactive_mode,
                 self.cursor_x,
                 self.cursor_y,
+                self.envelope_delay_seconds,
             );
         }
     }
@@ -192,6 +204,7 @@ impl App {
             self.use_interactive_mode,
             self.cursor_x,
             self.cursor_y,
+            self.envelope_delay_seconds,
         );
     }
 
@@ -204,6 +217,7 @@ impl App {
             self.use_interactive_mode,
             self.cursor_x,
             self.cursor_y,
+            self.envelope_delay_seconds,
         );
     }
 
@@ -239,6 +253,7 @@ impl App {
             self.use_interactive_mode,
             self.cursor_x,
             self.cursor_y,
+            self.envelope_delay_seconds,
         );
     }
 
@@ -346,6 +361,7 @@ impl App {
                 self.use_interactive_mode,
                 self.cursor_x,
                 self.cursor_y,
+                self.envelope_delay_seconds,
             );
         }
     }
@@ -372,6 +388,7 @@ impl App {
             self.use_interactive_mode,
             self.cursor_x,
             self.cursor_y,
+            self.envelope_delay_seconds,
         );
     }
 
@@ -393,6 +410,7 @@ impl App {
                 self.use_interactive_mode,
                 self.cursor_x,
                 self.cursor_y,
+                self.envelope_delay_seconds,
             );
         }
     }
@@ -414,6 +432,7 @@ impl App {
                 self.use_interactive_mode,
                 self.cursor_x,
                 self.cursor_y,
+                self.envelope_delay_seconds,
             );
         }
     }
@@ -436,6 +455,7 @@ impl App {
                 self.use_interactive_mode,
                 self.cursor_x,
                 self.cursor_y,
+                self.envelope_delay_seconds,
             );
         }
     }
@@ -457,6 +477,7 @@ impl App {
                 self.use_interactive_mode,
                 self.cursor_x,
                 self.cursor_y,
+                self.envelope_delay_seconds,
             );
         }
     }
@@ -785,6 +806,7 @@ impl App {
                 self.use_interactive_mode,
                 self.cursor_x,
                 self.cursor_y,
+                self.envelope_delay_seconds,
             );
         }
     }
@@ -806,6 +828,7 @@ impl App {
                 self.use_interactive_mode,
                 self.cursor_x,
                 self.cursor_y,
+                self.envelope_delay_seconds,
             );
         }
     }

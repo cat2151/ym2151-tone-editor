@@ -1,3 +1,4 @@
+use crate::models::DEFAULT_ENVELOPE_DELAY_SECONDS;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -78,14 +79,40 @@ pub enum Action {
     Exit,
 }
 
-/// Configuration for keybinds
+/// Audio settings configuration
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct KeybindsConfig {
-    #[serde(default)]
-    pub keybinds: HashMap<String, Action>,
+pub struct AudioConfig {
+    /// Envelope delay in seconds before tone parameters are set
+    /// Default: 0.005 (5ms)
+    #[serde(default = "default_envelope_delay")]
+    pub envelope_delay_seconds: f64,
 }
 
-impl Default for KeybindsConfig {
+fn default_envelope_delay() -> f64 {
+    DEFAULT_ENVELOPE_DELAY_SECONDS
+}
+
+impl Default for AudioConfig {
+    fn default() -> Self {
+        AudioConfig {
+            envelope_delay_seconds: default_envelope_delay(),
+        }
+    }
+}
+
+/// Configuration for keybinds and audio settings
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Config {
+    #[serde(default)]
+    pub keybinds: HashMap<String, Action>,
+    #[serde(default)]
+    pub audio: AudioConfig,
+}
+
+/// Legacy structure name for backwards compatibility
+pub type KeybindsConfig = Config;
+
+impl Default for Config {
     fn default() -> Self {
         let mut keybinds = HashMap::new();
 
@@ -212,31 +239,34 @@ impl Default for KeybindsConfig {
         // Exit
         keybinds.insert("Esc".to_string(), Action::Exit);
 
-        KeybindsConfig { keybinds }
+        Config {
+            keybinds,
+            audio: AudioConfig::default(),
+        }
     }
 }
 
-impl KeybindsConfig {
-    /// Load keybinds configuration from a TOML file
+impl Config {
+    /// Load configuration from a TOML file
     pub fn load_from_file(filename: &str) -> io::Result<Self> {
         let toml_string = fs::read_to_string(filename)?;
-        let config: KeybindsConfig = toml::from_str(&toml_string)
+        let config: Config = toml::from_str(&toml_string)
             .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
         Ok(config)
     }
 
-    /// Load keybinds from current directory's ym2151-tone-editor.toml if it exists,
-    /// otherwise use default keybinds
+    /// Load configuration from current directory's ym2151-tone-editor.toml if it exists,
+    /// otherwise use default configuration
     pub fn load_or_default() -> Self {
         const CONFIG_FILE: &str = "ym2151-tone-editor.toml";
 
         match Self::load_from_file(CONFIG_FILE) {
             Ok(config) => {
-                crate::log_verbose(&format!("Loaded keybinds from {}", CONFIG_FILE));
+                crate::log_verbose(&format!("Loaded configuration from {}", CONFIG_FILE));
                 config
             }
             Err(_) => {
-                crate::log_verbose("Using default keybinds");
+                crate::log_verbose("Using default configuration");
                 Self::default()
             }
         }
@@ -247,7 +277,7 @@ impl KeybindsConfig {
         self.keybinds.get(key)
     }
 
-    /// Save the current keybinds configuration to a TOML file
+    /// Save the current configuration to a TOML file
     #[cfg(test)]
     pub fn save_to_file(&self, filename: &str) -> io::Result<()> {
         let toml_string = toml::to_string_pretty(self)
@@ -340,5 +370,37 @@ mod tests {
 
         // Clean up
         let _ = std::fs::remove_file(temp_file);
+    }
+
+    #[test]
+    fn test_default_audio_config() {
+        let config = Config::default();
+        assert_eq!(config.audio.envelope_delay_seconds, 0.005);
+    }
+
+    #[test]
+    fn test_load_audio_config_from_toml() {
+        let toml_str = r#"
+[keybinds]
+"q" = "decrease_value"
+
+[audio]
+envelope_delay_seconds = 0.010
+"#;
+
+        let config: Config = toml::from_str(toml_str).unwrap();
+        assert_eq!(config.audio.envelope_delay_seconds, 0.010);
+    }
+
+    #[test]
+    fn test_audio_config_with_defaults() {
+        // Test that missing audio section uses defaults
+        let toml_str = r#"
+[keybinds]
+"q" = "decrease_value"
+"#;
+
+        let config: Config = toml::from_str(toml_str).unwrap();
+        assert_eq!(config.audio.envelope_delay_seconds, 0.005);
     }
 }

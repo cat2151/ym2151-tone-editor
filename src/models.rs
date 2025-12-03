@@ -64,6 +64,10 @@ pub const CH_PARAM_NOTE: usize = 2;
 // Row index for channel settings
 pub const ROW_CH: usize = 4;
 
+/// Default envelope delay in seconds before tone parameters are set
+/// This is the default value used when no configuration is provided
+pub const DEFAULT_ENVELOPE_DELAY_SECONDS: f64 = 0.005;
+
 /// Type alias for tone data grid
 pub type ToneData = [[u8; GRID_WIDTH]; GRID_HEIGHT];
 
