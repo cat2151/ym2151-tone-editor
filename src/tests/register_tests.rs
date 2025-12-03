@@ -528,16 +528,26 @@ fn test_envelope_reset_events() {
 
     let events = editor_rows_to_ym2151_events_with_envelope_reset(&values);
 
-    // The first 4 events should be D2R=15 writes (registers 0xC0, 0xC8, 0xD0, 0xD8)
-    // Verify D2R=15 is set for all operators
-    let d2r_events: Vec<_> = events
-        .iter()
-        .filter(|e| e.addr == "0xC0" || e.addr == "0xC8" || e.addr == "0xD0" || e.addr == "0xD8")
+    // The first 4 events should be D2R=15 writes
+    // Verify D2R=15 is set for all operators using calculated addresses
+    let channel = 0;
+    let expected_d2r_addrs: Vec<String> = (0..4)
+        .map(|row_id| {
+            let reg = crate::register::REG_FROM_O1_O4[row_id];
+            let op_offset = reg * 8 + channel;
+            format!("0x{:02X}", 0xC0 + op_offset)
+        })
         .collect();
 
-    assert!(
-        d2r_events.len() >= 4,
-        "Should have at least 4 D2R register writes"
+    let d2r_events: Vec<_> = events
+        .iter()
+        .filter(|e| expected_d2r_addrs.contains(&e.addr))
+        .collect();
+
+    assert_eq!(
+        d2r_events.len(),
+        4,
+        "Should have exactly 4 D2R register writes"
     );
 
     // Check the first D2R write (operator 0, register 0xC0)
@@ -550,7 +560,7 @@ fn test_envelope_reset_events() {
     );
     assert_eq!((data >> 6) & 0x03, 1, "DT2 should be preserved as 1");
 
-    // The 5th event should be KEY_OFF at time 0.005
+    // Verify KEY_OFF event with timing
     let key_off_event = events.iter().find(|e| e.addr == "0x08" && e.time > 0.0);
     assert!(
         key_off_event.is_some(),
@@ -560,11 +570,14 @@ fn test_envelope_reset_events() {
     assert_eq!(key_off.time, 0.005, "KEY_OFF should have 5ms delay");
     assert_eq!(key_off.data, "0x00", "KEY_OFF should be for channel 0");
 
-    // After the envelope reset events, should have all the normal register events
-    // Total events should be: 4 D2R + 1 KEY_OFF + 28 normal events = 33 events
+    // Verify total event count: envelope reset events + normal events
+    let normal_events = crate::register::editor_rows_to_ym2151_events(&values);
+    let expected_total = 4 + 1 + normal_events.len(); // 4 D2R + 1 KEY_OFF + normal events
     assert_eq!(
         events.len(),
-        33,
-        "Should have correct total number of events"
+        expected_total,
+        "Should have correct total number of events (4 D2R + 1 KEY_OFF + {} normal = {})",
+        normal_events.len(),
+        expected_total
     );
 }
