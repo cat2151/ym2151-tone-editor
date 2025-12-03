@@ -45,8 +45,8 @@ pub fn play_tone(values: &ToneData, use_interactive_mode: bool, cursor_x: usize,
 /// Converts tone data to JSON and sends via named pipe to server
 #[cfg(windows)]
 fn send_json_update(values: &ToneData) {
-    // Get JSON string of current tone data
-    let json_string = match register::to_json_string(values) {
+    // Get JSON string of current tone data with envelope reset
+    let json_string = match register::to_json_string_with_envelope_reset(values) {
         Ok(json) => json,
         Err(e) => {
             eprintln!("send_json_update: JSON変換失敗: {}", e);
@@ -156,7 +156,7 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
 
     let mut events = Vec::new();
 
-    add_key_off(&mut events, channel);
+    add_key_off(&mut events, channel, values);
 
     // Determine which register(s) to send based on the edited parameter
     match param_index {
@@ -311,7 +311,7 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
 
     let mut events = Vec::new();
 
-    add_key_off(&mut events, channel);
+    add_key_off(&mut events, channel, values);
 
     // Determine which register(s) to send based on the edited parameter
     match param_index {
@@ -398,14 +398,39 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
 }
 
 /// Helper function to add KEY_OFF (note-off) register to events
+/// Sets D2R=15 for all operators before KEY_OFF to reset envelope to 0
 #[cfg(windows)]
-fn add_key_off(events: &mut Vec<Ym2151Event>, channel: u8) {
+fn add_key_off(events: &mut Vec<Ym2151Event>, channel: u8, values: &ToneData) {
+    // Set D2R=15 for all operators to decay envelope to 0 before next note
+    // This prevents envelope continuation across notes (issue #115)
+    for row_id in 0..4 {
+        let reg = register::REG_FROM_O1_O4[row_id];
+        let op_offset = reg * 8 + channel as usize;
+        
+        // Get current DT2 value from values to preserve it
+        let dt2 = values[row_id][PARAM_DT2];
+        // Set D2R to 15 (maximum decay rate)
+        let dt2_d2r = ((dt2 & 0x03) << 6) | 0x0F;
+        
+        log_verbose(&format!(
+            "  operator register: addr=0x{:02X}, data=0x{:02X} (DT2={}, D2R=15 for envelope reset)",
+            0xC0 + op_offset as u8,
+            dt2_d2r,
+            dt2
+        ));
+        events.push(Ym2151Event {
+            time: 0.0,
+            addr: format!("0x{:02X}", 0xC0 + op_offset as u8),
+            data: format!("0x{:02X}", dt2_d2r),
+        });
+    }
+    
     log_verbose(&format!(
         "  channel register: addr=0x08, data=0x{:02X} (KEY_OFF)",
         channel
     ));
     events.push(Ym2151Event {
-        time: 0.0,
+        time: 0.005, // Wait 5ms for envelope to decay to 0
         addr: "0x08".to_string(),
         data: format!("0x{:02X}", channel), // KEY_OFF: no slot mask, just channel
     });

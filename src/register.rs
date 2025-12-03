@@ -244,9 +244,54 @@ pub fn json_events_to_editor_rows(events: &[Ym2151Event]) -> io::Result<ToneData
     Ok(editor_rows)
 }
 
+/// Convert tone data to YM2151 register events with envelope reset
+/// This is used for audio preview to prevent envelope continuation across notes (issue #115)
+#[cfg(windows)]
+pub fn editor_rows_to_ym2151_events_with_envelope_reset(editor_rows: &ToneData) -> Vec<Ym2151Event> {
+    let mut events = Vec::new();
+    let channel = 0;
+    
+    // Set D2R=15 for all operators to decay envelope to 0 before next note
+    for row_id in 0..4 {
+        let reg = REG_FROM_O1_O4[row_id];
+        let op_offset = reg * 8 + channel;
+        
+        // Get current DT2 value to preserve it
+        let dt2 = editor_rows[row_id][PARAM_DT2];
+        // Set D2R to 15 (maximum decay rate)
+        let dt2_d2r = ((dt2 & 0x03) << 6) | 0x0F;
+        
+        events.push(Ym2151Event {
+            time: 0.0,
+            addr: format!("0x{:02X}", 0xC0 + op_offset),
+            data: format!("0x{:02X}", dt2_d2r),
+        });
+    }
+    
+    // KEY_OFF before setting new parameters
+    events.push(Ym2151Event {
+        time: 0.005, // Wait 5ms for envelope to decay to 0
+        addr: "0x08".to_string(),
+        data: format!("0x{:02X}", channel),
+    });
+    
+    // Add all the normal register events
+    events.extend(editor_rows_to_ym2151_events(editor_rows));
+    
+    events
+}
+
 /// Convert tone data to JSON string in ym2151-log-play-server format
 pub fn to_json_string(values: &ToneData) -> Result<String, serde_json::Error> {
     let events = editor_rows_to_ym2151_events(values);
+    let log = Ym2151Log { events };
+    serde_json::to_string_pretty(&log)
+}
+
+/// Convert tone data to JSON string with envelope reset for audio preview
+#[cfg(windows)]
+pub fn to_json_string_with_envelope_reset(values: &ToneData) -> Result<String, serde_json::Error> {
+    let events = editor_rows_to_ym2151_events_with_envelope_reset(values);
     let log = Ym2151Log { events };
     serde_json::to_string_pretty(&log)
 }
