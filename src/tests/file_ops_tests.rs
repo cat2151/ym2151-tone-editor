@@ -305,3 +305,73 @@ fn test_gm_file_minified_variations_format() {
     // Clean up
     std::fs::remove_file(test_filename).ok();
 }
+
+#[test]
+fn test_append_to_gm_file() {
+    use std::path::Path;
+
+    let test_filename = "test_append_gm.json";
+
+    // Clean up any existing test file
+    let _ = std::fs::remove_file(test_filename);
+
+    // Create first tone data
+    let mut values1 = [[0; GRID_WIDTH]; GRID_HEIGHT];
+    values1[0][PARAM_MUL] = 5;
+    values1[0][PARAM_TL] = 30;
+    values1[ROW_CH][CH_PARAM_ALG] = 3;
+    values1[ROW_CH][CH_PARAM_FB] = 2;
+    values1[ROW_CH][CH_PARAM_NOTE] = 60;
+
+    // Append first variation (file doesn't exist yet)
+    let result = append_to_gm_file(test_filename, &values1, "First Variation");
+    assert!(
+        result.is_ok(),
+        "Failed to append first variation: {:?}",
+        result.err()
+    );
+
+    // Verify file exists
+    assert!(Path::new(test_filename).exists(), "GM file was not created");
+
+    // Read and parse the file
+    let content = std::fs::read_to_string(test_filename).unwrap();
+    let tone_file: ToneFile = serde_json::from_str(&content).unwrap();
+    assert_eq!(tone_file.variations.len(), 1, "Should have 1 variation");
+    assert_eq!(tone_file.variations[0].description, "First Variation");
+
+    // Create second tone data with different values
+    let mut values2 = [[0; GRID_WIDTH]; GRID_HEIGHT];
+    values2[0][PARAM_MUL] = 10;
+    values2[0][PARAM_TL] = 50;
+    values2[ROW_CH][CH_PARAM_ALG] = 7;
+    values2[ROW_CH][CH_PARAM_FB] = 5;
+    values2[ROW_CH][CH_PARAM_NOTE] = 72;
+
+    // Append second variation
+    let result = append_to_gm_file(test_filename, &values2, "Second Variation");
+    assert!(
+        result.is_ok(),
+        "Failed to append second variation: {:?}",
+        result.err()
+    );
+
+    // Read and verify we now have 2 variations
+    let content = std::fs::read_to_string(test_filename).unwrap();
+    let tone_file: ToneFile = serde_json::from_str(&content).unwrap();
+    assert_eq!(tone_file.variations.len(), 2, "Should have 2 variations");
+    assert_eq!(tone_file.variations[0].description, "First Variation");
+    assert_eq!(tone_file.variations[1].description, "Second Variation");
+
+    // Verify the variations have different note numbers
+    assert_eq!(tone_file.variations[0].note_number, Some(60));
+    assert_eq!(tone_file.variations[1].note_number, Some(72));
+
+    // Load first variation and verify values
+    let loaded1 = load_from_gm_file(test_filename).unwrap();
+    assert_eq!(loaded1[0][PARAM_MUL], values1[0][PARAM_MUL]);
+    assert_eq!(loaded1[0][PARAM_TL], values1[0][PARAM_TL]);
+
+    // Clean up
+    std::fs::remove_file(test_filename).ok();
+}

@@ -126,6 +126,54 @@ pub fn save_to_gm_file(filename: &str, values: &ToneData, description: &str) -> 
     Ok(())
 }
 
+/// Append tone data as a new variation to General MIDI tone file
+/// Reads existing file, adds new variation to the end, and writes back
+pub fn append_to_gm_file(filename: &str, values: &ToneData, description: &str) -> io::Result<()> {
+    // Convert tone data to registers hex string
+    let registers = register::editor_rows_to_registers(values);
+
+    // Get the current MIDI note from the tone data
+    let note_number = values[crate::models::ROW_CH][crate::models::CH_PARAM_NOTE];
+
+    // Create the new variation
+    let new_variation = crate::models::ToneVariation {
+        description: description.to_string(),
+        mml: None,
+        note_number: Some(note_number),
+        registers,
+    };
+
+    // Try to load existing file, or create new if it doesn't exist
+    let mut tone_file = match fs::read_to_string(filename) {
+        Ok(json_string) => serde_json::from_str::<crate::models::ToneFile>(&json_string)
+            .map_err(io::Error::other)?,
+        Err(e) if e.kind() == io::ErrorKind::NotFound => {
+            // File doesn't exist, create new structure
+            crate::models::ToneFile {
+                description: "Acoustic Grand Piano".to_string(),
+                variations: vec![],
+            }
+        }
+        Err(e) => return Err(e),
+    };
+
+    // Append the new variation
+    tone_file.variations.push(new_variation);
+
+    // Serialize to JSON with minified variations
+    let json_string =
+        serialize_tone_file_with_minified_variations(&tone_file).map_err(io::Error::other)?;
+
+    // Ensure directory exists
+    if let Some(parent) = std::path::Path::new(filename).parent() {
+        fs::create_dir_all(parent)?;
+    }
+
+    // Write to file
+    fs::write(filename, json_string)?;
+    Ok(())
+}
+
 /// Serialize ToneFile with minified variations (one line per variation)
 /// The outer structure is pretty-printed, but each variation is on a single line
 fn serialize_tone_file_with_minified_variations(

@@ -76,6 +76,7 @@ pub enum Action {
     JumpToAmsAndDecrease,
     JumpToNoteAndIncrease,
     JumpToNoteAndDecrease,
+    SaveToGmVariations,
     Exit,
 }
 
@@ -235,6 +236,9 @@ impl Default for Config {
         // AMS (Amplitude Modulation Sensitivity) shortcuts (jump to current row's AMS parameter)
         keybinds.insert("i".to_string(), Action::JumpToAmsAndIncrease);
         keybinds.insert("I".to_string(), Action::JumpToAmsAndDecrease);
+
+        // Save to GM variations
+        keybinds.insert("Ctrl+s".to_string(), Action::SaveToGmVariations);
 
         // Exit
         keybinds.insert("Esc".to_string(), Action::Exit);
