@@ -530,8 +530,9 @@ fn test_envelope_reset_events() {
 
     // The first 4 events should be D2R=15 writes
     // Verify D2R=15 is set for all operators using calculated addresses
+    use std::collections::HashSet;
     let channel = 0;
-    let expected_d2r_addrs: Vec<String> = (0..4)
+    let expected_d2r_addrs: HashSet<String> = (0..4)
         .map(|row_id| {
             let reg = crate::register::REG_FROM_O1_O4[row_id];
             let op_offset = reg * 8 + channel;
