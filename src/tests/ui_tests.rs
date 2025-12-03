@@ -5,6 +5,23 @@ use crate::ui::*;
 use ratatui::style::Color;
 
 #[test]
+fn test_get_key_guide() {
+    // Test that all parameters with jump keybindings return the correct letter
+    assert_eq!(get_key_guide(PARAM_SM), Some('O'));
+    assert_eq!(get_key_guide(PARAM_TL), Some('T'));
+    assert_eq!(get_key_guide(PARAM_MUL), Some('M'));
+    assert_eq!(get_key_guide(PARAM_AR), Some('A'));
+    assert_eq!(get_key_guide(PARAM_D1R), Some('D'));
+    assert_eq!(get_key_guide(PARAM_D1L), Some('L'));
+    assert_eq!(get_key_guide(PARAM_D2R), Some('S'));
+    assert_eq!(get_key_guide(PARAM_RR), Some('R'));
+    assert_eq!(get_key_guide(PARAM_DT), Some('U'));
+    assert_eq!(get_key_guide(PARAM_DT2), Some('N'));
+    assert_eq!(get_key_guide(PARAM_KS), Some('K'));
+    assert_eq!(get_key_guide(PARAM_AMS), Some('I'));
+}
+
+#[test]
 fn test_get_param_color() {
     // Test operator row colors
     assert_eq!(get_param_color(PARAM_MUL, false), Color::Green);
