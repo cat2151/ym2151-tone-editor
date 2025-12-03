@@ -497,3 +497,116 @@ fn test_registers_invalid_hex() {
     let result = registers_to_editor_rows("GGGG");
     assert!(result.is_err(), "Should error on invalid hex characters");
 }
+
+#[test]
+#[cfg(windows)]
+fn test_envelope_reset_events() {
+    use crate::register::editor_rows_to_ym2151_events_with_envelope_reset;
+
+    let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
+
+    // Set some D2R values different from 15 to test they get overridden
+    values[0][PARAM_D2R] = 5;
+    values[1][PARAM_D2R] = 7;
+    values[2][PARAM_D2R] = 3;
+    values[3][PARAM_D2R] = 9;
+
+    // Set DT2 values to verify they are preserved
+    values[0][PARAM_DT2] = 1;
+    values[1][PARAM_DT2] = 2;
+    values[2][PARAM_DT2] = 0;
+    values[3][PARAM_DT2] = 3;
+
+    // Enable all operators
+    values[0][PARAM_SM] = 1;
+    values[1][PARAM_SM] = 1;
+    values[2][PARAM_SM] = 1;
+    values[3][PARAM_SM] = 1;
+
+    values[ROW_CH][CH_PARAM_ALG] = 4;
+    values[ROW_CH][CH_PARAM_FB] = 0;
+
+    let events = editor_rows_to_ym2151_events_with_envelope_reset(&values);
+
+    // The first 4 events should be D2R=15 writes
+    // Verify D2R=15 is set for all operators using calculated addresses
+    use std::collections::HashSet;
+    let channel = 0;
+    let expected_d2r_addrs: HashSet<String> = (0..4)
+        .map(|row_id| {
+            let reg = crate::register::REG_FROM_O1_O4[row_id];
+            let op_offset = reg * 8 + channel;
+            format!("0x{:02X}", 0xC0 + op_offset)
+        })
+        .collect();
+
+    let d2r_events: Vec<_> = events
+        .iter()
+        .filter(|e| expected_d2r_addrs.contains(&e.addr))
+        .collect();
+
+    assert_eq!(
+        d2r_events.len(),
+        4,
+        "Should have exactly 4 D2R register writes"
+    );
+
+    // Check D2R events at time 0.0
+    for d2r_event in &d2r_events {
+        assert_eq!(d2r_event.time, 0.0, "D2R=15 events should be at time 0.0");
+    }
+
+    // Check the first D2R write (operator 0, register 0xC0)
+    let first_d2r = d2r_events[0];
+    let data = u8::from_str_radix(first_d2r.data.trim_start_matches("0x"), 16).unwrap();
+    assert_eq!(
+        data & 0x0F,
+        0x0F,
+        "D2R should be set to 15 for envelope reset"
+    );
+    assert_eq!((data >> 6) & 0x03, 1, "DT2 should be preserved as 1");
+
+    // Verify KEY_OFF event at time 0.0
+    let key_off_events: Vec<_> = events
+        .iter()
+        .filter(|e| e.addr == "0x08" && e.time == 0.0)
+        .collect();
+    assert_eq!(
+        key_off_events.len(),
+        1,
+        "Should have exactly one KEY_OFF event at time 0.0"
+    );
+    assert_eq!(
+        key_off_events[0].data, "0x00",
+        "KEY_OFF should be for channel 0"
+    );
+
+    // Verify tone settings and KEY_ON are at time 0.005
+    let delayed_events: Vec<_> = events.iter().filter(|e| e.time == 0.005).collect();
+    assert!(
+        !delayed_events.is_empty(),
+        "Should have events at time 0.005 (tone settings and KEY_ON)"
+    );
+
+    // Verify KEY_ON is at time 0.005
+    let key_on_events: Vec<_> = events
+        .iter()
+        .filter(|e| e.addr == "0x08" && e.time == 0.005)
+        .collect();
+    assert_eq!(
+        key_on_events.len(),
+        1,
+        "Should have exactly one KEY_ON event at time 0.005"
+    );
+
+    // Verify total event count: envelope reset events + normal events
+    let normal_events = crate::register::editor_rows_to_ym2151_events(&values);
+    let expected_total = 4 + 1 + normal_events.len(); // 4 D2R + 1 KEY_OFF + normal events
+    assert_eq!(
+        events.len(),
+        expected_total,
+        "Should have correct total number of events (4 D2R + 1 KEY_OFF + {} normal = {})",
+        normal_events.len(),
+        expected_total
+    );
+}

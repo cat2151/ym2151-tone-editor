@@ -32,6 +32,32 @@ fn add_key_on(values: &ToneData, events: &mut Vec<Ym2151Event>) {
 pub const REG_FROM_O1_O4: [usize; 4] = [0, 2, 1, 3];
 pub const O1_O4_FROM_REG: [usize; 4] = [0, 2, 1, 3]; // 内容は同じだが、可読性を優先し、別名で定義
 
+/// Helper function to generate D2R=15 register events for envelope reset
+/// Preserves DT2 values while setting D2R to maximum decay rate (15)
+/// Used to reset envelope amplitude to 0 before next note (issue #115)
+#[cfg(windows)]
+pub fn generate_d2r_15_events(values: &ToneData, channel: usize, time: f64) -> Vec<Ym2151Event> {
+    let mut events = Vec::new();
+
+    for row_id in 0..4 {
+        let reg = REG_FROM_O1_O4[row_id];
+        let op_offset = reg * 8 + channel;
+
+        // Get current DT2 value to preserve it
+        let dt2 = values[row_id][PARAM_DT2];
+        // Set D2R to 15 (maximum decay rate)
+        let dt2_d2r = ((dt2 & 0x03) << 6) | 0x0F;
+
+        events.push(Ym2151Event {
+            time,
+            addr: format!("0x{:02X}", 0xC0 + op_offset),
+            data: format!("0x{:02X}", dt2_d2r),
+        });
+    }
+
+    events
+}
+
 /// Convert tone data to YM2151 register events
 /// This generates register writes for the YM2151 chip based on the current tone parameters
 pub fn editor_rows_to_ym2151_events(editor_rows: &ToneData) -> Vec<Ym2151Event> {
@@ -244,9 +270,47 @@ pub fn json_events_to_editor_rows(events: &[Ym2151Event]) -> io::Result<ToneData
     Ok(editor_rows)
 }
 
+/// Convert tone data to YM2151 register events with envelope reset
+/// This is used for audio preview to prevent envelope continuation across notes (issue #115)
+#[cfg(windows)]
+pub fn editor_rows_to_ym2151_events_with_envelope_reset(
+    editor_rows: &ToneData,
+) -> Vec<Ym2151Event> {
+    let mut events = Vec::new();
+    let channel = 0;
+
+    // Step 1: Set D2R=15 for all operators at time 0.0
+    events.extend(generate_d2r_15_events(editor_rows, channel, 0.0));
+
+    // Step 2: KEY_OFF at time 0.0
+    events.push(Ym2151Event {
+        time: 0.0,
+        addr: "0x08".to_string(),
+        data: format!("0x{:02X}", channel),
+    });
+
+    // Step 3: Wait 5ms, then set tone parameters and KEY_ON at time 0.005
+    // Add all the normal register events with 5ms delay
+    let mut tone_events = editor_rows_to_ym2151_events(editor_rows);
+    for event in &mut tone_events {
+        event.time = 0.005; // All tone settings and KEY_ON happen after 5ms delay
+    }
+    events.extend(tone_events);
+
+    events
+}
+
 /// Convert tone data to JSON string in ym2151-log-play-server format
 pub fn to_json_string(values: &ToneData) -> Result<String, serde_json::Error> {
     let events = editor_rows_to_ym2151_events(values);
+    let log = Ym2151Log { events };
+    serde_json::to_string_pretty(&log)
+}
+
+/// Convert tone data to JSON string with envelope reset for audio preview
+#[cfg(windows)]
+pub fn to_json_string_with_envelope_reset(values: &ToneData) -> Result<String, serde_json::Error> {
+    let events = editor_rows_to_ym2151_events_with_envelope_reset(values);
     let log = Ym2151Log { events };
     serde_json::to_string_pretty(&log)
 }
