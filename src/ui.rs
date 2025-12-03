@@ -21,6 +21,27 @@ pub fn get_operator_roles_for_alg(alg: u8) -> [bool; 4] {
     }
 }
 
+/// Get the keybinding guide letter for a parameter column
+/// Returns the uppercase letter if there's a jump keybinding for that parameter
+/// Based on default keybindings from config.rs
+pub(crate) fn get_key_guide(col: usize) -> Option<char> {
+    match col {
+        PARAM_SM => Some('O'),  // 'o'/'O' for SM (Slot Mask)
+        PARAM_TL => Some('T'),  // 't'/'T' for TL (Total Level)
+        PARAM_MUL => Some('M'), // 'm'/'M' for MUL
+        PARAM_AR => Some('A'),  // 'a'/'A' for AR (Attack Rate)
+        PARAM_D1R => Some('D'), // 'd'/'D' for D1R (Decay 1 Rate)
+        PARAM_D1L => Some('L'), // 'l'/'L' for D1L (Decay 1 Level)
+        PARAM_D2R => Some('S'), // 's'/'S' for D2R (Decay 2 Rate / Sustain Rate)
+        PARAM_RR => Some('R'),  // 'r'/'R' for RR (Release Rate)
+        PARAM_DT => Some('U'),  // 'u'/'U' for DT (Detune 1)
+        PARAM_DT2 => Some('N'), // 'n'/'N' for DT2 (Detune 2)
+        PARAM_KS => Some('K'),  // 'k'/'K' for KS (Key Scaling)
+        PARAM_AMS => Some('I'), // 'i'/'I' for AMS (Amplitude Modulation Sensitivity)
+        _ => None,
+    }
+}
+
 /// Get the color for a parameter based on its column index and row
 /// Returns the color to use for both the parameter name and value
 pub(crate) fn get_param_color(col: usize, is_ch_row: bool) -> Color {
@@ -180,7 +201,12 @@ pub fn ui(f: &mut Frame, app: &App) {
                 };
                 Style::default().fg(color)
             };
-            let text = format!("{:2}", value);
+            // Display key guide letter to the left of the value if available
+            let text = if let Some(key_guide) = get_key_guide(col) {
+                format!("{}{:2}", key_guide, value)
+            } else {
+                format!(" {:2}", value)
+            };
             let paragraph = Paragraph::new(Span::styled(text, style));
             f.render_widget(paragraph, area);
         }
