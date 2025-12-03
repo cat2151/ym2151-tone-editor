@@ -2,7 +2,7 @@
 #
 # 課題 : アプリdefaultのkeybindsが頻繁に破壊的変更されており、こちらは追いついていない。対策、様子見
 # 
-# This file allows you to customize keyboard shortcuts for the editor.
+# This file allows you to customize keyboard shortcuts and audio settings for the editor.
 # Format: "Key" = "action"
 #
 # Available keys:
@@ -116,3 +116,10 @@
 
 # Exit
 "Esc" = "exit"
+
+# Audio Settings
+# Configure the envelope delay (in seconds) before tone parameters are set.
+# This delay helps prevent envelope continuation across notes (issue #115).
+# Default: 0.005 (5 milliseconds)
+[audio]
+envelope_delay_seconds = 0.005

@@ -29,30 +29,37 @@ pub(crate) fn log_verbose(message: &str) {
 /// Play current tone data through audio server
 /// Routes to either interactive mode or legacy JSON mode based on settings
 #[cfg(windows)]
-pub fn play_tone(values: &ToneData, use_interactive_mode: bool, cursor_x: usize, cursor_y: usize) {
+pub fn play_tone(
+    values: &ToneData,
+    use_interactive_mode: bool,
+    cursor_x: usize,
+    cursor_y: usize,
+    envelope_delay_seconds: f64,
+) {
     if use_interactive_mode {
         log_verbose(&format!(
             "play_tone: Interactive mode - cursor_x={}, cursor_y={}",
             cursor_x, cursor_y
         ));
-        send_interactive_update(values, cursor_x, cursor_y);
+        send_interactive_update(values, cursor_x, cursor_y, envelope_delay_seconds);
     } else {
-        send_json_update(values);
+        send_json_update(values, envelope_delay_seconds);
     }
 }
 
 /// Send full JSON update (legacy mode)
 /// Converts tone data to JSON and sends via named pipe to server
 #[cfg(windows)]
-fn send_json_update(values: &ToneData) {
+fn send_json_update(values: &ToneData, envelope_delay_seconds: f64) {
     // Get JSON string of current tone data with envelope reset
-    let json_string = match register::to_json_string_with_envelope_reset(values) {
-        Ok(json) => json,
-        Err(e) => {
-            eprintln!("send_json_update: JSON変換失敗: {}", e);
-            std::process::exit(1);
-        }
-    };
+    let json_string =
+        match register::to_json_string_with_envelope_reset(values, envelope_delay_seconds) {
+            Ok(json) => json,
+            Err(e) => {
+                eprintln!("send_json_update: JSON変換失敗: {}", e);
+                std::process::exit(1);
+            }
+        };
 
     // サーバーへJSON送信（失敗時はprintして即終了）
     match ym2151_log_play_server::client::send_json(&json_string) {
@@ -126,14 +133,19 @@ fn send_all_registers(values: &ToneData) {
 /// Send interactive update for a single parameter change
 /// Only sends the specific register(s) affected by the edited parameter
 #[cfg(windows)]
-fn send_interactive_update(values: &ToneData, cursor_x: usize, cursor_y: usize) {
+fn send_interactive_update(
+    values: &ToneData,
+    cursor_x: usize,
+    cursor_y: usize,
+    envelope_delay_seconds: f64,
+) {
     if cursor_y == ROW_CH {
         // Channel parameter changed - send specific channel register(s)
         log_verbose(&format!(
             "send_interactive_update: Sending channel register for param {}",
             cursor_x
         ));
-        send_channel_register_for_param(values, cursor_x);
+        send_channel_register_for_param(values, cursor_x, envelope_delay_seconds);
     } else {
         // Operator parameter changed - send specific operator register
         let data_row = cursor_y;
@@ -141,13 +153,18 @@ fn send_interactive_update(values: &ToneData, cursor_x: usize, cursor_y: usize) 
             "send_interactive_update: Sending operator register for data_row={}, param={}",
             data_row, cursor_x
         ));
-        send_operator_register_for_param(values, data_row, cursor_x);
+        send_operator_register_for_param(values, data_row, cursor_x, envelope_delay_seconds);
     }
 }
 
 /// Send only the specific operator register(s) affected by a parameter change
 #[cfg(windows)]
-fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_index: usize) {
+fn send_operator_register_for_param(
+    values: &ToneData,
+    data_row: usize,
+    param_index: usize,
+    envelope_delay_seconds: f64,
+) {
     let channel: u8 = 0; // We use channel 0
     let reg = register::REG_FROM_O1_O4[data_row];
     let op_offset = reg * 8 + channel as usize;
@@ -159,7 +176,7 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
     add_key_off(&mut events, channel, values);
 
     // Determine which register(s) to send based on the edited parameter
-    // All these events happen after 5ms delay (time: 0.005)
+    // All these events happen after the configured envelope delay
     match param_index {
         PARAM_SM => {
             // SM affects KEY_ON register, which is handled at the end
@@ -175,7 +192,7 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
                 tl
             ));
             events.push(Ym2151Event {
-                time: 0.005,
+                time: envelope_delay_seconds,
                 addr: format!("0x{:02X}", 0x60 + op_offset as u8),
                 data: format!("0x{:02X}", tl & 0x7F),
             });
@@ -193,7 +210,7 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
                 mul
             ));
             events.push(Ym2151Event {
-                time: 0.005,
+                time: envelope_delay_seconds,
                 addr: format!("0x{:02X}", 0x40 + op_offset as u8),
                 data: format!("0x{:02X}", dt_mul),
             });
@@ -211,7 +228,7 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
                 ar
             ));
             events.push(Ym2151Event {
-                time: 0.005,
+                time: envelope_delay_seconds,
                 addr: format!("0x{:02X}", 0x80 + op_offset as u8),
                 data: format!("0x{:02X}", ks_ar),
             });
@@ -229,7 +246,7 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
                 d1r
             ));
             events.push(Ym2151Event {
-                time: 0.005,
+                time: envelope_delay_seconds,
                 addr: format!("0x{:02X}", 0xA0 + op_offset as u8),
                 data: format!("0x{:02X}", ams_d1r),
             });
@@ -247,7 +264,7 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
                 d2r
             ));
             events.push(Ym2151Event {
-                time: 0.005,
+                time: envelope_delay_seconds,
                 addr: format!("0x{:02X}", 0xC0 + op_offset as u8),
                 data: format!("0x{:02X}", dt2_d2r),
             });
@@ -265,7 +282,7 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
                 rr
             ));
             events.push(Ym2151Event {
-                time: 0.005,
+                time: envelope_delay_seconds,
                 addr: format!("0x{:02X}", 0xE0 + op_offset as u8),
                 data: format!("0x{:02X}", d1l_rr),
             });
@@ -279,7 +296,7 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
         }
     }
 
-    add_key_on(values, &mut events);
+    add_key_on(values, &mut events, envelope_delay_seconds);
 
     if events.is_empty() {
         return;
@@ -305,7 +322,11 @@ fn send_operator_register_for_param(values: &ToneData, data_row: usize, param_in
 
 /// Send only the specific channel register(s) affected by a parameter change
 #[cfg(windows)]
-fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
+fn send_channel_register_for_param(
+    values: &ToneData,
+    param_index: usize,
+    envelope_delay_seconds: f64,
+) {
     let channel = 0;
 
     // let _ = ym2151_log_play_server::client::clear_schedule();
@@ -315,7 +336,7 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
     add_key_off(&mut events, channel, values);
 
     // Determine which register(s) to send based on the edited parameter
-    // All these events happen after 5ms delay (time: 0.005)
+    // All these events happen after the configured envelope delay
     match param_index {
         CH_PARAM_ALG | CH_PARAM_FB => {
             // RL, FB, CON (Algorithm) - Register $20-$27 (shared register)
@@ -330,7 +351,7 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
                 fb
             ));
             events.push(Ym2151Event {
-                time: 0.005,
+                time: envelope_delay_seconds,
                 addr: format!("0x{:02X}", 0x20 + channel),
                 data: format!("0x{:02X}", rl_fb_con),
             });
@@ -348,7 +369,7 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
                 midi_note
             ));
             events.push(Ym2151Event {
-                time: 0.005,
+                time: envelope_delay_seconds,
                 addr: format!("0x{:02X}", 0x28 + channel),
                 data: format!("0x{:02X}", kc),
             });
@@ -361,7 +382,7 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
                 midi_note
             ));
             events.push(Ym2151Event {
-                time: 0.005,
+                time: envelope_delay_seconds,
                 addr: format!("0x{:02X}", 0x30 + channel),
                 data: format!("0x{:02X}", kf),
             });
@@ -375,7 +396,7 @@ fn send_channel_register_for_param(values: &ToneData, param_index: usize) {
         }
     }
 
-    add_key_on(values, &mut events);
+    add_key_on(values, &mut events, envelope_delay_seconds);
 
     if events.is_empty() {
         return;
@@ -428,7 +449,7 @@ fn add_key_off(events: &mut Vec<Ym2151Event>, channel: u8, values: &ToneData) {
 
 /// Helper function to add KEY_ON register to events
 #[cfg(windows)]
-pub fn add_key_on(values: &ToneData, events: &mut Vec<Ym2151Event>) {
+pub fn add_key_on(values: &ToneData, events: &mut Vec<Ym2151Event>, envelope_delay_seconds: f64) {
     let channel = 0; // We use channel 0
 
     // Calculate slot mask based on which operators are enabled
@@ -448,7 +469,7 @@ pub fn add_key_on(values: &ToneData, events: &mut Vec<Ym2151Event>) {
         key_on, slot_mask
     ));
     events.push(Ym2151Event {
-        time: 0.005,
+        time: envelope_delay_seconds,
         addr: "0x08".to_string(),
         data: format!("0x{:02X}", key_on),
     });

@@ -275,6 +275,7 @@ pub fn json_events_to_editor_rows(events: &[Ym2151Event]) -> io::Result<ToneData
 #[cfg(windows)]
 pub fn editor_rows_to_ym2151_events_with_envelope_reset(
     editor_rows: &ToneData,
+    envelope_delay_seconds: f64,
 ) -> Vec<Ym2151Event> {
     let mut events = Vec::new();
     let channel = 0;
@@ -289,11 +290,11 @@ pub fn editor_rows_to_ym2151_events_with_envelope_reset(
         data: format!("0x{:02X}", channel),
     });
 
-    // Step 3: Wait 5ms, then set tone parameters and KEY_ON at time 0.005
-    // Add all the normal register events with 5ms delay
+    // Step 3: Wait for configured delay, then set tone parameters and KEY_ON
+    // Add all the normal register events with the configured delay
     let mut tone_events = editor_rows_to_ym2151_events(editor_rows);
     for event in &mut tone_events {
-        event.time = 0.005; // All tone settings and KEY_ON happen after 5ms delay
+        event.time = envelope_delay_seconds; // All tone settings and KEY_ON happen after configured delay
     }
     events.extend(tone_events);
 
@@ -309,8 +310,11 @@ pub fn to_json_string(values: &ToneData) -> Result<String, serde_json::Error> {
 
 /// Convert tone data to JSON string with envelope reset for audio preview
 #[cfg(windows)]
-pub fn to_json_string_with_envelope_reset(values: &ToneData) -> Result<String, serde_json::Error> {
-    let events = editor_rows_to_ym2151_events_with_envelope_reset(values);
+pub fn to_json_string_with_envelope_reset(
+    values: &ToneData,
+    envelope_delay_seconds: f64,
+) -> Result<String, serde_json::Error> {
+    let events = editor_rows_to_ym2151_events_with_envelope_reset(values, envelope_delay_seconds);
     let log = Ym2151Log { events };
     serde_json::to_string_pretty(&log)
 }

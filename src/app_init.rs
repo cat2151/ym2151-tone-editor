@@ -5,6 +5,7 @@ use crate::models::*;
 pub fn init_app(
     #[allow(unused_variables)] use_interactive_mode: bool,
     value_by_mouse_move: bool,
+    envelope_delay_seconds: f64,
 ) -> App {
     let mut editor_rows = [[0; GRID_WIDTH]; GRID_HEIGHT];
     // order: SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS
@@ -21,6 +22,7 @@ pub fn init_app(
         #[cfg(windows)]
         use_interactive_mode,
         hovered_penta_x: None,
+        envelope_delay_seconds,
     };
     const GM_FILE_PATH: &str = "tones/general_midi/000_AcousticGrand.json";
     #[cfg(windows)]
