@@ -497,3 +497,74 @@ fn test_registers_invalid_hex() {
     let result = registers_to_editor_rows("GGGG");
     assert!(result.is_err(), "Should error on invalid hex characters");
 }
+
+#[test]
+#[cfg(windows)]
+fn test_envelope_reset_events() {
+    use crate::register::editor_rows_to_ym2151_events_with_envelope_reset;
+
+    let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
+
+    // Set some D2R values different from 15 to test they get overridden
+    values[0][PARAM_D2R] = 5;
+    values[1][PARAM_D2R] = 7;
+    values[2][PARAM_D2R] = 3;
+    values[3][PARAM_D2R] = 9;
+
+    // Set DT2 values to verify they are preserved
+    values[0][PARAM_DT2] = 1;
+    values[1][PARAM_DT2] = 2;
+    values[2][PARAM_DT2] = 0;
+    values[3][PARAM_DT2] = 3;
+
+    // Enable all operators
+    values[0][PARAM_SM] = 1;
+    values[1][PARAM_SM] = 1;
+    values[2][PARAM_SM] = 1;
+    values[3][PARAM_SM] = 1;
+
+    values[ROW_CH][CH_PARAM_ALG] = 4;
+    values[ROW_CH][CH_PARAM_FB] = 0;
+
+    let events = editor_rows_to_ym2151_events_with_envelope_reset(&values);
+
+    // The first 4 events should be D2R=15 writes (registers 0xC0, 0xC8, 0xD0, 0xD8)
+    // Verify D2R=15 is set for all operators
+    let d2r_events: Vec<_> = events
+        .iter()
+        .filter(|e| e.addr == "0xC0" || e.addr == "0xC8" || e.addr == "0xD0" || e.addr == "0xD8")
+        .collect();
+
+    assert!(
+        d2r_events.len() >= 4,
+        "Should have at least 4 D2R register writes"
+    );
+
+    // Check the first D2R write (operator 0, register 0xC0)
+    let first_d2r = d2r_events[0];
+    let data = u8::from_str_radix(first_d2r.data.trim_start_matches("0x"), 16).unwrap();
+    assert_eq!(
+        data & 0x0F,
+        0x0F,
+        "D2R should be set to 15 for envelope reset"
+    );
+    assert_eq!((data >> 6) & 0x03, 1, "DT2 should be preserved as 1");
+
+    // The 5th event should be KEY_OFF at time 0.005
+    let key_off_event = events.iter().find(|e| e.addr == "0x08" && e.time > 0.0);
+    assert!(
+        key_off_event.is_some(),
+        "Should have KEY_OFF event with delay"
+    );
+    let key_off = key_off_event.unwrap();
+    assert_eq!(key_off.time, 0.005, "KEY_OFF should have 5ms delay");
+    assert_eq!(key_off.data, "0x00", "KEY_OFF should be for channel 0");
+
+    // After the envelope reset events, should have all the normal register events
+    // Total events should be: 4 D2R + 1 KEY_OFF + 28 normal events = 33 events
+    assert_eq!(
+        events.len(),
+        33,
+        "Should have correct total number of events"
+    );
+}

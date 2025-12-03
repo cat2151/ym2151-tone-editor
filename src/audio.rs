@@ -406,12 +406,12 @@ fn add_key_off(events: &mut Vec<Ym2151Event>, channel: u8, values: &ToneData) {
     for row_id in 0..4 {
         let reg = register::REG_FROM_O1_O4[row_id];
         let op_offset = reg * 8 + channel as usize;
-        
+
         // Get current DT2 value from values to preserve it
         let dt2 = values[row_id][PARAM_DT2];
         // Set D2R to 15 (maximum decay rate)
         let dt2_d2r = ((dt2 & 0x03) << 6) | 0x0F;
-        
+
         log_verbose(&format!(
             "  operator register: addr=0x{:02X}, data=0x{:02X} (DT2={}, D2R=15 for envelope reset)",
             0xC0 + op_offset as u8,
@@ -424,7 +424,7 @@ fn add_key_off(events: &mut Vec<Ym2151Event>, channel: u8, values: &ToneData) {
             data: format!("0x{:02X}", dt2_d2r),
         });
     }
-    
+
     log_verbose(&format!(
         "  channel register: addr=0x08, data=0x{:02X} (KEY_OFF)",
         channel
