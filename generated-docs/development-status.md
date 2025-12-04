@@ -1,94 +1,50 @@
-Last updated: 2025-12-04
+Last updated: 2025-12-05
 
 # Development Status
 
 ## 現在のIssues
-- [Issue #131](../issue-notes/131.md)と[Issue #130](../issue-notes/130.md)は、エンベロープ遅延時間のマジックナンバー`0.005`を`models.rs`で設定可能にするリファクタリングに関する。
-- [Issue #100](../issue-notes/100.md)は、CTRL+OでGM000 JSONの音色バリエーションをfzfで選択・演奏し、エディタに読み込む検証機能の実装。
-- [Issue #99](../issue-notes/99.md)は、CTRL+Sで現在の音色データをGM000 JSONのバリエーションに追記保存する検証機能の実装。
+- [Issue #137](../issue-notes/137.md)と[Issue #136](../issue-notes/136.md)は、PR #133で計画されたCTRL+Oバリエーション選択機能の第2段階として、カーソル移動時のオーディオプレビュー実装に焦点を当てています。
+- この実装では、既存の`skim`セレクタをカスタムの`ratatui`ベースのセレクタに置き換え、カーソル移動時に選択中のトーンバリエーションを自動でプレビューする機能を追加します。
+- 現在はカスタムセレクタによるオーディオプレビュー機能の統合、テスト、および旧`skim`関連コードのクリーンアップが主要なタスクです。
 
 ## 次の一手候補
-1. [Issue #131](../issue-notes/131.md) & [Issue #130](../issue-notes/130.md): マジックナンバー`0.005`の完全な排除と設定化の完了確認
-   - 最初の小さな一歩: [PR #129](https://github.com/cat2151/ym2151-tone-editor/pull/129)の変更内容と[Issue #131](../issue-notes/131.md)、[Issue #130](../issue-notes/130.md)のdescriptionを比較し、マジックナンバー`0.005`の置き換えが完全に完了しているか、残タスクがないかを確認する。
+1. [Issue #137](../issue-notes/137.md) カスタム`ratatui`セレクタでのオーディオプレビュー機能の実装を完了する
+   - 最初の小さな一歩: `src/variation_selector.rs` 内で、カスタム`ratatui`セレクタのカーソル移動イベントを捕捉し、選択されたバリエーションのトーンデータを取得するロジックを実装します。その後、`src/audio.rs`のプレビュー機能と連携させるためのインターフェースを検討します。
    - Agent実行プロンプ:
      ```
-     対象ファイル:
-     - `src/audio.rs`
-     - `src/register.rs`
-     - `src/models.rs`
-     - `issue-notes/131.md`
-     - `issue-notes/130.md`
-     - PR #129の内容 (https://github.com/cat2151/ym2151-tone-editor/pull/129)
+     対象ファイル: src/app.rs, src/variation_selector.rs, src/audio.rs
 
-     実行内容:
-     1. `src/audio.rs`と`src/register.rs`内のハードコードされた浮動小数点数`0.005`の使用箇所を特定する。
-     2. [PR #129](https://github.com/cat2151/ym2151-tone-editor/pull/129)での変更、特に`79a1222 Fix timing and eliminate code duplication per review feedback`コミットにおける`0.005`の置き換え状況を詳細に分析する。
-     3. `src/models.rs`に`DEFAULT_ENVELOPE_DELAY_SECONDS`が定義されていること、および`Config`構造体への組み込み状況を確認する。
-     4. [Issue #131](../issue-notes/131.md)と[Issue #130](../issue-notes/130.md)の課題が、現在のコードベースとPR #129の修正によって完全に解決されているか評価する。
+     実行内容: `src/variation_selector.rs`内のカスタム`ratatui`セレクタにおいて、カーソル移動時に現在選択されているトーンのバリエーションデータを検出し、そのデータを`src/audio.rs`が提供するオーディオプレビュー機能に渡すための接着コードを実装する。これにより、カーソル移動時の自動オーディオプレビューを実現する。
 
-     確認事項:
-     - `0.005`が使われている全ての箇所が、意図した定数または設定値で置き換えられているか。
-     - `models.rs`に定義された定数や設定が、`audio.rs`や`register.rs`で正しく参照されているか。
-     - リファクタリングによって新たなバグや意図しない動作が発生していないか。
+     確認事項: 既存のオーディオ再生ロジック（`src/audio.rs`）との連携が適切に行われること。UIのイベントループ（`src/app.rs`）内でプレビュー処理がブロックされないこと。`skim`関連のコードが完全にカスタムセレクタに置き換えられていることを前提とする。
 
-     期待する出力:
-     markdown形式で以下の内容を出力してください：
-     - `src/audio.rs`と`src/register.rs`における`0.005`の使用箇所の現状（置き換え済みか、残っているか）。
-     - [PR #129](https://github.com/cat2151/ym2151-tone-editor/pull/129)での修正が、[Issue #131](../issue-notes/131.md)と[Issue #130](../issue-notes/130.md)を完全にクローズするに足るものかどうかの評価。
-     - もし未解決の箇所があれば、具体的な修正提案（どのファイルをどう変更すべきか）。
-     - 解決済みであれば、[Issue #131](../issue-notes/131.md)と[Issue #130](../issue-notes/130.md)をクローズするための推奨事項。
+     期待する出力: `src/variation_selector.rs`および`src/app.rs`に対するコード変更（`audio.rs`への呼び出し追加、カーソル移動イベント処理の追加など）。変更箇所の説明をMarkdown形式で出力。
      ```
 
-2. [Issue #100](../issue-notes/100.md): GM000 JSONファイルからの音色バリエーション読み込み機能のプロトタイプ作成
-   - 最初の小さな一歩: `tones/general_midi/000_AcousticGrand.json`のようなGM000 JSONファイルを読み込み、`src/models.rs`で定義されている`ToneFile`および`ToneVariation`構造体を使ってパースする機能のプロトタイプを作成する。
-   - Agent実行プロンプ:
+2. [Issue #137](../issue-notes/137.md) カスタム`ratatui`セレクタでのオーディオプレビュー機能に対するテストを追加する
+   - 最初の小さな一歩: `src/tests/variation_selector_tests.rs` に、バリエーションセレクタがカーソル移動時に特定のトーンデータをオーディオモジュールに渡すことをシミュレートするテストケースのスケルトンを作成します。必要に応じてモックオブジェクトの利用を検討します。
+   - Agent実行プロンプト:
      ```
-     対象ファイル:
-     - `src/file_ops.rs` (新規または既存のファイル操作ロジックに追加)
-     - `src/models.rs` (既存の構造体定義の確認)
-     - `tones/general_midi/000_AcousticGrand.json` (サンプルデータ)
+     対象ファイル: src/tests/variation_selector_tests.rs, src/variation_selector.rs, src/audio.rs
 
-     実行内容:
-     1. `tones/general_midi/000_AcousticGrand.json`ファイルを読み込むための関数を`src/file_ops.rs`に実装する。
-     2. 読み込んだJSONデータを`src/models.rs`の`ToneFile`および`ToneVariation`構造体にデシリアライズする。
-     3. デシリアライズが成功することを確認するための簡単なテストケースまたはデバッグ出力を追加する。
+     実行内容: `src/tests/variation_selector_tests.rs`に、カスタム`ratatui`セレクタのカーソル移動によるオーディオプレビュー機能の単体テストを追加する。具体的には、バリエーションセレクタ内でカーソルが移動した際に、`src/audio.rs`の適切なプレビュー関数が正しいトーンデータで呼び出されることを検証するテストケースを記述する。必要であれば、`src/audio.rs`をモック化して検証する。
 
-     確認事項:
-     - `ToneFile`および`ToneVariation`構造体がJSONスキーマと一致しているか。
-     - `serde`クレートがCargo.tomlに追加され、正しく設定されているか（もし必要であれば）。
-     - ファイルパスの解決がOS間で互換性があるか。
+     確認事項: テストが独立しており、外部の状態に依存しないこと。オーディオ再生の実装（候補1）が完了していることを前提とする。`ratatui`セレクタの内部状態（カーソル位置、選択中のバリエーション）を適切にシミュレートできること。
 
-     期待する出力:
-     markdown形式で以下の内容を出力してください：
-     - `src/file_ops.rs`に新しく追加されたJSONファイル読み込み関数のコードスニペット。
-     - その関数が`tones/general_midi/000_AcousticGrand.json`を正常にパースできることを示す簡単なテストコードまたは検証手順。
-     - 関連する`Cargo.toml`の変更点（`serde`クレートの追加など）。
+     期待する出力: `src/tests/variation_selector_tests.rs`に対するテストコードの追加。テストの目的と検証内容をMarkdown形式で出力。
      ```
 
-3. [Issue #99](../issue-notes/99.md): 現在の音色データから`ToneVariation`構造体への変換機能の作成
-   - 最初の小さな一歩: 現在の音色データ（`ToneData`）とUI上のアルゴリズム/フィードバック設定から、`src/models.rs`で定義されている`ToneVariation`構造体を作成する関数を実装する。この際、`registers`フィールドはYM2151のレジスタ設定文字列形式に変換する必要がある。
-   - Agent実行プロンプ:
+3. `skim`関連のコードをプロジェクトから完全にクリーンアップし削除する
+   - 最初の小さな一歩: プロジェクト全体から`skim`クレートへの依存を`Cargo.toml`から削除し、関連する`use`文や構造体、関数呼び出しを特定してコメントアウトします。
+   - Agent実行プロンプト:
      ```
-     対象ファイル:
-     - `src/file_ops.rs` (音色データ変換ロジックの追加)
-     - `src/models.rs` (既存の構造体定義の確認と必要に応じた`DEFAULT_ENVELOPE_DELAY_SECONDS`の利用)
-     - `src/app.rs`または`src/ui.rs` (現在の音色データとCHパラメータの取得方法の分析)
+     対象ファイル: Cargo.toml, src/app.rs, src/variation_selector.rs, およびプロジェクト内の`skim`に関連する可能性のある全てのファイル
 
-     実行内容:
-     1. `src/file_ops.rs`に、現在の`ToneData`（`[[u8; GRID_WIDTH]; GRID_HEIGHT]`)とチャンネルパラメータ（アルゴリズム、フィードバック、ノート番号）を受け取り、`ToneVariation`構造体を生成する関数を実装する。
-     2. `ToneVariation.registers`フィールドは、YM2151のレジスタ設定に準拠した文字列形式で表現する（例: `A:10,D:20,...`）。この文字列フォーマットは、既存のJSONファイル`tones/general_midi/000_AcousticGrand.json`の`registers`フィールドを参考にする。
-     3. `description`フィールドは仮で「User Saved Tone」とし、`mml`と`note_number`は`None`とする。
+     実行内容: `skim`ライブラリへの依存関係および、それに関連する全てのコードをプロジェクトから削除する。これには`Cargo.toml`からの依存関係の除去、`src/app.rs`や`src/variation_selector.rs`などでの`skim`のimport文、`skim`の関数呼び出し、`skim`に関連するデータ構造の定義などが含まれる。
 
-     確認事項:
-     - `ToneData`の各要素がYM2151レジスタのどの部分に対応するかを正確にマッピングできるか。
-     - `registers`文字列の形式が既存のJSONファイルと互換性があるか。
-     - 変換処理において、適切なエラーハンドリングまたはデフォルト値の設定が行われているか。
+     確認事項: `skim`が完全にカスタム`ratatui`セレクタに置き換えられていること（[Issue #137](../issue-notes/137.md)のフェーズ1が完了していること）。コードベースの他の部分に影響を与えないこと。コンパイルエラーが発生しないこと。
 
-     期待する出力:
-     markdown形式で以下の内容を出力してください：
-     - `src/file_ops.rs`に新しく追加された`ToneVariation`生成関数のコードスニペット。
-     - 生成される`registers`文字列の例。
-     - この関数を呼び出すための簡単なテストコードまたは検証手順。
+     期待する出力: `skim`関連のコードが削除された`Cargo.toml`および関連ソースファイル。削除されたファイルのリストと、変更の概要をMarkdown形式で出力。
 
 ---
-Generated at: 2025-12-04 07:09:24 JST
+Generated at: 2025-12-05 07:07:35 JST
