@@ -77,6 +77,7 @@ pub enum Action {
     JumpToNoteAndIncrease,
     JumpToNoteAndDecrease,
     SaveToGmVariations,
+    OpenVariationSelector,
     Exit,
 }
 
@@ -239,6 +240,9 @@ impl Default for Config {
 
         // Save to GM variations
         keybinds.insert("Ctrl+s".to_string(), Action::SaveToGmVariations);
+
+        // Open variation selector
+        keybinds.insert("Ctrl+o".to_string(), Action::OpenVariationSelector);
 
         // Exit
         keybinds.insert("Esc".to_string(), Action::Exit);

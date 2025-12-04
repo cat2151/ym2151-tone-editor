@@ -19,4 +19,7 @@ mod register_tests;
 mod ui_tests;
 
 #[cfg(test)]
+mod variation_selector_tests;
+
+#[cfg(test)]
 mod verbose_logging_tests;
