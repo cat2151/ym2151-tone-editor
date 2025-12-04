@@ -15,6 +15,10 @@ use std::io;
 #[cfg(windows)]
 use crate::audio;
 
+/// Default envelope delay for preview playback (seconds)
+#[cfg(windows)]
+const PREVIEW_ENVELOPE_DELAY: f64 = 0.005;
+
 /// Variation selector state
 struct SelectorState {
     list_state: ListState,
@@ -93,8 +97,7 @@ impl SelectorState {
                             .all(|row| row.len() == crate::models::GRID_WIDTH)
                     {
                         // Play the tone using audio module
-                        // Use cursor position (0, 0) and default envelope delay
-                        audio::play_tone(&tone_data, true, 0, 0, 0.005);
+                        audio::play_tone(&tone_data, true, 0, 0, PREVIEW_ENVELOPE_DELAY);
                     }
                 }
             }
@@ -132,7 +135,7 @@ fn ui(f: &mut Frame, state: &mut SelectorState) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("Variation Selector (↑↓: Navigate, Enter: Select, Esc: Cancel)"),
+                .title("Variation Selector (↑↓/jk: Navigate, Enter: Select, Esc/q: Cancel)"),
         )
         .highlight_style(
             Style::default()
@@ -197,8 +200,8 @@ pub fn open_variation_selector() -> io::Result<Option<ToneData>> {
     #[cfg(windows)]
     state.play_initial_preview();
 
-    // Create terminal for selector (reusing current terminal setup from main.rs)
-    // Note: Terminal is already in raw mode and alternate screen from main
+    // Create terminal for selector
+    // Note: main.rs suspends its terminal before calling this function
     let backend = ratatui::backend::CrosstermBackend::new(io::stdout());
     let mut terminal = ratatui::Terminal::new(backend)?;
     terminal.clear()?;
