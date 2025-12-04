@@ -54,7 +54,7 @@ pub fn open_variation_selector() -> io::Result<Option<ToneData>> {
                             let variation = &tone_file.variations[idx - 1];
                             let tone_data =
                                 register::registers_to_editor_rows(&variation.registers)?;
-                            
+
                             // Validate tone data dimensions
                             if tone_data.len() != crate::models::GRID_HEIGHT {
                                 return Err(io::Error::new(
@@ -70,7 +70,7 @@ pub fn open_variation_selector() -> io::Result<Option<ToneData>> {
                                     ));
                                 }
                             }
-                            
+
                             return Ok(Some(tone_data));
                         }
                     }

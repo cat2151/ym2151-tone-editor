@@ -182,6 +182,54 @@ fn main() -> Result<(), io::Error> {
     Ok(())
 }
 
+/// Handle variation selector action by suspending TUI, running skim, and restoring state
+/// Returns Ok(()) if successful, Err if terminal operations fail
+fn handle_open_variation_selector<B: ratatui::backend::Backend>(
+    terminal: &mut Terminal<B>,
+    app: &mut App,
+) -> io::Result<()> {
+    // Suspend terminal UI to allow skim to take over
+    let mut stdout = io::stdout();
+    disable_raw_mode()?;
+    execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
+
+    // Run variation selector
+    let selection_result = crate::variation_selector::open_variation_selector();
+
+    // Restore terminal UI first
+    enable_raw_mode()?;
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    terminal.clear()?;
+
+    // Process selection result after UI is restored
+    match selection_result {
+        Ok(Some(tone_data)) => {
+            app.values = tone_data;
+            #[cfg(windows)]
+            {
+                if app.use_interactive_mode {
+                    // Play the loaded tone with current cursor position
+                    audio::play_tone(
+                        &app.values,
+                        app.use_interactive_mode,
+                        app.cursor_x,
+                        app.cursor_y,
+                        app.envelope_delay_seconds,
+                    );
+                }
+            }
+        }
+        Ok(None) => {
+            // User cancelled selection, do nothing
+        }
+        Err(e) => {
+            eprintln!("Error loading variation: {}", e);
+        }
+    }
+
+    Ok(())
+}
+
 fn run_app<B: ratatui::backend::Backend>(
     terminal: &mut Terminal<B>,
     app: &mut App,
@@ -292,45 +340,7 @@ fn run_app<B: ratatui::backend::Backend>(
                                     let _ = app.save_to_gm_variations();
                                 }
                                 Action::OpenVariationSelector => {
-                                    // Suspend terminal UI to allow skim to take over
-                                    let mut stdout = io::stdout();
-                                    disable_raw_mode()?;
-                                    execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
-
-                                    // Run variation selector
-                                    let selection_result =
-                                        crate::variation_selector::open_variation_selector();
-
-                                    // Restore terminal UI first
-                                    enable_raw_mode()?;
-                                    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
-                                    terminal.clear()?;
-
-                                    // Process selection result after UI is restored
-                                    match selection_result {
-                                        Ok(Some(tone_data)) => {
-                                            app.values = tone_data;
-                                            #[cfg(windows)]
-                                            {
-                                                if app.use_interactive_mode {
-                                                    // Play the loaded tone with current cursor position
-                                                    audio::play_tone(
-                                                        &app.values,
-                                                        app.use_interactive_mode,
-                                                        app.cursor_x,
-                                                        app.cursor_y,
-                                                        app.envelope_delay_seconds,
-                                                    );
-                                                }
-                                            }
-                                        }
-                                        Ok(None) => {
-                                            // User cancelled selection, do nothing
-                                        }
-                                        Err(e) => {
-                                            eprintln!("Error loading variation: {}", e);
-                                        }
-                                    }
+                                    handle_open_variation_selector(terminal, app)?;
                                 }
                                 Action::Exit => {
                                     // Save tone data to JSON before exiting
