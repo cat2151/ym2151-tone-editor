@@ -88,7 +88,9 @@ impl SelectorState {
                 if let Ok(tone_data) = register::registers_to_editor_rows(&variation.registers) {
                     // Validate tone data before playing
                     if tone_data.len() == crate::models::GRID_HEIGHT
-                        && tone_data.iter().all(|row| row.len() == crate::models::GRID_WIDTH)
+                        && tone_data
+                            .iter()
+                            .all(|row| row.len() == crate::models::GRID_WIDTH)
                     {
                         // Play the tone using audio module
                         // Use cursor position (0, 0) and default envelope delay
@@ -142,8 +144,10 @@ fn ui(f: &mut Frame, state: &mut SelectorState) {
     f.render_stateful_widget(list, chunks[0], &mut state.list_state);
 
     // Help text
-    let help = Paragraph::new("Phase 2: Audio preview plays automatically on cursor movement (Windows only)")
-        .block(Block::default().borders(Borders::ALL).title("Help"));
+    let help = Paragraph::new(
+        "Phase 2: Audio preview plays automatically on cursor movement (Windows only)",
+    )
+    .block(Block::default().borders(Borders::ALL).title("Help"));
     f.render_widget(help, chunks[1]);
 }
 
