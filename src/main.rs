@@ -182,13 +182,13 @@ fn main() -> Result<(), io::Error> {
     Ok(())
 }
 
-/// Handle variation selector action by suspending TUI, running skim, and restoring state
+/// Handle variation selector action by suspending TUI, running selector, and restoring state
 /// Returns Ok(()) if successful, Err if terminal operations fail
 fn handle_open_variation_selector<B: ratatui::backend::Backend>(
     terminal: &mut Terminal<B>,
     app: &mut App,
 ) -> io::Result<()> {
-    // Suspend terminal UI to allow skim to take over
+    // Suspend terminal UI to allow variation selector to take over
     let mut stdout = io::stdout();
     disable_raw_mode()?;
     execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
