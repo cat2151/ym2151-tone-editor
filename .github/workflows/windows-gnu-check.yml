@@ -53,7 +53,7 @@ jobs:
         with:
           script: |
             const title = 'Windows GNU cross-compilation check failed';
-            const runUrl = `\${{ github.server_url }}/\${{ github.repository }}/actions/runs/\${{ github.run_id }}`;
+            const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
             const body = [
               'Windows GNU cross-compilation check failed in scheduled run.',
               '',
@@ -67,7 +67,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
-              labels: 'windows-build'
+              labels: ['windows-build']
             });
 
             const existingIssue = issues.data.find(issue => 
