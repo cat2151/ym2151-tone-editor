@@ -53,11 +53,13 @@ jobs:
         with:
           script: |
             const title = 'Windows GNU cross-compilation check failed';
-            const body = `Windows GNU cross-compilation check failed in scheduled run.
-
-            Please investigate the build errors and ensure all dependencies are compatible with Windows.
-
-            Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
+            const body = [
+              'Windows GNU cross-compilation check failed in scheduled run.',
+              '',
+              'Please investigate the build errors and ensure all dependencies are compatible with Windows.',
+              '',
+              'Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+            ].join('\n');
 
             // Check if issue already exists
             const issues = await github.rest.issues.listForRepo({
@@ -67,7 +69,9 @@ jobs:
               labels: 'windows-build'
             });
 
-            const existingIssue = issues.data.find(issue => issue.title === title);
+            const existingIssue = issues.data.find(issue => 
+              issue.title.includes('Windows GNU cross-compilation check failed')
+            );
 
             if (!existingIssue) {
               await github.rest.issues.create({
