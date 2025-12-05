@@ -34,13 +34,33 @@ struct SelectorState {
     tone_file: ToneFile,
     search_query: String,
     filtered_items: Vec<FilteredItem>,
+    matcher: SkimMatcherV2,
     #[cfg(windows)]
     last_previewed_index: Option<usize>,
 }
 
 impl SelectorState {
     fn new(tone_file: ToneFile) -> Self {
-        let filtered_items: Vec<FilteredItem> = tone_file
+        let mut list_state = ListState::default();
+        list_state.select(Some(0)); // Start with first item selected
+
+        let matcher = SkimMatcherV2::default();
+        let filtered_items = Self::create_unfiltered_items(&tone_file);
+
+        SelectorState {
+            list_state,
+            tone_file,
+            search_query: String::new(),
+            filtered_items,
+            matcher,
+            #[cfg(windows)]
+            last_previewed_index: None,
+        }
+    }
+
+    /// Create unfiltered items from tone file variations
+    fn create_unfiltered_items(tone_file: &ToneFile) -> Vec<FilteredItem> {
+        tone_file
             .variations
             .iter()
             .enumerate()
@@ -49,46 +69,23 @@ impl SelectorState {
                 description: v.description.clone(),
                 score: 0,
             })
-            .collect();
-
-        let mut list_state = ListState::default();
-        list_state.select(Some(0)); // Start with first item selected
-
-        SelectorState {
-            list_state,
-            tone_file,
-            search_query: String::new(),
-            filtered_items,
-            #[cfg(windows)]
-            last_previewed_index: None,
-        }
+            .collect()
     }
 
     /// Update filtered items based on search query
     fn update_filter(&mut self) {
         if self.search_query.is_empty() {
             // No filter - show all items
-            self.filtered_items = self
-                .tone_file
-                .variations
-                .iter()
-                .enumerate()
-                .map(|(i, v)| FilteredItem {
-                    original_index: i,
-                    description: v.description.clone(),
-                    score: 0,
-                })
-                .collect();
+            self.filtered_items = Self::create_unfiltered_items(&self.tone_file);
         } else {
             // Apply fuzzy matching
-            let matcher = SkimMatcherV2::default();
             let mut scored_items: Vec<FilteredItem> = self
                 .tone_file
                 .variations
                 .iter()
                 .enumerate()
                 .filter_map(|(i, v)| {
-                    matcher
+                    self.matcher
                         .fuzzy_match(&v.description, &self.search_query)
                         .map(|score| FilteredItem {
                             original_index: i,
