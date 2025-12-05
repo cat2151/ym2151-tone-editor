@@ -353,6 +353,7 @@ fn draw_virtual_pentatonic_keyboard_at_y(f: &mut Frame, app: &App, inner: Rect, 
             app.use_interactive_mode,
             CH_PARAM_NOTE,
             ROW_CH,
+            app.envelope_delay_seconds,
         );
     }
 }
