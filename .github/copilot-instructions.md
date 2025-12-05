@@ -66,6 +66,13 @@ struct Ym2151Event { time: u32, addr: String, data: String }
 ### 条件付きコンパイル
 Windows限定音声機能は`ym2151-log-play-server`統合周辺で`#[cfg(windows)]`ガードを使用。
 
+### Windows互換性
+プロジェクトはWindowsプラットフォームをサポートしているため、コード変更時は以下に注意：
+- **クロスプラットフォーム依存関係**: 新しい依存関係を追加する際は、Windows互換性を確認
+- **Unix固有APIの回避**: `std::os::unix`など、プラットフォーム固有のAPIは適切な条件付きコンパイルで使用
+- **Windows GNUターゲットでの検証**: コード変更後は`cargo check --all-targets --target x86_64-pc-windows-gnu`を実行して、Windowsビルドが成功することを確認
+- **CI統合**: GitHub Actionsワークフローが自動的にWindowsクロスコンパイルチェックを実行し、問題があれば検出
+
 ## 重要統合ポイント
 - **ym2151-log-play-server**: 名前付きパイプ経由のWindows音声再生用外部クレート
 - **ratatui + crossterm**: 特定イベント処理パターンを持つターミナルUIフレームワーク
@@ -99,7 +106,15 @@ cargo clippy --all-targets -- -D warnings
 2. **リンティング問題修正**: `cargo clippy` を実行して警告に対処
 3. **ビルド成功**: `cargo build` (または `cargo build --release`) を実行
 4. **テスト実行**: `cargo test` を実行して全テストが通ることを確認
-5. **ドキュメント更新**: パブリックAPIを追加した場合、docコメントを更新
+5. **Windows互換性チェック**: Windows向けクロスコンパイルチェックを実行
+   ```bash
+   # Windows GNUターゲットを追加 (初回のみ)
+   rustup target add x86_64-pc-windows-gnu
+   
+   # Windows向けにコンパイルチェック
+   cargo check --all-targets --target x86_64-pc-windows-gnu
+   ```
+6. **ドキュメント更新**: パブリックAPIを追加した場合、docコメントを更新
 
 # userからの指示
 - PRコメント
