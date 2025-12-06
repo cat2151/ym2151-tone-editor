@@ -421,20 +421,22 @@ fn send_channel_register_for_param(
 }
 
 /// Helper function to add KEY_OFF (note-off) register to events
-/// Sets D2R=15 for all operators before KEY_OFF to reset envelope to 0
+/// Sets AR=31, D1R=31, D1L=15, D2R=15, RR=15 for all operators before KEY_OFF to reset envelope to 0
+/// This prevents envelope continuation across notes (issue #115, issue #151)
 #[cfg(windows)]
 fn add_key_off(events: &mut Vec<Ym2151Event>, channel: u8, values: &ToneData) {
-    // Set D2R=15 for all operators to decay envelope to 0 before next note
-    // This prevents envelope continuation across notes (issue #115)
-    let d2r_events = register::generate_d2r_15_events(values, channel as usize, 0.0);
+    // Set full ADSR envelope reset parameters for all operators to decay envelope to 0 before next note
+    // AR=31, D1R=31, D1L=15, D2R=15, RR=15
+    let envelope_events =
+        register::generate_full_envelope_reset_events(values, channel as usize, 0.0);
 
-    for event in &d2r_events {
+    for event in &envelope_events {
         log_verbose(&format!(
-            "  operator register: addr={}, data={} (D2R=15 for envelope reset)",
+            "  operator register: addr={}, data={} (full ADSR envelope reset)",
             event.addr, event.data
         ));
     }
-    events.extend(d2r_events);
+    events.extend(envelope_events);
 
     log_verbose(&format!(
         "  channel register: addr=0x08, data=0x{:02X} (KEY_OFF)",

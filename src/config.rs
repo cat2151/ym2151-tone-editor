@@ -383,7 +383,7 @@ mod tests {
     #[test]
     fn test_default_audio_config() {
         let config = Config::default();
-        assert_eq!(config.audio.envelope_delay_seconds, 0.005);
+        assert_eq!(config.audio.envelope_delay_seconds, 0.01);
     }
 
     #[test]
@@ -409,6 +409,6 @@ envelope_delay_seconds = 0.010
 "#;
 
         let config: Config = toml::from_str(toml_str).unwrap();
-        assert_eq!(config.audio.envelope_delay_seconds, 0.005);
+        assert_eq!(config.audio.envelope_delay_seconds, 0.01);
     }
 }

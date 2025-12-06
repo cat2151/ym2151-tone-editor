@@ -506,17 +506,47 @@ fn test_envelope_reset_events() {
 
     let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
 
-    // Set some D2R values different from 15 to test they get overridden
+    // Set some ADSR values different from max to test they get overridden
+    values[0][PARAM_AR] = 10;
+    values[0][PARAM_D1R] = 5;
+    values[0][PARAM_D1L] = 3;
     values[0][PARAM_D2R] = 5;
-    values[1][PARAM_D2R] = 7;
-    values[2][PARAM_D2R] = 3;
-    values[3][PARAM_D2R] = 9;
+    values[0][PARAM_RR] = 7;
 
-    // Set DT2 values to verify they are preserved
+    values[1][PARAM_AR] = 15;
+    values[1][PARAM_D1R] = 10;
+    values[1][PARAM_D1L] = 8;
+    values[1][PARAM_D2R] = 7;
+    values[1][PARAM_RR] = 9;
+
+    values[2][PARAM_AR] = 20;
+    values[2][PARAM_D1R] = 15;
+    values[2][PARAM_D1L] = 10;
+    values[2][PARAM_D2R] = 3;
+    values[2][PARAM_RR] = 5;
+
+    values[3][PARAM_AR] = 25;
+    values[3][PARAM_D1R] = 20;
+    values[3][PARAM_D1L] = 12;
+    values[3][PARAM_D2R] = 9;
+    values[3][PARAM_RR] = 11;
+
+    // Set DT2, KS, AMS values to verify they are preserved
     values[0][PARAM_DT2] = 1;
+    values[0][PARAM_KS] = 2;
+    values[0][PARAM_AMS] = 1;
+
     values[1][PARAM_DT2] = 2;
+    values[1][PARAM_KS] = 3;
+    values[1][PARAM_AMS] = 2;
+
     values[2][PARAM_DT2] = 0;
+    values[2][PARAM_KS] = 1;
+    values[2][PARAM_AMS] = 0;
+
     values[3][PARAM_DT2] = 3;
+    values[3][PARAM_KS] = 0;
+    values[3][PARAM_AMS] = 3;
 
     // Enable all operators
     values[0][PARAM_SM] = 1;
@@ -530,10 +560,71 @@ fn test_envelope_reset_events() {
     let events =
         editor_rows_to_ym2151_events_with_envelope_reset(&values, DEFAULT_ENVELOPE_DELAY_SECONDS);
 
-    // The first 4 events should be D2R=15 writes
-    // Verify D2R=15 is set for all operators using calculated addresses
+    // Verify full ADSR envelope reset events at time 0.0
     use std::collections::HashSet;
     let channel = 0;
+
+    // Check AR=31 events (registers 0x80-0x9F)
+    let expected_ar_addrs: HashSet<String> = (0..4)
+        .map(|row_id| {
+            let reg = crate::register::REG_FROM_O1_O4[row_id];
+            let op_offset = reg * 8 + channel;
+            format!("0x{:02X}", 0x80 + op_offset)
+        })
+        .collect();
+
+    let ar_events: Vec<_> = events
+        .iter()
+        .filter(|e| expected_ar_addrs.contains(&e.addr) && e.time == 0.0)
+        .collect();
+
+    assert_eq!(
+        ar_events.len(),
+        4,
+        "Should have exactly 4 AR register writes at time 0.0"
+    );
+
+    // Check first AR event to verify AR=31 and KS is preserved
+    let first_ar = ar_events[0];
+    let data = u8::from_str_radix(first_ar.data.trim_start_matches("0x"), 16).unwrap();
+    assert_eq!(
+        data & 0x1F,
+        0x1F,
+        "AR should be set to 31 for envelope reset"
+    );
+    assert_eq!((data >> 6) & 0x03, 2, "KS should be preserved as 2");
+
+    // Check D1R=31 events (registers 0xA0-0xBF)
+    let expected_d1r_addrs: HashSet<String> = (0..4)
+        .map(|row_id| {
+            let reg = crate::register::REG_FROM_O1_O4[row_id];
+            let op_offset = reg * 8 + channel;
+            format!("0x{:02X}", 0xA0 + op_offset)
+        })
+        .collect();
+
+    let d1r_events: Vec<_> = events
+        .iter()
+        .filter(|e| expected_d1r_addrs.contains(&e.addr) && e.time == 0.0)
+        .collect();
+
+    assert_eq!(
+        d1r_events.len(),
+        4,
+        "Should have exactly 4 D1R register writes at time 0.0"
+    );
+
+    // Check first D1R event to verify D1R=31 and AMS is preserved
+    let first_d1r = d1r_events[0];
+    let data = u8::from_str_radix(first_d1r.data.trim_start_matches("0x"), 16).unwrap();
+    assert_eq!(
+        data & 0x1F,
+        0x1F,
+        "D1R should be set to 31 for envelope reset"
+    );
+    assert_eq!((data >> 6) & 0x03, 1, "AMS should be preserved as 1");
+
+    // Check D2R=15 events (registers 0xC0-0xDF)
     let expected_d2r_addrs: HashSet<String> = (0..4)
         .map(|row_id| {
             let reg = crate::register::REG_FROM_O1_O4[row_id];
@@ -544,21 +635,16 @@ fn test_envelope_reset_events() {
 
     let d2r_events: Vec<_> = events
         .iter()
-        .filter(|e| expected_d2r_addrs.contains(&e.addr))
+        .filter(|e| expected_d2r_addrs.contains(&e.addr) && e.time == 0.0)
         .collect();
 
     assert_eq!(
         d2r_events.len(),
         4,
-        "Should have exactly 4 D2R register writes"
+        "Should have exactly 4 D2R register writes at time 0.0"
     );
 
-    // Check D2R events at time 0.0
-    for d2r_event in &d2r_events {
-        assert_eq!(d2r_event.time, 0.0, "D2R=15 events should be at time 0.0");
-    }
-
-    // Check the first D2R write (operator 0, register 0xC0)
+    // Check first D2R event to verify D2R=15 and DT2 is preserved
     let first_d2r = d2r_events[0];
     let data = u8::from_str_radix(first_d2r.data.trim_start_matches("0x"), 16).unwrap();
     assert_eq!(
@@ -567,6 +653,40 @@ fn test_envelope_reset_events() {
         "D2R should be set to 15 for envelope reset"
     );
     assert_eq!((data >> 6) & 0x03, 1, "DT2 should be preserved as 1");
+
+    // Check D1L=15, RR=15 events (registers 0xE0-0xFF)
+    let expected_rr_addrs: HashSet<String> = (0..4)
+        .map(|row_id| {
+            let reg = crate::register::REG_FROM_O1_O4[row_id];
+            let op_offset = reg * 8 + channel;
+            format!("0x{:02X}", 0xE0 + op_offset)
+        })
+        .collect();
+
+    let rr_events: Vec<_> = events
+        .iter()
+        .filter(|e| expected_rr_addrs.contains(&e.addr) && e.time == 0.0)
+        .collect();
+
+    assert_eq!(
+        rr_events.len(),
+        4,
+        "Should have exactly 4 D1L/RR register writes at time 0.0"
+    );
+
+    // Check first D1L/RR event to verify both are set to 15
+    let first_rr = rr_events[0];
+    let data = u8::from_str_radix(first_rr.data.trim_start_matches("0x"), 16).unwrap();
+    assert_eq!(
+        data & 0x0F,
+        0x0F,
+        "RR should be set to 15 for envelope reset"
+    );
+    assert_eq!(
+        (data >> 4) & 0x0F,
+        0x0F,
+        "D1L should be set to 15 for envelope reset"
+    );
 
     // Verify KEY_OFF event at time 0.0
     let key_off_events: Vec<_> = events
@@ -608,11 +728,12 @@ fn test_envelope_reset_events() {
 
     // Verify total event count: envelope reset events + normal events
     let normal_events = crate::register::editor_rows_to_ym2151_events(&values);
-    let expected_total = 4 + 1 + normal_events.len(); // 4 D2R + 1 KEY_OFF + normal events
+    // Full envelope reset: 4 operators × 4 registers (AR, D1R, D2R, D1L/RR) = 16 events
+    let expected_total = 16 + 1 + normal_events.len(); // 16 ADSR + 1 KEY_OFF + normal events
     assert_eq!(
         events.len(),
         expected_total,
-        "Should have correct total number of events (4 D2R + 1 KEY_OFF + {} normal = {})",
+        "Should have correct total number of events (16 ADSR + 1 KEY_OFF + {} normal = {})",
         normal_events.len(),
         expected_total
     );

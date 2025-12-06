@@ -58,6 +58,61 @@ pub fn generate_d2r_15_events(values: &ToneData, channel: usize, time: f64) -> V
     events
 }
 
+/// Helper function to generate complete ADSR envelope reset events
+/// Sets AR=31, D1R=31, D1L=15, D2R=15, RR=15 for all operators
+/// Preserves DT2, KS, AMS values while setting envelope parameters to maximum
+/// Used to reset envelope amplitude to 0 before next note (issue #151)
+#[cfg(windows)]
+pub fn generate_full_envelope_reset_events(
+    values: &ToneData,
+    channel: usize,
+    time: f64,
+) -> Vec<Ym2151Event> {
+    let mut events = Vec::new();
+
+    for row_id in 0..4 {
+        let reg = REG_FROM_O1_O4[row_id];
+        let op_offset = reg * 8 + channel;
+
+        // AR=31 with KS preserved - Register $80-$9F
+        let ks = values[row_id][PARAM_KS];
+        let ks_ar = ((ks & 0x03) << 6) | 0x1F; // AR=31 (max)
+        events.push(Ym2151Event {
+            time,
+            addr: format!("0x{:02X}", 0x80 + op_offset),
+            data: format!("0x{:02X}", ks_ar),
+        });
+
+        // D1R=31 with AMS preserved - Register $A0-$BF
+        let ams = values[row_id][PARAM_AMS];
+        let ams_d1r = ((ams & 0x03) << 6) | 0x1F; // D1R=31 (max)
+        events.push(Ym2151Event {
+            time,
+            addr: format!("0x{:02X}", 0xA0 + op_offset),
+            data: format!("0x{:02X}", ams_d1r),
+        });
+
+        // D2R=15 with DT2 preserved - Register $C0-$DF
+        let dt2 = values[row_id][PARAM_DT2];
+        let dt2_d2r = ((dt2 & 0x03) << 6) | 0x0F; // D2R=15 (max)
+        events.push(Ym2151Event {
+            time,
+            addr: format!("0x{:02X}", 0xC0 + op_offset),
+            data: format!("0x{:02X}", dt2_d2r),
+        });
+
+        // D1L=15, RR=15 - Register $E0-$FF
+        let d1l_rr = 0xFF; // D1L=15 (max), RR=15 (max)
+        events.push(Ym2151Event {
+            time,
+            addr: format!("0x{:02X}", 0xE0 + op_offset),
+            data: format!("0x{:02X}", d1l_rr),
+        });
+    }
+
+    events
+}
+
 /// Convert tone data to YM2151 register events
 /// This generates register writes for the YM2151 chip based on the current tone parameters
 pub fn editor_rows_to_ym2151_events(editor_rows: &ToneData) -> Vec<Ym2151Event> {
@@ -271,7 +326,7 @@ pub fn json_events_to_editor_rows(events: &[Ym2151Event]) -> io::Result<ToneData
 }
 
 /// Convert tone data to YM2151 register events with envelope reset
-/// This is used for audio preview to prevent envelope continuation across notes (issue #115)
+/// This is used for audio preview to prevent envelope continuation across notes (issue #115, issue #151)
 #[cfg(windows)]
 pub fn editor_rows_to_ym2151_events_with_envelope_reset(
     editor_rows: &ToneData,
@@ -280,8 +335,12 @@ pub fn editor_rows_to_ym2151_events_with_envelope_reset(
     let mut events = Vec::new();
     let channel = 0;
 
-    // Step 1: Set D2R=15 for all operators at time 0.0
-    events.extend(generate_d2r_15_events(editor_rows, channel, 0.0));
+    // Step 1: Set full ADSR envelope reset (AR=31, D1R=31, D1L=15, D2R=15, RR=15) for all operators at time 0.0
+    events.extend(generate_full_envelope_reset_events(
+        editor_rows,
+        channel,
+        0.0,
+    ));
 
     // Step 2: KEY_OFF at time 0.0
     events.push(Ym2151Event {
