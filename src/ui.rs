@@ -2,7 +2,7 @@ use crate::{app::App, models::*};
 use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
-    text::Span,
+    text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
@@ -184,7 +184,7 @@ pub fn ui(f: &mut Frame, app: &App) {
                 width: cell_width,
                 height: cell_height,
             };
-            let style = if app.cursor_x == col && app.cursor_y == display_row {
+            let value_style = if app.cursor_x == col && app.cursor_y == display_row {
                 Style::default()
                     .fg(Color::Black)
                     .bg(Color::White)
@@ -201,13 +201,28 @@ pub fn ui(f: &mut Frame, app: &App) {
                 };
                 Style::default().fg(color)
             };
+
             // Display key guide letter to the left of the value if available
-            let text = if let Some(key_guide) = get_key_guide(col) {
-                format!("{}{:2}", key_guide, value)
+            // Only show key guide on the currently edited operator row (not on CH row)
+            let is_current_row = app.cursor_y == display_row;
+            let line = if let Some(key_guide) = get_key_guide(col) {
+                if is_current_row {
+                    // Show key guide with darker color and background on current row
+                    let key_guide_style = Style::default()
+                        .fg(Color::DarkGray)
+                        .bg(Color::Rgb(40, 40, 40)); // Dark background
+                    Line::from(vec![
+                        Span::styled(key_guide.to_string(), key_guide_style),
+                        Span::styled(format!("{:2}", value), value_style),
+                    ])
+                } else {
+                    // No key guide on non-current rows
+                    Line::from(Span::styled(format!(" {:2}", value), value_style))
+                }
             } else {
-                format!(" {:2}", value)
+                Line::from(Span::styled(format!(" {:2}", value), value_style))
             };
-            let paragraph = Paragraph::new(Span::styled(text, style));
+            let paragraph = Paragraph::new(line);
             f.render_widget(paragraph, area);
         }
     }
