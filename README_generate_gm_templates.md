@@ -10,7 +10,7 @@ This script generates 128 GM (General MIDI) tone template JSON files from `tones
 rustc --edition 2021 generate_gm_templates.rs && ./generate_gm_templates
 ```
 
-This works without any external dependencies and uses a built-in JSON parser.
+This works without any external dependencies - the script includes its own simple JSON parser.
 
 ### Method 2: Using rust-script (Recommended for development)
 

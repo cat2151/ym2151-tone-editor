@@ -14,15 +14,8 @@
 //! ## Usage with manual compilation:
 //!
 //! ```bash
-//! # Simple compilation (no dependencies required)
+//! # Simple compilation (no external dependencies required)
 //! rustc --edition 2021 generate_gm_templates.rs && ./generate_gm_templates
-//! ```
-//!
-//! Dependencies when using rust-script:
-//! ```cargo
-//! [dependencies]
-//! serde = { version = "1.0", features = ["derive"] }
-//! serde_json = "1.0"
 //! ```
 
 use std::fs;
@@ -190,8 +183,13 @@ fn create_filename(index: usize, description: &str) -> String {
     let words: Vec<&str> = description
         .split_whitespace()
         .filter(|word| {
+            // Filter out parenthetical content first (cheaper check)
+            if word.starts_with('(') {
+                return false;
+            }
+            // Then check for filler words (requires string conversion)
             let word_lower = word.to_lowercase();
-            !word.starts_with('(') && !FILLER_WORDS.contains(&word_lower.as_str())
+            !FILLER_WORDS.contains(&word_lower.as_str())
         })
         .collect();
 
