@@ -206,8 +206,7 @@ pub fn ui(f: &mut Frame, app: &App) {
             };
 
             // Display key guide letter to the left of the value if available
-            // Only show key guide on the currently edited operator row.
-            // Note: display_row ranges 0-3 (operator rows only), so CH row (ROW_CH=4) is naturally excluded
+            // Only show key guide on the currently edited operator row
             let is_current_row = app.cursor_y == display_row;
             let line = if let Some(key_guide) = get_key_guide(col) {
                 if is_current_row {
