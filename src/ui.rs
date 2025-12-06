@@ -7,6 +7,9 @@ use ratatui::{
     Frame,
 };
 
+/// Background color for shortcut key guides
+const KEY_GUIDE_BG_COLOR: Color = Color::Rgb(40, 40, 40);
+
 pub fn get_operator_roles_for_alg(alg: u8) -> [bool; 4] {
     match alg {
         0 => [false, false, false, true], // O4のみキャリア
@@ -203,14 +206,14 @@ pub fn ui(f: &mut Frame, app: &App) {
             };
 
             // Display key guide letter to the left of the value if available
-            // Only show key guide on the currently edited operator row (not on CH row)
+            // Only show key guide on the currently edited operator row.
+            // Note: display_row ranges 0-3 (operator rows only), so CH row (ROW_CH=4) is naturally excluded
             let is_current_row = app.cursor_y == display_row;
             let line = if let Some(key_guide) = get_key_guide(col) {
                 if is_current_row {
                     // Show key guide with darker color and background on current row
-                    let key_guide_style = Style::default()
-                        .fg(Color::DarkGray)
-                        .bg(Color::Rgb(40, 40, 40)); // Dark background
+                    let key_guide_style =
+                        Style::default().fg(Color::DarkGray).bg(KEY_GUIDE_BG_COLOR);
                     Line::from(vec![
                         Span::styled(key_guide.to_string(), key_guide_style),
                         Span::styled(format!("{:2}", value), value_style),
