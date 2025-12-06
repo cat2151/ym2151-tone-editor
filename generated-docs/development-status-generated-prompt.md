@@ -1,4 +1,4 @@
-Last updated: 2025-12-06
+Last updated: 2025-12-07
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -106,11 +106,13 @@ Last updated: 2025-12-06
 - .github/actions-tmp/.github/workflows/call-callgraph.yml
 - .github/actions-tmp/.github/workflows/call-daily-project-summary.yml
 - .github/actions-tmp/.github/workflows/call-issue-note.yml
+- .github/actions-tmp/.github/workflows/call-rust-windows-check.yml
 - .github/actions-tmp/.github/workflows/call-translate-readme.yml
 - .github/actions-tmp/.github/workflows/callgraph.yml
 - .github/actions-tmp/.github/workflows/check-recent-human-commit.yml
 - .github/actions-tmp/.github/workflows/daily-project-summary.yml
 - .github/actions-tmp/.github/workflows/issue-note.yml
+- .github/actions-tmp/.github/workflows/rust-windows-check.yml
 - .github/actions-tmp/.github/workflows/translate-readme.yml
 - .github/actions-tmp/.github_automation/callgraph/codeql-queries/callgraph.ql
 - .github/actions-tmp/.github_automation/callgraph/codeql-queries/codeql-pack.lock.yml
@@ -195,8 +197,8 @@ Last updated: 2025-12-06
 - .github/copilot-instructions.md
 - .github/workflows/call-daily-project-summary.yml
 - .github/workflows/call-issue-note.yml
+- .github/workflows/call-rust-windows-check.yml
 - .github/workflows/call-translate-readme.yml
-- .github/workflows/windows-gnu-check.yml
 - .gitignore
 - Cargo.lock
 - Cargo.toml
@@ -230,6 +232,13 @@ Last updated: 2025-12-06
 - issue-notes/138.md
 - issue-notes/139.md
 - issue-notes/141.md
+- issue-notes/144.md
+- issue-notes/146.md
+- issue-notes/147.md
+- issue-notes/148.md
+- issue-notes/149.md
+- issue-notes/150.md
+- issue-notes/151.md
 - issue-notes/95.md
 - issue-notes/96.md
 - issue-notes/97.md
@@ -258,125 +267,99 @@ Last updated: 2025-12-06
 - ym2151-tone-editor.toml.example
 
 ## 現在のオープンIssues
-## [Issue #143](../issue-notes/143.md): Windows GNU cross-compilation check failed
-Windows GNU cross-compilation check failed in scheduled run.
+## [Issue #151](../issue-notes/151.md): issue 115 が解決していないので、waitを大きくし、ADSRをrateとlevelいずれも最大値にして、問題を切り分ける
+[issue-notes/151.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/151.md)
 
-Please investigate the build errors and ensure all dependencies are compatible with Windows.
-
-Workflow run: https://github.com/cat2151/ym2151-tone-editor/actions/runs/19971682217...
-ラベル: bug, windows-build
---- issue-notes/143.md の内容 ---
+...
+ラベル: 
+--- issue-notes/151.md の内容 ---
 
 ```markdown
+# issue issue 115 が解決していないので、waitを大きくし、ADSRをrateとlevelいずれも最大値にして、問題を切り分ける #151
+[issues #151](https://github.com/cat2151/ym2151-tone-editor/issues/151)
+
+
+
+```
+
+## [Issue #149](../issue-notes/149.md): issue #116 を利用し、tones/ に GM000 ～ GM0127 の音色データ保存用templateを生成する
+[issue-notes/149.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/149.md)
+
+...
+ラベル: 
+--- issue-notes/149.md の内容 ---
+
+```markdown
+# issue issue #116 を利用し、tones/ に GM000 ～ GM0127 の音色データ保存用templateを生成する #149
+[issues #149](https://github.com/cat2151/ym2151-tone-editor/issues/149)
+
+
 
 ```
 
 ## ドキュメントで言及されているファイルの内容
-### .github/actions-tmp/issue-notes/3.md
+### .github/actions-tmp/issue-notes/9.md
 ```md
 {% raw %}
-# issue GitHub Actions「issue note生成」を共通ワークフロー化する #3
-[issues #3](https://github.com/cat2151/github-actions/issues/3)
+# issue 関数コールグラフhtmlビジュアライズが0件なので、原因を可視化する #9
+[issues #9](https://github.com/cat2151/github-actions/issues/9)
 
-- 前提
-  - userは、translateのworkflowを共通ワークフロー化し、動くようにしたので、共通ワークフロー化の知識がある
-  - よって、今回は、promptでplanさせ、そのplanをuserがレビューし、planの改善を指示できるので、ハルシネーションのリスクを下げることができる
+# agentに修正させたり、人力で修正したりした
+- agentがハルシネーションし、いろいろ根の深いバグにつながる、エラー隠蔽などを仕込んでいたため、検知が遅れた
+- 詳しくはcommit logを参照のこと
+- WSL + actの環境を少し変更、act起動時のコマンドライン引数を変更し、generated-docsをmountする（ほかはデフォルト挙動であるcpだけにする）ことで、デバッグ情報をコンテナ外に出力できるようにし、デバッグを効率化した
 
-- prompt
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-このymlはまだ共通ワークフロー化されず、
-呼び出し元からコピーされたままの状態です。
-このymlファイル名のまま、
-中身を共通ワークフロー化してください。
-呼び出し元ymlは別途書きますので気にしないでください。
-まずplanしてください
+# test green
+
+# closeとする
+
+{% endraw %}
 ```
 
-- plan 生成結果
-```
-共通ワークフロー化のためのplanは以下の通りです。
+### issue-notes/149.md
+```md
+{% raw %}
+# issue issue #116 を利用し、tones/ に GM000 ～ GM0127 の音色データ保存用templateを生成する #149
+[issues #149](https://github.com/cat2151/ym2151-tone-editor/issues/149)
 
-1. 目的
-現在の issue-note.yml を「共通ワークフロー」として再設計し、他リポジトリや他ワークフローから workflow_call で呼び出せるようにする。
-2. 主な変更点
-on: トリガーを workflow_call に変更（直接イベントで起動しない）。
-必要な入力（inputs）やシークレット（secrets）を workflow_call セクションで定義。
-github.event.issue などのイベント依存部分を、inputs経由で受け取る形に修正。
-既存の処理（issueノート生成、コミット、issue body更新）はそのまま活かすが、パラメータ化する。
-3. 具体的な修正内容
-on: issues: → on: workflow_call: に変更。
-inputs で必要な値（例: issue_title, issue_number, issue_body, issue_url など）を受け取る。
-スクリプト内の ${{ github.event.issue.xxx }} を ${{ inputs.xxx }} に置換。
-github-script ステップも同様にinputsを参照。
-必要に応じて secrets も workflow_call で受け取れるようにする。
-4. ファイル名・配置
-ファイル名はそのまま issue-note.yml。
-配置場所は workflows でOK（共通ワークフローとしてもこの場所で良い）。
-5. 呼び出し元への影響
-呼び出し元ワークフローで uses: <repo>/.github/workflows/issue-note.yml@main のように参照し、inputsを渡す形になる。
-このplanで進めます。次に、実際の共通ワークフロー化のためのyml修正案を作成しますか？
+
+
+{% endraw %}
 ```
 
-- userがplanレビューし、OKを出した
-- agentに生成結果ymlをレビューさせた、OKとなった
-  - userはこのレビューは認知負荷が高いのでskipとする（単純な細かい間違い探し作業になるので、それはagentに任せた）
--  エラー。呼び出し元ymlのエラーがあり修正。共通ワークフローのエラー指摘があり、共通ワークフロー側の修正が必要となった
-```
-原因の分析：
+### issue-notes/151.md
+```md
+{% raw %}
+# issue issue 115 が解決していないので、waitを大きくし、ADSRをrateとlevelいずれも最大値にして、問題を切り分ける #151
+[issues #151](https://github.com/cat2151/ym2151-tone-editor/issues/151)
 
-呼び出し元（tonejs-mml-to-jsonのissue-note.yml）は、reusable workflow（cat2151/github-actions/.github/workflows/issue-note.yml@main）をusesで呼び出し、inputsをwithで渡しています。
-共通ワークフロー（reusable workflow）は inputs を workflow_call で受け取り、各ステップで ${{ inputs.xxx }} で参照しています。
-しかし、エラーが発生したのは actions/github-script@v7 の script 内です。
-エラーの本質的な原因：
 
-actions/github-script の script: で ${{ inputs.issue_number }} のような式を直接 JavaScript テンプレートリテラル内で使っていますが、これはサポートされていません。
-script: の中は JavaScript であり、YAMLの ${{ ... }} は展開されません（または意図通りに展開されません）。
-そのため、inputs 変数は script 内の JavaScript で未定義となり、ReferenceError になります。
-正しい書き方：
-
-actions/github-script の script: でワークフローの inputs を使いたい場合は、with: で input を environment 変数や script の引数として渡し、JavaScript で process.env から取得するか、github-script の input 機能を使う必要があります。
-例（修正版）：
-
-このように、inputs の値を env で渡し、script 内では process.env で参照してください。
-
-まとめ：
-
-actions/github-script の script 内で ${{ inputs.xxx }} を直接使うと ReferenceError になる
-env: で値を渡し、process.env で参照するのが正しい
-修正が必要です。修正版のワークフローが必要な場合はお知らせください。
-```
-
-- test green
-- closeとする
 
 {% endraw %}
 ```
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-91f29b6 Merge pull request #142 from cat2151/copilot/fix-windows-build-issues
-97e26a1 Fix GitHub Actions variable interpolation and labels array
-aa549a2 Fix GitHub Actions variable interpolation and improve comments
-78aec74 Improve workflow script maintainability
-064d09e Security: Add explicit permissions to workflow
-107a7d9 Fix: Use recommended dtolnay/rust-toolchain action
-3b71dd7 Add Windows GNU cross-compilation check workflow and update instructions
-0a3030c Merge pull request #140 from cat2151/copilot/fix-windows-build-error
-38d6883 Initial plan
-e639cbd Address code review feedback: optimize fuzzy matcher reuse
+6d1a029 Merge pull request #152 from cat2151/copilot/update-shortcut-key-guide-color
+af2322e Simplify comment - remove unnecessary ROW_CH note
+4ff18d8 Address code review feedback
+2808073 Implement shortcut key guide color and visibility changes
+c7d263e Initial plan
+c7a9cc3 Add issue note for #151 [auto]
+c04aa1a Add issue note for #150 [auto]
+58a0e7e Add issue note for #149 [auto]
+7ec08ba fix #146
+9a1af5d #148 Revise issue note for cargo check YAML improvements
 
 ### 変更されたファイル:
-.github/copilot-instructions.md
+.github/workflows/call-rust-windows-check.yml
 .github/workflows/windows-gnu-check.yml
-Cargo.lock
-Cargo.toml
-issue-notes/138.md
-issue-notes/139.md
-issue-notes/141.md
-src/main.rs
-src/variation_selector.rs
+issue-notes/148.md
+issue-notes/149.md
+issue-notes/150.md
+issue-notes/151.md
+src/ui.rs
 
 
 ---
-Generated at: 2025-12-06 07:08:14 JST
+Generated at: 2025-12-07 07:07:37 JST

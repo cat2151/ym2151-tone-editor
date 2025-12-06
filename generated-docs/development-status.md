@@ -1,60 +1,51 @@
-Last updated: 2025-12-06
+Last updated: 2025-12-07
 
 # Development Status
 
 ## 現在のIssues
-- [Issue #143](../issue-notes/143.md) は、GitHub Actionsのスケジュール実行でWindows GNUクロスコンパイルが失敗したバグを報告しています。
-- ワークフローは最近のコミットで変数補間や権限に関する修正が行われましたが、まだ問題が残っているようです。
-- ビルドログを詳細に調査し、Windows環境での依存関係と互換性を確認する必要があります。
+- [Issue #151](../issue-notes/151.md)では、音源パラメータのデバッグのため、ADSRのrateとlevel、wait値を最大にして問題の切り分けを進めています。
+- [Issue #149](../issue-notes/149.md)は、General MIDI (GM) 音色データ保存用のテンプレートファイルを`tones/`ディレクトリに生成する作業を進めています。
+- 現在の開発は、音源の正確な制御と、GM音色データ管理の基盤構築に焦点を当てています。
 
 ## 次の一手候補
-1. [Issue #143](../issue-notes/143.md) 失敗したワークフローのビルドログを詳細に分析する
-   - 最初の小さな一歩: 失敗したGitHub Actionsの実行ログ（`https://github.com/cat2151/ym2151-tone-editor/actions/runs/19971682217`）を全て取得し、主要なエラーメッセージと警告を抽出する。
+1. [Issue #151](../issue-notes/151.md) の音源パラメータ調整とデバッグの継続
+   - 最初の小さな一歩: `src/midi_conversion.rs`や`src/app.rs`といった関連ファイルで、ADSRパラメータ（Rate/Level）とWaitパラメータの設定箇所を特定し、指定された最大値に一時的に変更して、実際の音源再生での挙動変化を確認する。
    - Agent実行プロンプト:
      ```
-     対象ファイル: GitHub Actions ワークフロー実行ログ (URL: https://github.com/cat2151/ym2151-tone-editor/actions/runs/19971682217)
+     対象ファイル: src/midi_conversion.rs, src/app.rs, src/audio.rs
 
-     実行内容: 提供されたURLのGitHub Actions実行ログを詳細に分析し、以下の情報を抽出してください：
-     1. 失敗したジョブまたはステップの具体的なエラーメッセージ。
-     2. `rustup target add x86_64-pc-windows-gnu` や `cargo build --target x86_64-pc-windows-gnu` コマンドの出力（成功/失敗に関わらず）。
-     3. ビルド中に発生した可能性のある警告メッセージ。
+     実行内容: [Issue #151](../issue-notes/151.md)の指示に基づき、ADSRのRateおよびLevel、Waitパラメータを一時的に最大値に設定する変更案を作成してください。これらのパラメータが、音源のエンベロープ（アタック、ディケイ、サスティン、リリース）とノートオフ後の待機時間にどのように影響するかを分析し、変更前後の挙動の違いを検証するためのテスト計画をmarkdown形式で出力してください。
 
-     確認事項: ログが完全に取得可能であること、および全てのステップの出力が確認できることを前提とします。
+     確認事項: ADSRパラメータとWaitパラメータがMIDIイベント処理または音源レジスタ設定のどの部分に影響するか、既存の音源制御ロジックとの依存関係、および変更がアプリケーション全体の安定性に与える可能性のある影響を確認してください。
 
-     期待する出力: 抽出された主要なエラーメッセージと警告、それらがログのどの部分（ステップ名、行番号など）で発生したかを示すMarkdown形式のレポート。潜在的な原因についての考察も簡潔に含めてください。
+     期待する出力: 変更が必要な具体的なコード箇所（ファイル名、関数名、行番号など）、変更後のテスト手順（例：特定のMIDIシーケンスでの再生、デバッグログの確認、サウンド出力の評価方法など）、および変更を元に戻すための手順をまとめた詳細なmarkdownレポート。
      ```
 
-2. [Issue #143](../issue-notes/143.md) Windows GNUクロスコンパイル環境の要件を特定する
-   - 最初の小さな一歩: `Cargo.toml` と `Cargo.lock` に記載されている依存関係を洗い出し、Windows GNUターゲット向けにビルドするためのRustツールチェーンおよび外部依存ライブラリの要件を特定する。
+2. [Issue #149](../issue-notes/149.md) General MIDI音色データテンプレートの生成
+   - 最初の小さな一歩: `tones/general_midi/000_AcousticGrand.json`の構造を詳細に分析し、`tones/general_midi/tone_names.json`に含まれるGM音色名リストを基に、GM001 (Bright Acoustic Piano) のテンプレートJSONファイルを`tones/general_midi/001_BrightAcousticPiano.json`として手動で作成する。
    - Agent実行プロンプト:
      ```
-     対象ファイル: `Cargo.toml`, `Cargo.lock`, `.github/workflows/windows-gnu-check.yml`
+     対象ファイル: tones/general_midi/000_AcousticGrand.json, tones/general_midi/tone_names.json, src/file_ops.rs
 
-     実行内容: 以下の点を分析してください：
-     1. `Cargo.toml` と `Cargo.lock` から、ビルドに必要なクレートとそのバージョン、およびそれらの潜在的なプラットフォーム固有の依存関係を特定してください。
-     2. `.github/workflows/windows-gnu-check.yml` で使用されているRustツールチェーン (`dtolnay/rust-toolchain`) のバージョンと、`rustup target add` コマンドを確認してください。
-     3. 上記情報を総合し、Windows GNUターゲットでクロスコンパイルするために必要なRustツールチェーンの構成と、必要となる可能性のあるOSレベルのライブラリ（例: MinGWやCygwinの特定のパッケージ）を特定してください。
+     実行内容: [Issue #149](../issue-notes/149.md)の要求を満たすため、General MIDI (GM) 001から0127までの音色データ保存用JSONテンプレートファイルを`tones/general_midi/`ディレクトリに生成する自動化スクリプトまたは詳細な手順書を検討してください。この際、`000_AcousticGrand.json`をベースとし、`tone_names.json`からGM音色名と番号を抽出し、適切なファイル名と初期内容を持つダミーJSONファイルを生成するロジックを設計してください。
 
-     確認事項: `dtolnay/rust-toolchain` アクションの公式ドキュメントやRustのクロスコンパイルに関する一般的な情報を参照し、推奨される設定方法を確認してください。
+     確認事項: `tone_names.json`のフォーマットがGM音色リストの抽出に適しているか、生成されるJSONファイルのデータ構造がアプリケーションの音色ロード機能（`src/file_ops.rs`など）と互換性があるか、およびファイル名が命名規則に沿っているかを確認してください。
 
-     期待する出力: Windows GNUクロスコンパイルを成功させるために必要な環境設定（Rustツールチェーン、ターゲット追加、潜在的なOS依存ライブラリ）をMarkdown形式で具体的に記述してください。
+     期待する出力: GM音色テンプレートファイルを効率的に生成するためのPythonまたはNode.jsスクリプトのコード案（または詳細な擬似コード）、または手動でファイルを生成する際の一連のコマンドと考慮事項を記述したmarkdown形式の手順書。生成されるファイル構造の例を少なくとも3つ含めてください。
      ```
 
-3. [Issue #143](../issue-notes/143.md) ワークフロー定義ファイル `windows-gnu-check.yml` のレビューと変数補間・権限の検証
-   - 最初の小さな一歩: `.github/workflows/windows-gnu-check.yml` の内容と、最近のコミット (`97e26a1`, `aa549a2`, `064d09e`) で変更された部分を比較し、変数補間や権限設定に誤りがないかを確認する。
+3. [Issue #149](../issue-notes/149.md) 関連: `tones/general_midi/tone_names.json` の内容の検証と整合性の確保
+   - 最初の小さな一歩: `tones/general_midi/tone_names.json` の内容を、一般的なGeneral MIDI (GM) 音色リストの標準情報源（例: WikipediaやMIDI協会のドキュメント）と照合し、記載されている音色名と番号が正確で完全であるかを確認する。
    - Agent実行プロンプト:
      ```
-     対象ファイル: `.github/workflows/windows-gnu-check.yml`
+     対象ファイル: tones/general_midi/tone_names.json
 
-     実行内容: `.github/workflows/windows-gnu-check.yml` ファイルを以下の観点で詳細にレビューしてください：
-     1. YAMLの構文エラーがないか。
-     2. GitHub Actionsのコンテキスト変数（例: `github`, `env`, `inputs`, `vars`）の利用方法が正しいか。特に、最近のコミットで修正された変数補間のパターン（例: `vars.VAR_NAME` vs `env.VAR_NAME`）に誤りがないか確認してください。
-     3. ワークフロー全体および個々のジョブ/ステップに設定されている `permissions` が、実行に必要な操作（例: `contents: read`, `statuses: write`）に対して適切に付与されているか確認してください。
-     4. `actions/checkout@v4` や `dtolnay/rust-toolchain@master` など、使用しているアクションのバージョンが最新かつ安定版であるか、または既知の問題がないか確認してください。
+     実行内容: [Issue #149](../issue-notes/149.md)で利用される`tones/general_midi/tone_names.json`の内容について、General MIDI標準の音色名と番号リストとの整合性を分析してください。具体的には、このJSONファイルがすべてのGM音色（000-127）を網羅しているか、各音色名が正確であるか、および将来的な拡張（例: 音色カテゴリー情報の追加）を考慮した構造になっているかを評価してください。
 
-     確認事項: GitHub Actionsの公式ドキュメントや、使用されているアクションのGitHubリポジトリを参照し、正しい構文と推奨される設定を確認してください。
+     確認事項: 参照するGM標準音色リストが最新かつ信頼できる情報源であること。`tone_names.json`の構造が現在のアプリケーション設計（特にUI表示や音色データ管理）にどのように影響しているか。
 
-     期待する出力: `.github/workflows/windows-gnu-check.yml` 内でビルド失敗に繋がりうる潜在的な問題点（変数補間の誤用、不適切な権限、アクションのバージョン問題など）を特定し、その詳細な説明と修正案をMarkdown形式で提示してください。問題が見つからない場合はその旨を記述してください。
+     期待する出力: `tone_names.json`の現状分析結果、GM標準との差異のリスト、不足している音色や誤っている音色名の修正提案、およびファイル構造の改善案（もしあれば）を含むmarkdown形式のレポート。
+     ```
 
 ---
-Generated at: 2025-12-06 07:08:37 JST
+Generated at: 2025-12-07 07:08:05 JST

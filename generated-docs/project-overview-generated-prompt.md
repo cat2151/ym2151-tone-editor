@@ -1,4 +1,4 @@
-Last updated: 2025-12-06
+Last updated: 2025-12-07
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -404,6 +404,13 @@ cargo run
   📖 138.md
   📖 139.md
   📖 141.md
+  📖 144.md
+  📖 146.md
+  📖 147.md
+  📖 148.md
+  📖 149.md
+  📖 150.md
+  📖 151.md
   📖 95.md
   📖 96.md
   📖 97.md
@@ -471,9 +478,9 @@ issue-notes/136.md
 issue-notes/138.md
 issue-notes/139.md
 issue-notes/141.md
-issue-notes/95.md
-issue-notes/96.md
-issue-notes/97.md
+issue-notes/144.md
+issue-notes/146.md
+issue-notes/147.md
 tones/general_midi/000_AcousticGrand.json
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
@@ -486,4 +493,4 @@ tones/general_midi/000_AcousticGrand.json
 
 
 ---
-Generated at: 2025-12-06 07:08:14 JST
+Generated at: 2025-12-07 07:07:37 JST
