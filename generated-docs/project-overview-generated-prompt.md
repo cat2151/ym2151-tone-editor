@@ -1,4 +1,4 @@
-Last updated: 2025-12-07
+Last updated: 2025-12-08
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -375,9 +375,11 @@ cargo run
 📄 LICENSE
 📖 README.ja.md
 📖 README.md
+📖 README_generate_gm_templates.md
 📄 _config.yml
 📁 docs/
   📖 KEYBINDS.ja.md
+📄 generate_gm_templates.rs
 📁 generated-docs/
 🌐 googled947dc864c270e07.html
 📁 issue-notes/
@@ -411,6 +413,8 @@ cargo run
   📖 149.md
   📖 150.md
   📖 151.md
+  📖 155.md
+  📖 156.md
   📖 95.md
   📖 96.md
   📖 97.md
@@ -453,6 +457,7 @@ cargo run
 ## プロジェクト構造（ファイル一覧）
 README.ja.md
 README.md
+README_generate_gm_templates.md
 docs/KEYBINDS.ja.md
 googled947dc864c270e07.html
 issue-notes/100.md
@@ -480,7 +485,6 @@ issue-notes/139.md
 issue-notes/141.md
 issue-notes/144.md
 issue-notes/146.md
-issue-notes/147.md
 tones/general_midi/000_AcousticGrand.json
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
@@ -493,4 +497,4 @@ tones/general_midi/000_AcousticGrand.json
 
 
 ---
-Generated at: 2025-12-07 07:07:37 JST
+Generated at: 2025-12-08 07:07:51 JST

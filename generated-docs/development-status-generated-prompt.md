@@ -1,4 +1,4 @@
-Last updated: 2025-12-07
+Last updated: 2025-12-08
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -205,8 +205,10 @@ Last updated: 2025-12-07
 - LICENSE
 - README.ja.md
 - README.md
+- README_generate_gm_templates.md
 - _config.yml
 - docs/KEYBINDS.ja.md
+- generate_gm_templates.rs
 - generated-docs/project-overview-generated-prompt.md
 - googled947dc864c270e07.html
 - issue-notes/100.md
@@ -239,6 +241,8 @@ Last updated: 2025-12-07
 - issue-notes/149.md
 - issue-notes/150.md
 - issue-notes/151.md
+- issue-notes/155.md
+- issue-notes/156.md
 - issue-notes/95.md
 - issue-notes/96.md
 - issue-notes/97.md
@@ -267,71 +271,27 @@ Last updated: 2025-12-07
 - ym2151-tone-editor.toml.example
 
 ## 現在のオープンIssues
-## [Issue #151](../issue-notes/151.md): issue 115 が解決していないので、waitを大きくし、ADSRをrateとlevelいずれも最大値にして、問題を切り分ける
-[issue-notes/151.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/151.md)
+## [Issue #155](../issue-notes/155.md): ドッグフーディングする
+[issue-notes/155.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/155.md)
 
 ...
 ラベル: 
---- issue-notes/151.md の内容 ---
+--- issue-notes/155.md の内容 ---
 
 ```markdown
-# issue issue 115 が解決していないので、waitを大きくし、ADSRをrateとlevelいずれも最大値にして、問題を切り分ける #151
-[issues #151](https://github.com/cat2151/ym2151-tone-editor/issues/151)
-
-
-
-```
-
-## [Issue #149](../issue-notes/149.md): issue #116 を利用し、tones/ に GM000 ～ GM0127 の音色データ保存用templateを生成する
-[issue-notes/149.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/149.md)
-
-...
-ラベル: 
---- issue-notes/149.md の内容 ---
-
-```markdown
-# issue issue #116 を利用し、tones/ に GM000 ～ GM0127 の音色データ保存用templateを生成する #149
-[issues #149](https://github.com/cat2151/ym2151-tone-editor/issues/149)
+# issue ドッグフーディングする #155
+[issues #155](https://github.com/cat2151/ym2151-tone-editor/issues/155)
 
 
 
 ```
 
 ## ドキュメントで言及されているファイルの内容
-### .github/actions-tmp/issue-notes/9.md
+### issue-notes/155.md
 ```md
 {% raw %}
-# issue 関数コールグラフhtmlビジュアライズが0件なので、原因を可視化する #9
-[issues #9](https://github.com/cat2151/github-actions/issues/9)
-
-# agentに修正させたり、人力で修正したりした
-- agentがハルシネーションし、いろいろ根の深いバグにつながる、エラー隠蔽などを仕込んでいたため、検知が遅れた
-- 詳しくはcommit logを参照のこと
-- WSL + actの環境を少し変更、act起動時のコマンドライン引数を変更し、generated-docsをmountする（ほかはデフォルト挙動であるcpだけにする）ことで、デバッグ情報をコンテナ外に出力できるようにし、デバッグを効率化した
-
-# test green
-
-# closeとする
-
-{% endraw %}
-```
-
-### issue-notes/149.md
-```md
-{% raw %}
-# issue issue #116 を利用し、tones/ に GM000 ～ GM0127 の音色データ保存用templateを生成する #149
-[issues #149](https://github.com/cat2151/ym2151-tone-editor/issues/149)
-
-
-
-{% endraw %}
-```
-
-### issue-notes/151.md
-```md
-{% raw %}
-# issue issue 115 が解決していないので、waitを大きくし、ADSRをrateとlevelいずれも最大値にして、問題を切り分ける #151
-[issues #151](https://github.com/cat2151/ym2151-tone-editor/issues/151)
+# issue ドッグフーディングする #155
+[issues #155](https://github.com/cat2151/ym2151-tone-editor/issues/155)
 
 
 
@@ -340,26 +300,32 @@ Last updated: 2025-12-07
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-6d1a029 Merge pull request #152 from cat2151/copilot/update-shortcut-key-guide-color
-af2322e Simplify comment - remove unnecessary ROW_CH note
-4ff18d8 Address code review feedback
-2808073 Implement shortcut key guide color and visibility changes
-c7d263e Initial plan
-c7a9cc3 Add issue note for #151 [auto]
-c04aa1a Add issue note for #150 [auto]
-58a0e7e Add issue note for #149 [auto]
-7ec08ba fix #146
-9a1af5d #148 Revise issue note for cargo check YAML improvements
+d00da6d Merge pull request #157 from cat2151/copilot/fix-sound-envelope-issue
+04a1038 Fix envelope parameter restoration in interactive mode preview (issue #156)
+78c13ee Initial plan
+87ba98d Expand notes on issue #156 with hypotheses and methods
+8749381 Add issue note for #156 [auto]
+a385556 Add issue note for #155 [auto]
+097c5d1 Merge pull request #154 from cat2151/copilot/generate-template-for-tones
+910e7ca Fix documentation and optimize filter logic
+c91ed1f Refactor generator script based on code review
+19a1c46 Add GM tone template generator script
 
 ### 変更されたファイル:
-.github/workflows/call-rust-windows-check.yml
-.github/workflows/windows-gnu-check.yml
-issue-notes/148.md
-issue-notes/149.md
-issue-notes/150.md
-issue-notes/151.md
-src/ui.rs
+README_generate_gm_templates.md
+generate_gm_templates.rs
+generated-docs/development-status-generated-prompt.md
+generated-docs/development-status.md
+generated-docs/project-overview-generated-prompt.md
+generated-docs/project-overview.md
+issue-notes/155.md
+issue-notes/156.md
+src/audio.rs
+src/config.rs
+src/models.rs
+src/register.rs
+src/tests/register_tests.rs
 
 
 ---
-Generated at: 2025-12-07 07:07:37 JST
+Generated at: 2025-12-08 07:07:51 JST
