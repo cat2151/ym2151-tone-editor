@@ -157,7 +157,9 @@ fn send_interactive_update(
     }
 }
 
-/// Send only the specific operator register(s) affected by a parameter change
+/// Send all tone registers after envelope reset when any operator parameter changes
+/// This ensures that after envelope reset (AR=31, D1R=31, D1L=15, D2R=15, RR=15),
+/// all parameters are restored to their tone values before KEY_ON (fixes issue #156)
 #[cfg(windows)]
 fn send_operator_register_for_param(
     values: &ToneData,
@@ -166,143 +168,45 @@ fn send_operator_register_for_param(
     envelope_delay_seconds: f64,
 ) {
     let channel: u8 = 0; // We use channel 0
-    let reg = register::REG_FROM_O1_O4[data_row];
-    let op_offset = reg * 8 + channel as usize;
 
-    // let _ = ym2151_log_play_server::client::clear_schedule();
+    log_verbose(&format!(
+        "send_operator_register_for_param: data_row={}, param_index={} ({})",
+        data_row,
+        param_index,
+        if param_index < PARAM_NAMES.len() {
+            PARAM_NAMES[param_index]
+        } else {
+            "unknown"
+        }
+    ));
 
     let mut events = Vec::new();
 
+    // Step 1: Envelope reset and KEY_OFF at time 0.0
     add_key_off(&mut events, channel, values);
 
-    // Determine which register(s) to send based on the edited parameter
-    // All these events happen after the configured envelope delay
-    match param_index {
-        PARAM_SM => {
-            // SM affects KEY_ON register, which is handled at the end
-            // No additional register needed here
-        }
-        PARAM_TL => {
-            // TL - Register $60-$7F (standalone)
-            let tl = values[data_row][PARAM_TL];
-            log_verbose(&format!(
-                "  operator register: addr=0x{:02X}, data=0x{:02X} (TL={})",
-                0x60 + op_offset as u8,
-                tl & 0x7F,
-                tl
-            ));
-            events.push(Ym2151Event {
-                time: envelope_delay_seconds,
-                addr: format!("0x{:02X}", 0x60 + op_offset as u8),
-                data: format!("0x{:02X}", tl & 0x7F),
-            });
-        }
-        PARAM_MUL | PARAM_DT => {
-            // DT1 and MUL - Register $40-$5F (shared register)
-            let dt = values[data_row][PARAM_DT];
-            let mul = values[data_row][PARAM_MUL];
-            let dt_mul = ((dt & 0x07) << 4) | (mul & 0x0F);
-            log_verbose(&format!(
-                "  operator register: addr=0x{:02X}, data=0x{:02X} (DT={}, MUL={})",
-                0x40 + op_offset as u8,
-                dt_mul,
-                dt,
-                mul
-            ));
-            events.push(Ym2151Event {
-                time: envelope_delay_seconds,
-                addr: format!("0x{:02X}", 0x40 + op_offset as u8),
-                data: format!("0x{:02X}", dt_mul),
-            });
-        }
-        PARAM_AR | PARAM_KS => {
-            // KS and AR - Register $80-$9F (shared register)
-            let ks = values[data_row][PARAM_KS];
-            let ar = values[data_row][PARAM_AR];
-            let ks_ar = ((ks & 0x03) << 6) | (ar & 0x1F);
-            log_verbose(&format!(
-                "  operator register: addr=0x{:02X}, data=0x{:02X} (KS={}, AR={})",
-                0x80 + op_offset as u8,
-                ks_ar,
-                ks,
-                ar
-            ));
-            events.push(Ym2151Event {
-                time: envelope_delay_seconds,
-                addr: format!("0x{:02X}", 0x80 + op_offset as u8),
-                data: format!("0x{:02X}", ks_ar),
-            });
-        }
-        PARAM_D1R | PARAM_AMS => {
-            // AMS and D1R - Register $A0-$BF (shared register)
-            let ams = values[data_row][PARAM_AMS];
-            let d1r = values[data_row][PARAM_D1R];
-            let ams_d1r = ((ams & 0x03) << 6) | (d1r & 0x1F);
-            log_verbose(&format!(
-                "  operator register: addr=0x{:02X}, data=0x{:02X} (AMS={}, D1R={})",
-                0xA0 + op_offset as u8,
-                ams_d1r,
-                ams,
-                d1r
-            ));
-            events.push(Ym2151Event {
-                time: envelope_delay_seconds,
-                addr: format!("0x{:02X}", 0xA0 + op_offset as u8),
-                data: format!("0x{:02X}", ams_d1r),
-            });
-        }
-        PARAM_D2R | PARAM_DT2 => {
-            // DT2 and D2R - Register $C0-$DF (shared register)
-            let dt2 = values[data_row][PARAM_DT2];
-            let d2r = values[data_row][PARAM_D2R];
-            let dt2_d2r = ((dt2 & 0x03) << 6) | (d2r & 0x1F);
-            log_verbose(&format!(
-                "  operator register: addr=0x{:02X}, data=0x{:02X} (DT2={}, D2R={})",
-                0xC0 + op_offset as u8,
-                dt2_d2r,
-                dt2,
-                d2r
-            ));
-            events.push(Ym2151Event {
-                time: envelope_delay_seconds,
-                addr: format!("0x{:02X}", 0xC0 + op_offset as u8),
-                data: format!("0x{:02X}", dt2_d2r),
-            });
-        }
-        PARAM_RR | PARAM_D1L => {
-            // D1L and RR - Register $E0-$FF (shared register)
-            let d1l = values[data_row][PARAM_D1L];
-            let rr = values[data_row][PARAM_RR];
-            let d1l_rr = ((d1l & 0x0F) << 4) | (rr & 0x0F);
-            log_verbose(&format!(
-                "  operator register: addr=0x{:02X}, data=0x{:02X} (D1L={}, RR={})",
-                0xE0 + op_offset as u8,
-                d1l_rr,
-                d1l,
-                rr
-            ));
-            events.push(Ym2151Event {
-                time: envelope_delay_seconds,
-                addr: format!("0x{:02X}", 0xE0 + op_offset as u8),
-                data: format!("0x{:02X}", d1l_rr),
-            });
-        }
-        _ => {
-            log_verbose(&format!(
-                "send_operator_register_for_param: Unknown parameter index {}",
-                param_index
-            ));
-            return;
-        }
+    // Step 2: Restore all tone parameters at envelope_delay_seconds
+    // Generate all register events with the tone values
+    let mut tone_events = register::editor_rows_to_ym2151_events(values);
+    
+    // Set all tone events to happen after envelope delay
+    for event in &mut tone_events {
+        event.time = envelope_delay_seconds;
     }
-
-    add_key_on(values, &mut events, envelope_delay_seconds);
+    
+    log_verbose(&format!(
+        "  restoring all {} tone registers at time {}",
+        tone_events.len(),
+        envelope_delay_seconds
+    ));
+    
+    events.extend(tone_events);
 
     if events.is_empty() {
         return;
     }
 
-    // Create minimal JSON with only the affected register(s)
+    // Create JSON with envelope reset + all tone parameters
     let log = Ym2151Log { events };
 
     let json_string = match serde_json::to_string(&log) {
@@ -320,7 +224,9 @@ fn send_operator_register_for_param(
     }
 }
 
-/// Send only the specific channel register(s) affected by a parameter change
+/// Send all tone registers after envelope reset when any channel parameter changes
+/// This ensures that after envelope reset (AR=31, D1R=31, D1L=15, D2R=15, RR=15),
+/// all parameters are restored to their tone values before KEY_ON (fixes issue #156)
 #[cfg(windows)]
 fn send_channel_register_for_param(
     values: &ToneData,
@@ -329,80 +235,43 @@ fn send_channel_register_for_param(
 ) {
     let channel = 0;
 
-    // let _ = ym2151_log_play_server::client::clear_schedule();
+    log_verbose(&format!(
+        "send_channel_register_for_param: param_index={} ({})",
+        param_index,
+        if param_index < CH_PARAM_NAMES.len() {
+            CH_PARAM_NAMES[param_index]
+        } else {
+            "unknown"
+        }
+    ));
 
     let mut events = Vec::new();
 
+    // Step 1: Envelope reset and KEY_OFF at time 0.0
     add_key_off(&mut events, channel, values);
 
-    // Determine which register(s) to send based on the edited parameter
-    // All these events happen after the configured envelope delay
-    match param_index {
-        CH_PARAM_ALG | CH_PARAM_FB => {
-            // RL, FB, CON (Algorithm) - Register $20-$27 (shared register)
-            let alg = values[ROW_CH][CH_PARAM_ALG];
-            let fb = values[ROW_CH][CH_PARAM_FB];
-            let rl_fb_con = 0xC0 | ((fb & 0x07) << 3) | (alg & 0x07);
-            log_verbose(&format!(
-                "  channel register: addr=0x{:02X}, data=0x{:02X} (ALG={}, FB={})",
-                0x20 + channel,
-                rl_fb_con,
-                alg,
-                fb
-            ));
-            events.push(Ym2151Event {
-                time: envelope_delay_seconds,
-                addr: format!("0x{:02X}", 0x20 + channel),
-                data: format!("0x{:02X}", rl_fb_con),
-            });
-        }
-        CH_PARAM_NOTE => {
-            // MIDI note affects KC, KF
-            let midi_note = values[ROW_CH][CH_PARAM_NOTE];
-            let (kc, kf) = midi_to_kc_kf(midi_note);
-
-            // KC - Register $28-$2F
-            log_verbose(&format!(
-                "  channel register: addr=0x{:02X}, data=0x{:02X} (KC from MIDI note={})",
-                0x28 + channel,
-                kc,
-                midi_note
-            ));
-            events.push(Ym2151Event {
-                time: envelope_delay_seconds,
-                addr: format!("0x{:02X}", 0x28 + channel),
-                data: format!("0x{:02X}", kc),
-            });
-
-            // KF - Register $30-$37
-            log_verbose(&format!(
-                "  channel register: addr=0x{:02X}, data=0x{:02X} (KF from MIDI note={})",
-                0x30 + channel,
-                kf,
-                midi_note
-            ));
-            events.push(Ym2151Event {
-                time: envelope_delay_seconds,
-                addr: format!("0x{:02X}", 0x30 + channel),
-                data: format!("0x{:02X}", kf),
-            });
-        }
-        _ => {
-            log_verbose(&format!(
-                "send_channel_register_for_param: Unknown parameter index {}",
-                param_index
-            ));
-            return;
-        }
+    // Step 2: Restore all tone parameters at envelope_delay_seconds
+    // Generate all register events with the tone values
+    let mut tone_events = register::editor_rows_to_ym2151_events(values);
+    
+    // Set all tone events to happen after envelope delay
+    for event in &mut tone_events {
+        event.time = envelope_delay_seconds;
     }
-
-    add_key_on(values, &mut events, envelope_delay_seconds);
+    
+    log_verbose(&format!(
+        "  restoring all {} tone registers at time {}",
+        tone_events.len(),
+        envelope_delay_seconds
+    ));
+    
+    events.extend(tone_events);
 
     if events.is_empty() {
         return;
     }
 
-    // Create minimal JSON with only the affected register(s)
+    // Create JSON with envelope reset + all tone parameters
     let log = Ym2151Log { events };
 
     let json_string = match serde_json::to_string(&log) {
