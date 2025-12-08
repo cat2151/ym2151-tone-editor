@@ -1,6 +1,5 @@
 //! Unit tests for register module
 
-use crate::models::DEFAULT_ENVELOPE_DELAY_SECONDS;
 use crate::models::*;
 use crate::register::*;
 
