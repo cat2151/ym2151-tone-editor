@@ -129,18 +129,18 @@ fn test_to_ym2151_events_with_midi_note() {
     // Verify KC value corresponds to MIDI note 72 (C5)
     let kc_data = kc_event.unwrap().data.trim_start_matches("0x");
     let kc = u8::from_str_radix(kc_data, 16).unwrap();
-    // According to smf-to-ym2151log-rust: MIDI 72 (C5) -> KC 0x4E
-    assert_eq!(kc, 0x4E, "MIDI note 72 (C5) should map to KC 0x4E");
+    // According to smf-to-ym2151log-rust: MIDI 72 (C5) -> KC 0x3E
+    assert_eq!(kc, 0x3E, "MIDI note 72 (C5) should map to KC 0x3E");
 }
 
 #[test]
 fn test_events_to_tone_data_with_kc() {
     // Create events with KC register
-    // Using 0x3E which is KC for middle C (MIDI 60)
+    // Using 0x2E which is KC for middle C (MIDI 60)
     let events = vec![Ym2151Event {
         time: 0.0,
         addr: "0x28".to_string(),
-        data: "0x3E".to_string(), // KC for middle C (MIDI 60)
+        data: "0x2E".to_string(), // KC for middle C (MIDI 60)
     }];
 
     let result = json_events_to_editor_rows(&events);
@@ -151,7 +151,7 @@ fn test_events_to_tone_data_with_kc() {
     // Check that MIDI note was extracted
     assert_eq!(
         values[ROW_CH][CH_PARAM_NOTE], 60,
-        "KC 0x3E should convert to MIDI note 60"
+        "KC 0x2E should convert to MIDI note 60"
     );
 }
 
@@ -233,29 +233,30 @@ fn test_alg4_carrier_mapping() {
 
     let events = editor_rows_to_ym2151_events(&values);
 
-    // Verify hardware slot mapping (YM2151 hardware: M1=slot0, M2=slot1, C1=slot2, C2=slot3)
-    // For ALG4, slots 2 (C1) and 3 (C2) should be carriers
+    // Verify hardware slot mapping (YM2151 hardware slot order: O1, O3, O2, O4)
+    // This corresponds to: M1=slot0, C1=slot1, M2=slot2, C2=slot3
+    // For ALG4, slots 1 (C1) and 3 (C2) should be carriers
 
-    // Check that M1 (data row 0) maps to slot 0
+    // Check that M1 (data row 0) maps to slot 0 (reg 0x40)
     let m1_event = events.iter().find(|e| e.addr == "0x40").unwrap();
     let m1_data = u8::from_str_radix(m1_event.data.trim_start_matches("0x"), 16).unwrap();
     assert_eq!(m1_data & 0x0F, 1, "M1 should have MUL=1 at slot 0");
 
-    // Check that M2 (data row 1) maps to slot 1
-    let m2_event = events.iter().find(|e| e.addr == "0x48").unwrap();
-    let m2_data = u8::from_str_radix(m2_event.data.trim_start_matches("0x"), 16).unwrap();
-    assert_eq!(m2_data & 0x0F, 2, "M2 should have MUL=2 at slot 1");
-
-    // Check that C1 (data row 2) maps to slot 2 - this is a carrier in ALG4
-    let c1_event = events.iter().find(|e| e.addr == "0x50").unwrap();
+    // Check that C1 (data row 2) maps to slot 1 (reg 0x48) - this is a carrier in ALG4
+    let c1_event = events.iter().find(|e| e.addr == "0x48").unwrap();
     let c1_data = u8::from_str_radix(c1_event.data.trim_start_matches("0x"), 16).unwrap();
     assert_eq!(
         c1_data & 0x0F,
         3,
-        "C1 (carrier) should have MUL=3 at slot 2"
+        "C1 (carrier) should have MUL=3 at slot 1"
     );
 
-    // Check that C2 (data row 3) maps to slot 3 - this is a carrier in ALG4
+    // Check that M2 (data row 1) maps to slot 2 (reg 0x50)
+    let m2_event = events.iter().find(|e| e.addr == "0x50").unwrap();
+    let m2_data = u8::from_str_radix(m2_event.data.trim_start_matches("0x"), 16).unwrap();
+    assert_eq!(m2_data & 0x0F, 2, "M2 should have MUL=2 at slot 2");
+
+    // Check that C2 (data row 3) maps to slot 3 (reg 0x58) - this is a carrier in ALG4
     let c2_event = events.iter().find(|e| e.addr == "0x58").unwrap();
     let c2_data = u8::from_str_radix(c2_event.data.trim_start_matches("0x"), 16).unwrap();
     assert_eq!(
@@ -267,14 +268,14 @@ fn test_alg4_carrier_mapping() {
 
 #[test]
 fn test_operator_register_order() {
-    // Test that data rows map to correct hardware slots:
-    // Data row 0 (M1)→slot0, Data row 1 (M2)→slot1, Data row 2 (C1)→slot2, Data row 3 (C2)→slot3
+    // Test that data rows map to correct hardware slots using REG_FROM_O1_O4 mapping:
+    // Data row 0 (M1)→slot0, Data row 2 (C1)→slot1, Data row 1 (M2)→slot2, Data row 3 (C2)→slot3
     let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
 
     // Set unique MUL values for each data row to identify them
     values[0][PARAM_MUL] = 1; // Data row 0 (M1) should go to slot 0
-    values[1][PARAM_MUL] = 2; // Data row 1 (M2) should go to slot 1
-    values[2][PARAM_MUL] = 3; // Data row 2 (C1) should go to slot 2
+    values[1][PARAM_MUL] = 2; // Data row 1 (M2) should go to slot 2
+    values[2][PARAM_MUL] = 3; // Data row 2 (C1) should go to slot 1
     values[3][PARAM_MUL] = 4; // Data row 3 (C2) should go to slot 3
 
     let events = editor_rows_to_ym2151_events(&values);
@@ -290,24 +291,24 @@ fn test_operator_register_order() {
         "Register 0x40 (slot 0) should have M1's MUL=1"
     );
 
-    // Register 0x48 (slot 1, channel 0) should have M2's MUL=2
-    let m2_event = events.iter().find(|e| e.addr == "0x48");
-    assert!(m2_event.is_some(), "M2 register should be present");
-    let data = u8::from_str_radix(m2_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
-    assert_eq!(
-        data & 0x0F,
-        2,
-        "Register 0x48 (slot 1) should have M2's MUL=2"
-    );
-
-    // Register 0x50 (slot 2, channel 0) should have C1's MUL=3
-    let c1_event = events.iter().find(|e| e.addr == "0x50");
+    // Register 0x48 (slot 1, channel 0) should have C1's MUL=3
+    let c1_event = events.iter().find(|e| e.addr == "0x48");
     assert!(c1_event.is_some(), "C1 register should be present");
     let data = u8::from_str_radix(c1_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
     assert_eq!(
         data & 0x0F,
         3,
-        "Register 0x50 (slot 2) should have C1's MUL=3"
+        "Register 0x48 (slot 1) should have C1's MUL=3"
+    );
+
+    // Register 0x50 (slot 2, channel 0) should have M2's MUL=2
+    let m2_event = events.iter().find(|e| e.addr == "0x50");
+    assert!(m2_event.is_some(), "M2 register should be present");
+    let data = u8::from_str_radix(m2_event.unwrap().data.trim_start_matches("0x"), 16).unwrap();
+    assert_eq!(
+        data & 0x0F,
+        2,
+        "Register 0x50 (slot 2) should have M2's MUL=2"
     );
 
     // Register 0x58 (slot 3, channel 0) should have C2's MUL=4

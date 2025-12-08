@@ -8,23 +8,23 @@ fn test_midi_to_kc_kf_middle_c() {
     let (kc, _kf) = midi_to_kc_kf(60);
 
     // According to smf-to-ym2151log-rust library:
-    // MIDI 60 should map to KC = 0x3E (octave 3, note C = 14/0xE)
-    assert_eq!(kc, 0x3E, "MIDI note 60 should map to KC 0x3E");
+    // MIDI 60 should map to KC = 0x2E (octave 2, note C = 14/0xE)
+    assert_eq!(kc, 0x2E, "MIDI note 60 should map to KC 0x2E");
 }
 
 #[test]
 fn test_midi_to_kc_kf_various_notes() {
     // Test A4 (MIDI note 69)
     let (kc, _) = midi_to_kc_kf(69);
-    assert_eq!(kc, 0x4A, "A4 (MIDI 69) should map to KC 0x4A");
+    assert_eq!(kc, 0x3A, "A4 (MIDI 69) should map to KC 0x3A");
 
     // Test C5 (MIDI note 72)
     let (kc, _) = midi_to_kc_kf(72);
-    assert_eq!(kc, 0x4E, "C5 (MIDI 72) should map to KC 0x4E");
+    assert_eq!(kc, 0x3E, "C5 (MIDI 72) should map to KC 0x3E");
 
     // Test C3 (MIDI note 48)
     let (kc, _) = midi_to_kc_kf(48);
-    assert_eq!(kc, 0x2E, "C3 (MIDI 48) should map to KC 0x2E");
+    assert_eq!(kc, 0x1E, "C3 (MIDI 48) should map to KC 0x1E");
 }
 
 #[test]
@@ -44,18 +44,19 @@ fn test_midi_to_kc_kf_boundary_values() {
 
 #[test]
 fn test_kc_to_midi_note_middle_c() {
-    // KC for middle C from the library is 0x3E
-    let kc = 0x3E;
+    // KC for middle C from the library is 0x2E
+    let kc = 0x2E;
     let midi_note = kc_to_midi_note(kc);
 
     // Should convert back to 60 (middle C)
-    assert_eq!(midi_note, 60, "KC 0x3E should convert to MIDI note 60");
+    assert_eq!(midi_note, 60, "KC 0x2E should convert to MIDI note 60");
 }
 
 #[test]
 fn test_midi_note_roundtrip() {
     // Test that converting MIDI -> KC -> MIDI gives the same value
-    for midi_in in [24, 36, 48, 60, 69, 72, 84, 96] {
+    // Note: MIDI notes below 36 get clamped to YM2151 octave 0, so roundtrip only works for MIDI >= 36
+    for midi_in in [36, 48, 60, 69, 72, 84, 96] {
         let (kc, _) = midi_to_kc_kf(midi_in);
         let midi_out = kc_to_midi_note(kc);
 
