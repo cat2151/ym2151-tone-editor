@@ -47,10 +47,11 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const title = 'Cargo test failed';
+            const sha = '${{ github.sha }}';
+            const shortSha = sha.substring(0, 7);
+            const title = `Cargo test failed (${shortSha})`;
             const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
             const ref = '${{ github.ref }}';
-            const sha = '${{ github.sha }}';
             const body = [
               'Cargo test failed in push event.',
               '',
@@ -62,7 +63,7 @@ jobs:
               `Workflow run: ${runUrl}`
             ].join('\n');
 
-            // Check if issue already exists
+            // Check if issue already exists for this commit
             const issues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -71,7 +72,7 @@ jobs:
             });
 
             const existingIssue = issues.data.find(issue => 
-              issue.title.includes('Cargo test failed')
+              issue.title.includes(shortSha)
             );
 
             if (!existingIssue) {
