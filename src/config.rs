@@ -307,7 +307,7 @@ mod tests {
         assert_eq!(config.get_action("q"), Some(&Action::DecreaseValue));
         assert_eq!(config.get_action("e"), Some(&Action::IncreaseValue));
         assert_eq!(config.get_action("Esc"), Some(&Action::Exit));
-        assert_eq!(config.get_action("1"), Some(&Action::IncreaseValueBy1));
+        assert_eq!(config.get_action("1"), Some(&Action::JumpToOp1AndIncrease));
         assert_eq!(config.get_action("h"), Some(&Action::MoveCursorLeft));
     }
 
