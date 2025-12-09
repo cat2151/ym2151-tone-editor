@@ -1,4 +1,4 @@
-Last updated: 2025-12-08
+Last updated: 2025-12-10
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -199,6 +199,7 @@ Last updated: 2025-12-08
 - .github/workflows/call-issue-note.yml
 - .github/workflows/call-rust-windows-check.yml
 - .github/workflows/call-translate-readme.yml
+- .github/workflows/rust-test.yml
 - .gitignore
 - Cargo.lock
 - Cargo.toml
@@ -243,6 +244,7 @@ Last updated: 2025-12-08
 - issue-notes/151.md
 - issue-notes/155.md
 - issue-notes/156.md
+- issue-notes/158.md
 - issue-notes/95.md
 - issue-notes/96.md
 - issue-notes/97.md
@@ -271,6 +273,51 @@ Last updated: 2025-12-08
 - ym2151-tone-editor.toml.example
 
 ## 現在のオープンIssues
+## [Issue #162](../issue-notes/162.md): Fix 20 failing tests: MIDI conversion expectations and operator row indexing
+CI revealed 20 test failures stemming from incorrect test expectations about MIDI-to-KC conversion values and operator row indexing assumptions.
+
+## MIDI Conversion (5 tests)
+Test expectations were one octave higher than `smf-to-ym2151log-rust` actually returns. Updated to match library behavior:
+- ...
+ラベル: 
+--- issue-notes/162.md の内容 ---
+
+```markdown
+
+```
+
+## [Issue #161](../issue-notes/161.md): Cargo test failed (387f691)
+Cargo test failed in push event.
+
+Branch/Ref: refs/heads/main
+Commit: 387f691991240b139bdca07a871b1f581c8e4ec1
+
+Please investigate the test failures and fix them.
+
+Workflow run: https://github.com/cat2151/ym2151-tone-editor/actions/runs/20045332056...
+ラベル: bug, test-failure
+--- issue-notes/161.md の内容 ---
+
+```markdown
+
+```
+
+## [Issue #160](../issue-notes/160.md): Cargo test failed (0ad3753)
+Cargo test failed in push event.
+
+Branch/Ref: refs/heads/copilot/add-ci-test-automation
+Commit: 0ad3753d5a6acb702efba39e8b5c389ea0af7f3f
+
+Please investigate the test failures and fix them.
+
+Workflow run: https://github.com/cat2151/ym2151-tone-editor/actions/runs/20013132216...
+ラベル: bug, test-failure
+--- issue-notes/160.md の内容 ---
+
+```markdown
+
+```
+
 ## [Issue #155](../issue-notes/155.md): ドッグフーディングする
 [issue-notes/155.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/155.md)
 
@@ -287,6 +334,181 @@ Last updated: 2025-12-08
 ```
 
 ## ドキュメントで言及されているファイルの内容
+### .github/actions-tmp/issue-notes/2.md
+```md
+{% raw %}
+# issue GitHub Actions「関数コールグラフhtmlビジュアライズ生成」を共通ワークフロー化する #2
+[issues #2](https://github.com/cat2151/github-actions/issues/2)
+
+
+# prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+このymlファイルを、以下の2つのファイルに分割してください。
+1. 共通ワークフロー       cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
+2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-callgraph_enhanced.yml
+まずplanしてください
+```
+
+# 結果
+- indent
+    - linter？がindentのエラーを出しているがyml内容は見た感じOK
+    - テキストエディタとagentの相性問題と判断する
+    - 別のテキストエディタでsaveしなおし、テキストエディタをreload
+    - indentのエラーは解消した
+- LLMレビュー
+    - agent以外の複数のLLMにレビューさせる
+    - prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューしてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
+
+--- 共通ワークフロー
+
+# GitHub Actions Reusable Workflow for Call Graph Generation
+name: Generate Call Graph
+
+# TODO Windowsネイティブでのtestをしていた名残が残っているので、今後整理していく。今はWSL act でtestしており、Windowsネイティブ環境依存問題が解決した
+#  ChatGPTにレビューさせるとそこそこ有用そうな提案が得られたので、今後それをやる予定
+#  agentに自己チェックさせる手も、セカンドオピニオンとして選択肢に入れておく
+
+on:
+  workflow_call:
+
+jobs:
+  check-commits:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50 # 過去のコミットを取得
+
+      - name: Check for user commits in last 24 hours
+        id: check
+        run: |
+          node .github/scripts/callgraph_enhanced/check-commits.cjs
+
+  generate-callgraph:
+    needs: check-commits
+    if: needs.check-commits.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Remove old CodeQL packages cache
+        run: rm -rf ~/.codeql/packages
+
+      - name: Check Node.js version
+        run: |
+          node .github/scripts/callgraph_enhanced/check-node-version.cjs
+
+      - name: Install CodeQL CLI
+        run: |
+          wget https://github.com/github/codeql-cli-binaries/releases/download/v2.22.1/codeql-linux64.zip
+          unzip codeql-linux64.zip
+          sudo mv codeql /opt/codeql
+          echo "/opt/codeql" >> $GITHUB_PATH
+
+      - name: Install CodeQL query packs
+        run: |
+          /opt/codeql/codeql pack install .github/codeql-queries
+
+      - name: Check CodeQL exists
+        run: |
+          node .github/scripts/callgraph_enhanced/check-codeql-exists.cjs
+
+      - name: Verify CodeQL Configuration
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs verify-config
+
+      - name: Remove existing CodeQL DB (if any)
+        run: |
+          rm -rf codeql-db
+
+      - name: Perform CodeQL Analysis
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs analyze
+
+      - name: Check CodeQL Analysis Results
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs check-results
+
+      - name: Debug CodeQL execution
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs debug
+
+      - name: Wait for CodeQL results
+        run: |
+          node -e "setTimeout(()=>{}, 10000)"
+
+      - name: Find and process CodeQL results
+        run: |
+          node .github/scripts/callgraph_enhanced/find-process-results.cjs
+
+      - name: Generate HTML graph
+        run: |
+          node .github/scripts/callgraph_enhanced/generate-html-graph.cjs
+
+      - name: Copy files to generated-docs and commit results
+        run: |
+          node .github/scripts/callgraph_enhanced/copy-commit-results.cjs
+
+--- 呼び出し元
+# 呼び出し元ワークフロー: call-callgraph_enhanced.yml
+name: Call Call Graph Enhanced
+
+on:
+  schedule:
+    # 毎日午前5時(JST) = UTC 20:00前日
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+jobs:
+  call-callgraph-enhanced:
+    # uses: cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
+    uses: ./.github/workflows/callgraph_enhanced.yml # ローカルでのテスト用
+```
+
+# レビュー結果OKと判断する
+- レビュー結果を人力でレビューした形になった
+
+# test
+- #4 同様にローカル WSL + act でtestする
+- エラー。userのtest設計ミス。
+  - scriptの挙動 : src/ がある前提
+  - 今回の共通ワークフローのリポジトリ : src/ がない
+  - 今回testで実現したいこと
+    - 仮のソースでよいので、関数コールグラフを生成させる
+  - 対策
+    - src/ にダミーを配置する
+- test green
+  - ただしcommit pushはしてないので、html内容が0件NG、といったケースの検知はできない
+  - もしそうなったら別issueとしよう
+
+# test green
+
+# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
+
+# closeとする
+- もしhtml内容が0件NG、などになったら、別issueとするつもり
+
+{% endraw %}
+```
+
 ### issue-notes/155.md
 ```md
 {% raw %}
@@ -300,32 +522,28 @@ Last updated: 2025-12-08
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
+387f691 Merge pull request #159 from cat2151/copilot/add-ci-test-automation
+0ad3753 Add restore-keys for better cache efficiency and --verbose flag for detailed test output
+5eb19fd Improve issue uniqueness by including commit SHA in title
+53ba2b3 Add GitHub Actions workflow for running tests on push
+4a7904e Initial plan
+02ebacd Add issue note for #158 [auto]
+1f467b1 Update project summaries (overview & development status) [auto]
 d00da6d Merge pull request #157 from cat2151/copilot/fix-sound-envelope-issue
 04a1038 Fix envelope parameter restoration in interactive mode preview (issue #156)
 78c13ee Initial plan
-87ba98d Expand notes on issue #156 with hypotheses and methods
-8749381 Add issue note for #156 [auto]
-a385556 Add issue note for #155 [auto]
-097c5d1 Merge pull request #154 from cat2151/copilot/generate-template-for-tones
-910e7ca Fix documentation and optimize filter logic
-c91ed1f Refactor generator script based on code review
-19a1c46 Add GM tone template generator script
 
 ### 変更されたファイル:
-README_generate_gm_templates.md
-generate_gm_templates.rs
+.github/workflows/rust-test.yml
 generated-docs/development-status-generated-prompt.md
 generated-docs/development-status.md
 generated-docs/project-overview-generated-prompt.md
 generated-docs/project-overview.md
 issue-notes/155.md
 issue-notes/156.md
+issue-notes/158.md
 src/audio.rs
-src/config.rs
-src/models.rs
-src/register.rs
-src/tests/register_tests.rs
 
 
 ---
-Generated at: 2025-12-08 07:07:51 JST
+Generated at: 2025-12-10 07:08:54 JST
