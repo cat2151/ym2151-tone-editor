@@ -156,14 +156,14 @@ fn test_events_to_tone_data_with_kc() {
 
 #[test]
 fn test_slot_mask_bit_order() {
-    // Test that slot masks use correct YM2151 bit order: M1, C1, M2, C2
+    // Test that slot masks use sequential row order: O1, O2, O3, O4
     let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
 
-    // Enable only M2
-    values[0][PARAM_SM] = 0; // M1
-    values[1][PARAM_SM] = 1; // M2 should map to bit 5
-    values[2][PARAM_SM] = 0; // C1
-    values[3][PARAM_SM] = 0; // C2
+    // Enable only O2/M2 (row 1)
+    values[0][PARAM_SM] = 0; // O1/M1
+    values[1][PARAM_SM] = 1; // O2/M2 should map to bit 4
+    values[2][PARAM_SM] = 0; // O3/C1
+    values[3][PARAM_SM] = 0; // O4/C2
     values[ROW_CH][CH_PARAM_ALG] = 4;
 
     let events = editor_rows_to_ym2151_events(&values);
@@ -175,20 +175,20 @@ fn test_slot_mask_bit_order() {
     let key_on_data = key_on_event.unwrap().data.trim_start_matches("0x");
     let data = u8::from_str_radix(key_on_data, 16).unwrap();
 
-    // M2 should be at bit 5, so data should be 0b00100000 | channel = 0x20
-    assert_eq!(data, 0x20, "M2 should map to bit 5 (0x20)");
+    // O2/M2 (row 1) should be at bit 4, so data should be 0b00010000 | channel = 0x10
+    assert_eq!(data, 0x10, "O2/M2 (row 1) should map to bit 4 (0x10)");
 
-    // Test C1
-    values[1][PARAM_SM] = 0; // M2
-    values[2][PARAM_SM] = 1; // C1 should map to bit 4
+    // Test O3/C1 (row 2)
+    values[1][PARAM_SM] = 0; // O2/M2
+    values[2][PARAM_SM] = 1; // O3/C1 should map to bit 5
 
     let events = editor_rows_to_ym2151_events(&values);
     let key_on_event = events.iter().find(|e| e.addr == "0x08");
     let key_on_data = key_on_event.unwrap().data.trim_start_matches("0x");
     let data = u8::from_str_radix(key_on_data, 16).unwrap();
 
-    // C1 should be at bit 4, so data should be 0b00010000 | channel = 0x10
-    assert_eq!(data, 0x10, "C1 should map to bit 4 (0x10)");
+    // O3/C1 (row 2) should be at bit 5, so data should be 0b00100000 | channel = 0x20
+    assert_eq!(data, 0x20, "O3/C1 (row 2) should map to bit 5 (0x20)");
 }
 
 #[test]

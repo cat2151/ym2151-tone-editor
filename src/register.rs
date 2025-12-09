@@ -9,17 +9,15 @@ fn add_key_on(values: &ToneData, events: &mut Vec<Ym2151Event>) {
     let channel = 0; // We use channel 0
 
     // Calculate slot mask based on which operators are enabled
-    // YM2151 KEY_ON register (0x08) uses hardware slot order: M1, C1, M2, C2 (bits 3-6)
-    // which corresponds to display rows: 0, 2, 1, 3 (using REG_FROM_O1_O4 mapping)
-    let sm0 = values[0][PARAM_SM]; // M1 -> bit 3
-    let sm1 = values[1][PARAM_SM]; // M2 -> bit 5 (hardware slot 2)
-    let sm2 = values[2][PARAM_SM]; // C1 -> bit 4 (hardware slot 1)
-    let sm3 = values[3][PARAM_SM]; // C2 -> bit 6
+    let sm0 = values[0][PARAM_SM];
+    let sm1 = values[1][PARAM_SM];
+    let sm2 = values[2][PARAM_SM];
+    let sm3 = values[3][PARAM_SM];
 
-    let slot_mask = if sm0 != 0 { 0x08 } else { 0 }  // M1 at bit 3
-        | if sm2 != 0 { 0x10 } else { 0 }            // C1 at bit 4 (row 2)
-        | if sm1 != 0 { 0x20 } else { 0 }            // M2 at bit 5 (row 1)
-        | if sm3 != 0 { 0x40 } else { 0 };           // C2 at bit 6
+    let slot_mask = if sm0 != 0 { 0x08 } else { 0 }
+        | if sm1 != 0 { 0x10 } else { 0 }
+        | if sm2 != 0 { 0x20 } else { 0 }
+        | if sm3 != 0 { 0x40 } else { 0 };
 
     let key_on = slot_mask | channel as u8;
     events.push(Ym2151Event {
@@ -308,13 +306,12 @@ pub fn json_events_to_editor_rows(events: &[Ym2151Event]) -> io::Result<ToneData
             }
             // Key On register (0x08)
             0x08 => {
-                // Bits 3-6 contain operator enable flags in hardware slot order
-                // Hardware order: M1(bit3), C1(bit4), M2(bit5), C2(bit6)
-                // Display rows: 0, 2, 1, 3
-                editor_rows[0][PARAM_SM] = (data >> 3) & 0x01; // M1
-                editor_rows[2][PARAM_SM] = (data >> 4) & 0x01; // C1
-                editor_rows[1][PARAM_SM] = (data >> 5) & 0x01; // M2
-                editor_rows[3][PARAM_SM] = (data >> 6) & 0x01; // C2
+                // Bits 3-6 contain operator enable flags
+                // Store these in the SM parameter of each operator row
+                editor_rows[0][PARAM_SM] = (data >> 3) & 0x01;
+                editor_rows[1][PARAM_SM] = (data >> 4) & 0x01;
+                editor_rows[2][PARAM_SM] = (data >> 5) & 0x01;
+                editor_rows[3][PARAM_SM] = (data >> 6) & 0x01;
             }
             // KC (Key Code) register (0x28-0x2F)
             0x28..=0x2F => {
