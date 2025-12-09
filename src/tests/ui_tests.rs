@@ -68,15 +68,15 @@ fn test_get_algorithm_diagram() {
     // Test specific algorithms
     let alg0 = get_algorithm_diagram(0);
     assert!(
-        alg0[0].contains("M1->C1->M2->C2->OUT"),
+        alg0[0].contains("O1->O2->O3->O4->OUT"),
         "ALG 0 should show cascade"
     );
 
     let alg7 = get_algorithm_diagram(7);
     assert!(alg7.len() >= 5, "ALG 7 should have at least 5 lines");
     assert!(
-        alg7[0].contains("M1->OUT"),
-        "ALG 7 should show M1 to output"
+        alg7[0].contains("O1->OUT"),
+        "ALG 7 should show O1 to output"
     );
 
     // Test invalid algorithm

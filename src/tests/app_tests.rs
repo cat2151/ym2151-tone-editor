@@ -1066,19 +1066,19 @@ fn test_jump_to_op2_and_increase() {
 
     // Start at a different position
     app.cursor_x = 2;
-    app.cursor_y = 0; // M1
-    app.values[2][2] = 5; // Set OP2 (C1 - data row 2) column 2 to 5
+    app.cursor_y = 0; // O1/M1
+    app.values[1][2] = 5; // Set OP2 (O2/M2 - row 1) column 2 to 5
 
-    // Jump to OP2 (C1 - display row 1) and increase
+    // Jump to OP2 (O2/M2 - row 1) and increase
     app.jump_to_operator_and_increase(1);
 
-    // Verify cursor moved to OP2 (C1)
-    assert_eq!(app.cursor_y, 1, "Cursor should move to OP2 row (C1)");
+    // Verify cursor moved to OP2 (O2/M2)
+    assert_eq!(app.cursor_y, 1, "Cursor should move to OP2 row (O2/M2)");
     assert_eq!(app.cursor_x, 2, "Cursor column should be preserved");
 
     // Verify value increased
     assert_eq!(
-        app.values[2][2], 6,
+        app.values[1][2], 6,
         "Value at OP2 column 2 should increase from 5 to 6"
     );
 }
@@ -1090,18 +1090,18 @@ fn test_jump_to_op3_and_increase() {
     // Start at CH row
     app.cursor_x = 1;
     app.cursor_y = ROW_CH;
-    app.values[1][1] = 20; // Set OP3 (M2 - data row 1) column 1 to 20
+    app.values[2][1] = 20; // Set OP3 (O3/C1 - row 2) column 1 to 20
 
-    // Jump to OP3 (M2 - display row 2) and increase
+    // Jump to OP3 (O3/C1 - row 2) and increase
     app.jump_to_operator_and_increase(2);
 
-    // Verify cursor moved to OP3 (M2)
-    assert_eq!(app.cursor_y, 2, "Cursor should move to OP3 row (M2)");
+    // Verify cursor moved to OP3 (O3/C1)
+    assert_eq!(app.cursor_y, 2, "Cursor should move to OP3 row (O3/C1)");
     assert_eq!(app.cursor_x, 1, "Cursor column should be preserved");
 
     // Verify value increased
     assert_eq!(
-        app.values[1][1], 21,
+        app.values[2][1], 21,
         "Value at OP3 column 1 should increase from 20 to 21"
     );
 }
@@ -1158,19 +1158,19 @@ fn test_jump_to_op2_and_decrease() {
 
     // Start at a different position
     app.cursor_x = 6;
-    app.cursor_y = 2; // M2
-    app.values[2][6] = 8; // Set OP2 (C1 - data row 2) column 6 to 8
+    app.cursor_y = 2; // O3/C1
+    app.values[1][6] = 8; // Set OP2 (O2/M2 - row 1) column 6 to 8
 
-    // Jump to OP2 (C1 - display row 1) and decrease
+    // Jump to OP2 (O2/M2 - row 1) and decrease
     app.jump_to_operator_and_decrease(1);
 
-    // Verify cursor moved to OP2 (C1)
-    assert_eq!(app.cursor_y, 1, "Cursor should move to OP2 row (C1)");
+    // Verify cursor moved to OP2 (O2/M2)
+    assert_eq!(app.cursor_y, 1, "Cursor should move to OP2 row (O2/M2)");
     assert_eq!(app.cursor_x, 6, "Cursor column should be preserved");
 
     // Verify value decreased
     assert_eq!(
-        app.values[2][6], 7,
+        app.values[1][6], 7,
         "Value at OP2 column 6 should decrease from 8 to 7"
     );
 }
@@ -1236,10 +1236,10 @@ fn test_rapid_operator_switching() {
     let mut app = App::new(false, false, DEFAULT_ENVELOPE_DELAY_SECONDS);
 
     // Set initial values for column 3 on all operators
-    app.values[0][3] = 10; // OP1 (M1)
-    app.values[2][3] = 15; // OP2 (C1)
-    app.values[1][3] = 20; // OP3 (M2)
-    app.values[3][3] = 25; // OP4 (C2)
+    app.values[0][3] = 10; // OP1 (O1/M1 - row 0)
+    app.values[1][3] = 15; // OP2 (O2/M2 - row 1)
+    app.values[2][3] = 20; // OP3 (O3/C1 - row 2)
+    app.values[3][3] = 25; // OP4 (O4/C2 - row 3)
 
     // Start at column 3
     app.cursor_x = 3;
@@ -1258,12 +1258,12 @@ fn test_rapid_operator_switching() {
     // Jump to OP2 and increase
     app.jump_to_operator_and_increase(1);
     assert_eq!(app.cursor_y, 1, "Should jump to OP2");
-    assert_eq!(app.values[2][3], 16, "OP2 value should increase");
+    assert_eq!(app.values[1][3], 16, "OP2 value should increase");
 
     // Jump to OP3 and decrease
     app.jump_to_operator_and_decrease(2);
     assert_eq!(app.cursor_y, 2, "Should jump to OP3");
-    assert_eq!(app.values[1][3], 19, "OP3 value should decrease");
+    assert_eq!(app.values[2][3], 19, "OP3 value should decrease");
 }
 
 #[test]
@@ -1295,12 +1295,12 @@ fn test_jump_to_ar_and_increase() {
 fn test_jump_to_ar_and_decrease() {
     let mut app = App::new(false, false, DEFAULT_ENVELOPE_DELAY_SECONDS);
 
-    // Set cursor to operator row 1, column 5
+    // Set cursor to operator row 1 (O2/M2), column 5
     app.cursor_x = 5;
     app.cursor_y = 1;
 
-    // Set initial AR value for display row 1 (data row 2)
-    app.values[2][PARAM_AR] = 15;
+    // Set initial AR value for row 1 (O2/M2)
+    app.values[1][PARAM_AR] = 15;
 
     // Jump to AR and decrease
     app.jump_to_ar_and_decrease();
@@ -1311,7 +1311,7 @@ fn test_jump_to_ar_and_decrease() {
 
     // Verify AR value decreased
     assert_eq!(
-        app.values[2][PARAM_AR], 14,
+        app.values[1][PARAM_AR], 14,
         "AR should decrease from 15 to 14"
     );
 }
@@ -1320,12 +1320,12 @@ fn test_jump_to_ar_and_decrease() {
 fn test_jump_to_d1r_and_increase() {
     let mut app = App::new(false, false, DEFAULT_ENVELOPE_DELAY_SECONDS);
 
-    // Set cursor to operator row 2, column 1
+    // Set cursor to operator row 2 (O3/C1), column 1
     app.cursor_x = 1;
     app.cursor_y = 2;
 
-    // Set initial D1R value for display row 2 (data row 1)
-    app.values[1][PARAM_D1R] = 8;
+    // Set initial D1R value for row 2 (O3/C1)
+    app.values[2][PARAM_D1R] = 8;
 
     // Jump to D1R and increase
     app.jump_to_d1r_and_increase();
@@ -1336,7 +1336,7 @@ fn test_jump_to_d1r_and_increase() {
 
     // Verify D1R value increased
     assert_eq!(
-        app.values[1][PARAM_D1R], 9,
+        app.values[2][PARAM_D1R], 9,
         "D1R should increase from 8 to 9"
     );
 }
@@ -1395,12 +1395,12 @@ fn test_jump_to_d2r_and_increase() {
 fn test_jump_to_d2r_and_decrease() {
     let mut app = App::new(false, false, DEFAULT_ENVELOPE_DELAY_SECONDS);
 
-    // Set cursor to operator row 1
+    // Set cursor to operator row 1 (O2/M2)
     app.cursor_x = 8;
     app.cursor_y = 1;
 
-    // Set initial D2R value for display row 1 (data row 2)
-    app.values[2][PARAM_D2R] = 12;
+    // Set initial D2R value for row 1 (O2/M2)
+    app.values[1][PARAM_D2R] = 12;
 
     // Jump to D2R and decrease
     app.jump_to_d2r_and_decrease();
@@ -1411,7 +1411,7 @@ fn test_jump_to_d2r_and_decrease() {
 
     // Verify D2R value decreased
     assert_eq!(
-        app.values[2][PARAM_D2R], 11,
+        app.values[1][PARAM_D2R], 11,
         "D2R should decrease from 12 to 11"
     );
 }
@@ -1420,12 +1420,12 @@ fn test_jump_to_d2r_and_decrease() {
 fn test_jump_to_rr_and_increase() {
     let mut app = App::new(false, false, DEFAULT_ENVELOPE_DELAY_SECONDS);
 
-    // Set cursor to operator row 2
+    // Set cursor to operator row 2 (O3/C1)
     app.cursor_x = 3;
     app.cursor_y = 2;
 
-    // Set initial RR value for display row 2 (data row 1)
-    app.values[1][PARAM_RR] = 7;
+    // Set initial RR value for row 2 (O3/C1)
+    app.values[2][PARAM_RR] = 7;
 
     // Jump to RR and increase
     app.jump_to_rr_and_increase();
@@ -1435,7 +1435,7 @@ fn test_jump_to_rr_and_increase() {
     assert_eq!(app.cursor_y, 2, "Cursor should stay on same row");
 
     // Verify RR value increased
-    assert_eq!(app.values[1][PARAM_RR], 8, "RR should increase from 7 to 8");
+    assert_eq!(app.values[2][PARAM_RR], 8, "RR should increase from 7 to 8");
 }
 
 #[test]
@@ -1529,12 +1529,12 @@ fn test_jump_to_mul_and_increase() {
 fn test_jump_to_mul_and_decrease() {
     let mut app = App::new(false, false, DEFAULT_ENVELOPE_DELAY_SECONDS);
 
-    // Set cursor to operator row 1, column 5
+    // Set cursor to operator row 1 (O2/M2), column 5
     app.cursor_x = 5;
     app.cursor_y = 1;
 
-    // Set initial MUL value for display row 1 (data row 2)
-    app.values[2][PARAM_MUL] = 10;
+    // Set initial MUL value for row 1 (O2/M2)
+    app.values[1][PARAM_MUL] = 10;
 
     // Jump to MUL and decrease
     app.jump_to_mul_and_decrease();
@@ -1545,7 +1545,7 @@ fn test_jump_to_mul_and_decrease() {
 
     // Verify MUL value decreased
     assert_eq!(
-        app.values[2][PARAM_MUL], 9,
+        app.values[1][PARAM_MUL], 9,
         "MUL should decrease from 10 to 9"
     );
 }
