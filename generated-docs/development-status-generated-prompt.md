@@ -1,4 +1,4 @@
-Last updated: 2025-12-10
+Last updated: 2025-12-11
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -245,6 +245,10 @@ Last updated: 2025-12-10
 - issue-notes/155.md
 - issue-notes/156.md
 - issue-notes/158.md
+- issue-notes/164.md
+- issue-notes/165.md
+- issue-notes/166.md
+- issue-notes/167.md
 - issue-notes/95.md
 - issue-notes/96.md
 - issue-notes/97.md
@@ -273,16 +277,102 @@ Last updated: 2025-12-10
 - ym2151-tone-editor.toml.example
 
 ## 現在のオープンIssues
-## [Issue #162](../issue-notes/162.md): Fix 20 failing tests: MIDI conversion expectations and operator row indexing
-CI revealed 20 test failures stemming from incorrect test expectations about MIDI-to-KC conversion values and operator row indexing assumptions.
+## [Issue #167](../issue-notes/167.md): プレビューを鳴らすとき、前の音のkeyoff時にプチノイズが乗ってしまう
+[issue-notes/167.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/167.md)
 
-## MIDI Conversion (5 tests)
-Test expectations were one octave higher than `smf-to-ym2151log-rust` actually returns. Updated to match library behavior:
-- ...
+...
 ラベル: 
---- issue-notes/162.md の内容 ---
+--- issue-notes/167.md の内容 ---
 
 ```markdown
+# issue プレビューを鳴らすとき、前の音のkeyoff時にプチノイズが乗ってしまう #167
+[issues #167](https://github.com/cat2151/ym2151-tone-editor/issues/167)
+
+# わかっていること
+- これまでの不具合は一通り解決した
+    - slow attack音色を問題なくプレビューできるようになった
+    - プチノイズ以外はプレビュー音が適切に演奏できるようになった
+- slow attack音色でプチノイズが乗っている、
+    - よって、keyonにはプチノイズは乗っていない
+- なお、cat-play-mmlで普通に演奏してもプチノイズが乗る
+    - 注意、それは切り分けて別途考えるほうがよい
+# 仮説
+- 以下いずれかが必要
+    - キャリアのTLを127にしてからRR15
+        - 仮説、かえってプチノイズになる可能性
+    - キャリアだけはRR14
+    - ADSRのうちRだけを15にし、のち、Rを編集中の音色の値に復帰する
+        - 仮説、ADSRすべてを最速にした瞬間、かえってプチノイズになる可能性
+# 考察
+- 毎回試行錯誤にissueを立て、レビューして、動作確認、というサイクルをまわすのは、本件のようなissueだと非効率に感じる
+  - より正確には、このissueは堂々巡りに入りそうな予感がある、それを問題視している
+- もっとlocalで素早くサイクルをまわす方法の案を洗いだす
+- 例
+    - jsonを作って再生してプチノイズが乗るかを確認する
+        - データ内容
+            - long decayを0.5秒鳴らす
+            - keyoff ～ 次のkeyon
+                - プレビューと同じ
+    - 課題
+        - json編集のコストが大きい、編集ミスのリスクが高い
+        - 案
+            - STed2のようなjson editorのrepositoryを検討する
+                - eventが可視化されている、読みやすい、機械語に対するニモニックのような表示で
+                - time部分を、累積時間と、時刻とを、toggle切り替えできる
+                    - 保存時は時刻
+                    - これならwait増減が楽である
+                        - 「選択範囲の時刻をまとめて増減」より楽
+                        - シンプルなUIで時間編集ができる
+# どうする？
+- そのprojectを作る方向でいく
+- これまでもそのprojectの必要性は予想していた
+- 「次にそのprojectがないと困る段階」になったら、実施しよう、と計画していた
+- なぜならそれが一番のそのprojectのtestになるので
+
+```
+
+## [Issue #166](../issue-notes/166.md): カーソルが、ALG や FB の行にあるときも、OP1～4のいずれか1行と1列に、操作ガイドを表示し続ける
+[issue-notes/166.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/166.md)
+
+...
+ラベル: 
+--- issue-notes/166.md の内容 ---
+
+```markdown
+# issue カーソルが、ALG や FB の行にあるときも、OP1～4のいずれか1行と1列に、操作ガイドを表示し続ける #166
+[issues #166](https://github.com/cat2151/ym2151-tone-editor/issues/166)
+
+
+
+```
+
+## [Issue #165](../issue-notes/165.md): 現在カーソルのある列に、「1」～「4」という操作ガイドを表示する。ADSRガイド表示を参考にする
+[issue-notes/165.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/165.md)
+
+...
+ラベル: 
+--- issue-notes/165.md の内容 ---
+
+```markdown
+# issue 現在カーソルのある列に、「1」～「4」という操作ガイドを表示する。ADSRガイド表示を参考にする #165
+[issues #165](https://github.com/cat2151/ym2151-tone-editor/issues/165)
+
+
+
+```
+
+## [Issue #164](../issue-notes/164.md): compile時にwarningが出ている。それもcompileチェック時にエラーとみなすか、試して検証する
+[issue-notes/164.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/164.md)
+
+...
+ラベル: 
+--- issue-notes/164.md の内容 ---
+
+```markdown
+# issue compile時にwarningが出ている。それもcompileチェック時にエラーとみなすか、試して検証する #164
+[issues #164](https://github.com/cat2151/ym2151-tone-editor/issues/164)
+
+
 
 ```
 
@@ -297,22 +387,6 @@ Please investigate the test failures and fix them.
 Workflow run: https://github.com/cat2151/ym2151-tone-editor/actions/runs/20045332056...
 ラベル: bug, test-failure
 --- issue-notes/161.md の内容 ---
-
-```markdown
-
-```
-
-## [Issue #160](../issue-notes/160.md): Cargo test failed (0ad3753)
-Cargo test failed in push event.
-
-Branch/Ref: refs/heads/copilot/add-ci-test-automation
-Commit: 0ad3753d5a6acb702efba39e8b5c389ea0af7f3f
-
-Please investigate the test failures and fix them.
-
-Workflow run: https://github.com/cat2151/ym2151-tone-editor/actions/runs/20013132216...
-ラベル: bug, test-failure
---- issue-notes/160.md の内容 ---
 
 ```markdown
 
@@ -334,177 +408,160 @@ Workflow run: https://github.com/cat2151/ym2151-tone-editor/actions/runs/2001313
 ```
 
 ## ドキュメントで言及されているファイルの内容
-### .github/actions-tmp/issue-notes/2.md
+### .github/actions-tmp/issue-notes/4.md
 ```md
 {% raw %}
-# issue GitHub Actions「関数コールグラフhtmlビジュアライズ生成」を共通ワークフロー化する #2
-[issues #2](https://github.com/cat2151/github-actions/issues/2)
-
+# issue GitHub Actions「project概要生成」を共通ワークフロー化する #4
+[issues #4](https://github.com/cat2151/github-actions/issues/4)
 
 # prompt
 ```
 あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
 このymlファイルを、以下の2つのファイルに分割してください。
-1. 共通ワークフロー       cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
-2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-callgraph_enhanced.yml
+1. 共通ワークフロー       cat2151/github-actions/.github/workflows/daily-project-summary.yml
+2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-daily-project-summary.yml
 まずplanしてください
 ```
 
-# 結果
-- indent
-    - linter？がindentのエラーを出しているがyml内容は見た感じOK
-    - テキストエディタとagentの相性問題と判断する
-    - 別のテキストエディタでsaveしなおし、テキストエディタをreload
-    - indentのエラーは解消した
-- LLMレビュー
-    - agent以外の複数のLLMにレビューさせる
-    - prompt
+# 結果、あちこちハルシネーションのあるymlが生成された
+- agentの挙動があからさまにハルシネーション
+    - インデントが修正できない、「失敗した」という
+    - 構文誤りを認識できない
+- 人力で修正した
+
+# このagentによるセルフレビューが信頼できないため、別のLLMによるセカンドオピニオンを試す
 ```
 あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューしてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
+以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
+
+--- 呼び出し元
+
+name: Call Daily Project Summary
+
+on:
+  schedule:
+    # 日本時間 07:00 (UTC 22:00 前日)
+    - cron: '0 22 * * *'
+  workflow_dispatch:
+
+jobs:
+  call-daily-project-summary:
+    uses: cat2151/github-actions/.github/workflows/daily-project-summary.yml
+    secrets:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
 --- 共通ワークフロー
-
-# GitHub Actions Reusable Workflow for Call Graph Generation
-name: Generate Call Graph
-
-# TODO Windowsネイティブでのtestをしていた名残が残っているので、今後整理していく。今はWSL act でtestしており、Windowsネイティブ環境依存問題が解決した
-#  ChatGPTにレビューさせるとそこそこ有用そうな提案が得られたので、今後それをやる予定
-#  agentに自己チェックさせる手も、セカンドオピニオンとして選択肢に入れておく
-
+name: Daily Project Summary
 on:
   workflow_call:
 
 jobs:
-  check-commits:
+  generate-summary:
     runs-on: ubuntu-latest
-    outputs:
-      should-run: ${{ steps.check.outputs.should-run }}
+
+    permissions:
+      contents: write
+      issues: read
+      pull-requests: read
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 50 # 過去のコミットを取得
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # 履歴を取得するため
 
-      - name: Check for user commits in last 24 hours
-        id: check
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
         run: |
-          node .github/scripts/callgraph_enhanced/check-commits.cjs
+          # 一時的なディレクトリで依存関係をインストール
+          mkdir -p /tmp/summary-deps
+          cd /tmp/summary-deps
+          npm init -y
+          npm install @google/generative-ai @octokit/rest
+          # generated-docsディレクトリを作成
+          mkdir -p $GITHUB_WORKSPACE/generated-docs
 
-  generate-callgraph:
-    needs: check-commits
-    if: needs.check-commits.outputs.should-run == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      security-events: write
-      actions: read
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set Git identity
+      - name: Generate project summary
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          NODE_PATH: /tmp/summary-deps/node_modules
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          node .github/scripts/generate-project-summary.cjs
 
-      - name: Remove old CodeQL packages cache
-        run: rm -rf ~/.codeql/packages
-
-      - name: Check Node.js version
+      - name: Check for generated summaries
+        id: check_summaries
         run: |
-          node .github/scripts/callgraph_enhanced/check-node-version.cjs
+          if [ -f "generated-docs/project-overview.md" ] && [ -f "generated-docs/development-status.md" ]; then
+            echo "summaries_generated=true" >> $GITHUB_OUTPUT
+          else
+            echo "summaries_generated=false" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Install CodeQL CLI
+      - name: Commit and push summaries
+        if: steps.check_summaries.outputs.summaries_generated == 'true'
         run: |
-          wget https://github.com/github/codeql-cli-binaries/releases/download/v2.22.1/codeql-linux64.zip
-          unzip codeql-linux64.zip
-          sudo mv codeql /opt/codeql
-          echo "/opt/codeql" >> $GITHUB_PATH
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          # package.jsonの変更のみリセット（generated-docsは保持）
+          git restore package.json 2>/dev/null || true
+          # サマリーファイルのみを追加
+          git add generated-docs/project-overview.md
+          git add generated-docs/development-status.md
+          git commit -m "Update project summaries (overview & development status)"
+          git push
 
-      - name: Install CodeQL query packs
+      - name: Summary generation result
         run: |
-          /opt/codeql/codeql pack install .github/codeql-queries
-
-      - name: Check CodeQL exists
-        run: |
-          node .github/scripts/callgraph_enhanced/check-codeql-exists.cjs
-
-      - name: Verify CodeQL Configuration
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs verify-config
-
-      - name: Remove existing CodeQL DB (if any)
-        run: |
-          rm -rf codeql-db
-
-      - name: Perform CodeQL Analysis
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs analyze
-
-      - name: Check CodeQL Analysis Results
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs check-results
-
-      - name: Debug CodeQL execution
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs debug
-
-      - name: Wait for CodeQL results
-        run: |
-          node -e "setTimeout(()=>{}, 10000)"
-
-      - name: Find and process CodeQL results
-        run: |
-          node .github/scripts/callgraph_enhanced/find-process-results.cjs
-
-      - name: Generate HTML graph
-        run: |
-          node .github/scripts/callgraph_enhanced/generate-html-graph.cjs
-
-      - name: Copy files to generated-docs and commit results
-        run: |
-          node .github/scripts/callgraph_enhanced/copy-commit-results.cjs
-
---- 呼び出し元
-# 呼び出し元ワークフロー: call-callgraph_enhanced.yml
-name: Call Call Graph Enhanced
-
-on:
-  schedule:
-    # 毎日午前5時(JST) = UTC 20:00前日
-    - cron: '0 20 * * *'
-  workflow_dispatch:
-
-jobs:
-  call-callgraph-enhanced:
-    # uses: cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
-    uses: ./.github/workflows/callgraph_enhanced.yml # ローカルでのテスト用
+          if [ "${{ steps.check_summaries.outputs.summaries_generated }}" == "true" ]; then
+            echo "✅ Project summaries updated successfully"
+            echo "📊 Generated: project-overview.md & development-status.md"
+          else
+            echo "ℹ️ No summaries generated (likely no user commits in the last 24 hours)"
+          fi
 ```
 
-# レビュー結果OKと判断する
-- レビュー結果を人力でレビューした形になった
+# 上記promptで、2つのLLMにレビューさせ、合格した
 
-# test
-- #4 同様にローカル WSL + act でtestする
-- エラー。userのtest設計ミス。
-  - scriptの挙動 : src/ がある前提
-  - 今回の共通ワークフローのリポジトリ : src/ がない
-  - 今回testで実現したいこと
-    - 仮のソースでよいので、関数コールグラフを生成させる
-  - 対策
-    - src/ にダミーを配置する
-- test green
-  - ただしcommit pushはしてないので、html内容が0件NG、といったケースの検知はできない
-  - もしそうなったら別issueとしよう
+# 細部を、先行する2つのymlを参照に手直しした
+
+# ローカルtestをしてからcommitできるとよい。方法を検討する
+- ローカルtestのメリット
+    - 素早く修正のサイクルをまわせる
+    - ムダにgit historyを汚さない
+        - これまでの事例：「実装したつもり」「エラー。修正したつもり」「エラー。修正したつもり」...（以降エラー多数）
+- 方法
+    - ※検討、WSL + act を環境構築済みである。test可能であると判断する
+    - 呼び出し元のURLをコメントアウトし、相対パス記述にする
+    - ※備考、テスト成功すると結果がcommit pushされる。それでよしとする
+- 結果
+    - OK
+    - secretsを簡略化できるか試した、できなかった、現状のsecrets記述が今わかっている範囲でベストと判断する
+    - OK
 
 # test green
 
 # commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
 
 # closeとする
-- もしhtml内容が0件NG、などになったら、別issueとするつもり
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/7.md
+```md
+{% raw %}
+# issue issue note生成できるかのtest用 #7
+[issues #7](https://github.com/cat2151/github-actions/issues/7)
+
+- 生成できた
+- closeとする
 
 {% endraw %}
 ```
@@ -520,30 +577,117 @@ jobs:
 {% endraw %}
 ```
 
+### issue-notes/164.md
+```md
+{% raw %}
+# issue compile時にwarningが出ている。それもcompileチェック時にエラーとみなすか、試して検証する #164
+[issues #164](https://github.com/cat2151/ym2151-tone-editor/issues/164)
+
+
+
+{% endraw %}
+```
+
+### issue-notes/165.md
+```md
+{% raw %}
+# issue 現在カーソルのある列に、「1」～「4」という操作ガイドを表示する。ADSRガイド表示を参考にする #165
+[issues #165](https://github.com/cat2151/ym2151-tone-editor/issues/165)
+
+
+
+{% endraw %}
+```
+
+### issue-notes/166.md
+```md
+{% raw %}
+# issue カーソルが、ALG や FB の行にあるときも、OP1～4のいずれか1行と1列に、操作ガイドを表示し続ける #166
+[issues #166](https://github.com/cat2151/ym2151-tone-editor/issues/166)
+
+
+
+{% endraw %}
+```
+
+### issue-notes/167.md
+```md
+{% raw %}
+# issue プレビューを鳴らすとき、前の音のkeyoff時にプチノイズが乗ってしまう #167
+[issues #167](https://github.com/cat2151/ym2151-tone-editor/issues/167)
+
+# わかっていること
+- これまでの不具合は一通り解決した
+    - slow attack音色を問題なくプレビューできるようになった
+    - プチノイズ以外はプレビュー音が適切に演奏できるようになった
+- slow attack音色でプチノイズが乗っている、
+    - よって、keyonにはプチノイズは乗っていない
+- なお、cat-play-mmlで普通に演奏してもプチノイズが乗る
+    - 注意、それは切り分けて別途考えるほうがよい
+# 仮説
+- 以下いずれかが必要
+    - キャリアのTLを127にしてからRR15
+        - 仮説、かえってプチノイズになる可能性
+    - キャリアだけはRR14
+    - ADSRのうちRだけを15にし、のち、Rを編集中の音色の値に復帰する
+        - 仮説、ADSRすべてを最速にした瞬間、かえってプチノイズになる可能性
+# 考察
+- 毎回試行錯誤にissueを立て、レビューして、動作確認、というサイクルをまわすのは、本件のようなissueだと非効率に感じる
+  - より正確には、このissueは堂々巡りに入りそうな予感がある、それを問題視している
+- もっとlocalで素早くサイクルをまわす方法の案を洗いだす
+- 例
+    - jsonを作って再生してプチノイズが乗るかを確認する
+        - データ内容
+            - long decayを0.5秒鳴らす
+            - keyoff ～ 次のkeyon
+                - プレビューと同じ
+    - 課題
+        - json編集のコストが大きい、編集ミスのリスクが高い
+        - 案
+            - STed2のようなjson editorのrepositoryを検討する
+                - eventが可視化されている、読みやすい、機械語に対するニモニックのような表示で
+                - time部分を、累積時間と、時刻とを、toggle切り替えできる
+                    - 保存時は時刻
+                    - これならwait増減が楽である
+                        - 「選択範囲の時刻をまとめて増減」より楽
+                        - シンプルなUIで時間編集ができる
+# どうする？
+- そのprojectを作る方向でいく
+- これまでもそのprojectの必要性は予想していた
+- 「次にそのprojectがないと困る段階」になったら、実施しよう、と計画していた
+- なぜならそれが一番のそのprojectのtestになるので
+
+{% endraw %}
+```
+
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-387f691 Merge pull request #159 from cat2151/copilot/add-ci-test-automation
-0ad3753 Add restore-keys for better cache efficiency and --verbose flag for detailed test output
-5eb19fd Improve issue uniqueness by including commit SHA in title
-53ba2b3 Add GitHub Actions workflow for running tests on push
-4a7904e Initial plan
-02ebacd Add issue note for #158 [auto]
-1f467b1 Update project summaries (overview & development status) [auto]
-d00da6d Merge pull request #157 from cat2151/copilot/fix-sound-envelope-issue
-04a1038 Fix envelope parameter restoration in interactive mode preview (issue #156)
-78c13ee Initial plan
+04eb99b Document findings and hypotheses for issue #167
+b6b8e17 Add issue note for #167 [auto]
+d8fd87f Add issue note for #166 [auto]
+4236ca2 Add issue note for #165 [auto]
+1d8b8ac Add issue note for #164 [auto]
+ee45e40 Merge pull request #162 from cat2151/copilot/fix-cargo-test-failures
+4430bc8 Update project summaries (overview & development status) [auto]
+a4722c3 Revert slot mask changes - keep original implementation, fix tests instead
+5423bd5 Remove unused import to fix clippy warning
+6ad640f Fix jump+increase/decrease tests and remaining test failures
 
 ### 変更されたファイル:
-.github/workflows/rust-test.yml
 generated-docs/development-status-generated-prompt.md
 generated-docs/development-status.md
 generated-docs/project-overview-generated-prompt.md
 generated-docs/project-overview.md
-issue-notes/155.md
-issue-notes/156.md
-issue-notes/158.md
-src/audio.rs
+issue-notes/164.md
+issue-notes/165.md
+issue-notes/166.md
+issue-notes/167.md
+src/config.rs
+src/tests/app_tests.rs
+src/tests/midi_conversion_tests.rs
+src/tests/register_tests.rs
+src/tests/ui_tests.rs
 
 
 ---
-Generated at: 2025-12-10 07:08:54 JST
+Generated at: 2025-12-11 07:08:52 JST
