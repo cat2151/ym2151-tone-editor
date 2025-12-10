@@ -32,32 +32,6 @@ fn add_key_on(values: &ToneData, events: &mut Vec<Ym2151Event>) {
 pub const REG_FROM_O1_O4: [usize; 4] = [0, 2, 1, 3];
 pub const O1_O4_FROM_REG: [usize; 4] = [0, 2, 1, 3]; // 内容は同じだが、可読性を優先し、別名で定義
 
-/// Helper function to generate D2R=15 register events for envelope reset
-/// Preserves DT2 values while setting D2R to maximum decay rate (15)
-/// Used to reset envelope amplitude to 0 before next note (issue #115)
-#[cfg(windows)]
-pub fn generate_d2r_15_events(values: &ToneData, channel: usize, time: f64) -> Vec<Ym2151Event> {
-    let mut events = Vec::new();
-
-    for row_id in 0..4 {
-        let reg = REG_FROM_O1_O4[row_id];
-        let op_offset = reg * 8 + channel;
-
-        // Get current DT2 value to preserve it
-        let dt2 = values[row_id][PARAM_DT2];
-        // Set D2R to 15 (maximum decay rate)
-        let dt2_d2r = ((dt2 & 0x03) << 6) | 0x0F;
-
-        events.push(Ym2151Event {
-            time,
-            addr: format!("0x{:02X}", 0xC0 + op_offset),
-            data: format!("0x{:02X}", dt2_d2r),
-        });
-    }
-
-    events
-}
-
 /// Helper function to generate complete ADSR envelope reset events
 /// Sets AR=31, D1R=31, D1L=15, D2R=15, RR=15 for all operators
 /// Preserves DT2, KS, AMS values while setting envelope parameters to maximum

@@ -112,6 +112,7 @@ pub struct Config {
 }
 
 /// Legacy structure name for backwards compatibility
+#[cfg(test)]
 pub type KeybindsConfig = Config;
 
 impl Default for Config {

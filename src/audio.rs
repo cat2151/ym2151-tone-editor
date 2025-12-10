@@ -6,8 +6,6 @@
 //! - Interactive mode: Sends minimal JSON with only affected registers using play_json_interactive API
 
 #[cfg(windows)]
-use crate::midi_conversion::midi_to_kc_kf;
-#[cfg(windows)]
 use crate::models::*;
 #[cfg(windows)]
 use crate::register;
@@ -188,18 +186,18 @@ fn send_operator_register_for_param(
     // Step 2: Restore all tone parameters at envelope_delay_seconds
     // Generate all register events with the tone values
     let mut tone_events = register::editor_rows_to_ym2151_events(values);
-    
+
     // Set all tone events to happen after envelope delay
     for event in &mut tone_events {
         event.time = envelope_delay_seconds;
     }
-    
+
     log_verbose(&format!(
         "  restoring all {} tone registers at time {}",
         tone_events.len(),
         envelope_delay_seconds
     ));
-    
+
     events.extend(tone_events);
 
     if events.is_empty() {
@@ -253,18 +251,18 @@ fn send_channel_register_for_param(
     // Step 2: Restore all tone parameters at envelope_delay_seconds
     // Generate all register events with the tone values
     let mut tone_events = register::editor_rows_to_ym2151_events(values);
-    
+
     // Set all tone events to happen after envelope delay
     for event in &mut tone_events {
         event.time = envelope_delay_seconds;
     }
-    
+
     log_verbose(&format!(
         "  restoring all {} tone registers at time {}",
         tone_events.len(),
         envelope_delay_seconds
     ));
-    
+
     events.extend(tone_events);
 
     if events.is_empty() {
@@ -315,34 +313,6 @@ fn add_key_off(events: &mut Vec<Ym2151Event>, channel: u8, values: &ToneData) {
         time: 0.0,
         addr: "0x08".to_string(),
         data: format!("0x{:02X}", channel), // KEY_OFF: no slot mask, just channel
-    });
-}
-
-/// Helper function to add KEY_ON register to events
-#[cfg(windows)]
-pub fn add_key_on(values: &ToneData, events: &mut Vec<Ym2151Event>, envelope_delay_seconds: f64) {
-    let channel = 0; // We use channel 0
-
-    // Calculate slot mask based on which operators are enabled
-    let sm0 = values[0][PARAM_SM];
-    let sm1 = values[1][PARAM_SM];
-    let sm2 = values[2][PARAM_SM];
-    let sm3 = values[3][PARAM_SM];
-
-    let slot_mask = if sm0 != 0 { 0x08 } else { 0 }
-        | if sm1 != 0 { 0x10 } else { 0 }
-        | if sm2 != 0 { 0x20 } else { 0 }
-        | if sm3 != 0 { 0x40 } else { 0 };
-
-    let key_on = slot_mask | channel as u8;
-    log_verbose(&format!(
-        "  channel register: addr=0x08, data=0x{:02X} (KEY_ON, slot_mask=0x{:02X})",
-        key_on, slot_mask
-    ));
-    events.push(Ym2151Event {
-        time: envelope_delay_seconds,
-        addr: "0x08".to_string(),
-        data: format!("0x{:02X}", key_on),
     });
 }
 
