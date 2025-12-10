@@ -45,6 +45,20 @@ pub(crate) fn get_key_guide(col: usize) -> Option<char> {
     }
 }
 
+/// Get the operator number guide for a specific row
+/// Returns the operator number ('1'-'4') for operator rows (0-3)
+/// Returns None for the CH row
+/// Based on operator jump keybindings: '1'-'4' to jump to operators
+pub(crate) fn get_operator_guide(row: usize) -> Option<char> {
+    match row {
+        0 => Some('1'), // O1/M1 - Operator 1
+        1 => Some('2'), // O2/M2 - Operator 2
+        2 => Some('3'), // O3/C1 - Operator 3
+        3 => Some('4'), // O4/C2 - Operator 4
+        _ => None,      // CH row has no operator number
+    }
+}
+
 /// Get the color for a parameter based on its column index and row
 /// Returns the color to use for both the parameter name and value
 pub(crate) fn get_param_color(col: usize, is_ch_row: bool) -> Color {
@@ -205,12 +219,27 @@ pub fn ui(f: &mut Frame, app: &App) {
                 Style::default().fg(color)
             };
 
-            // Display key guide letter to the left of the value if available
-            // Only show key guide on the currently edited operator row
+            // Display guide to the left of the value
+            // Show operator number guide in current column, or parameter key guide on current row
             let is_current_row = app.cursor_y == display_row;
-            let line = if let Some(key_guide) = get_key_guide(col) {
+            let is_current_col = app.cursor_x == col;
+
+            let line = if is_current_col {
+                // In current column, show operator number guide
+                if let Some(op_guide) = get_operator_guide(display_row) {
+                    let op_guide_style =
+                        Style::default().fg(Color::DarkGray).bg(KEY_GUIDE_BG_COLOR);
+                    Line::from(vec![
+                        Span::styled(op_guide.to_string(), op_guide_style),
+                        Span::styled(format!("{:2}", value), value_style),
+                    ])
+                } else {
+                    // No guide for non-operator rows in current column
+                    Line::from(Span::styled(format!(" {:2}", value), value_style))
+                }
+            } else if let Some(key_guide) = get_key_guide(col) {
                 if is_current_row {
-                    // Show key guide with darker color and background on current row
+                    // Show parameter key guide on current row (for non-current columns)
                     let key_guide_style =
                         Style::default().fg(Color::DarkGray).bg(KEY_GUIDE_BG_COLOR);
                     Line::from(vec![
@@ -218,7 +247,7 @@ pub fn ui(f: &mut Frame, app: &App) {
                         Span::styled(format!("{:2}", value), value_style),
                     ])
                 } else {
-                    // No key guide on non-current rows
+                    // No guide on non-current rows in non-current columns
                     Line::from(Span::styled(format!(" {:2}", value), value_style))
                 }
             } else {
