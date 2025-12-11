@@ -38,6 +38,19 @@ fn test_get_operator_guide() {
 }
 
 #[test]
+fn test_get_ch_key_guide() {
+    // Test that CH row parameters with keybindings return the correct letter
+    assert_eq!(get_ch_key_guide(CH_PARAM_ALG), Some('G')); // 'g'/'G' for ALG
+    assert_eq!(get_ch_key_guide(CH_PARAM_FB), Some('F')); // 'f'/'F' for FB
+
+    // Test that Note parameter returns None (no keybinding)
+    assert_eq!(get_ch_key_guide(CH_PARAM_NOTE), None);
+
+    // Test out of bounds
+    assert_eq!(get_ch_key_guide(3), None);
+}
+
+#[test]
 fn test_get_param_color() {
     // Test operator row colors
     assert_eq!(get_param_color(PARAM_MUL, false), Color::Green);
