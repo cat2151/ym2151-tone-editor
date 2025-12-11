@@ -77,7 +77,7 @@ impl App {
         if self.cursor_y > 0 {
             self.cursor_y -= 1;
 
-            // Track last operator row when moving within operator rows
+            // Track the new position if it's an operator row
             if self.cursor_y < ROW_CH {
                 self.last_operator_row = self.cursor_y;
             }
@@ -97,7 +97,7 @@ impl App {
 
     pub fn move_cursor_down(&mut self) {
         if self.cursor_y < GRID_HEIGHT - 1 {
-            // Track last operator row before moving from operator row to CH row
+            // Track current position if it's an operator row (before moving)
             if self.cursor_y < ROW_CH {
                 self.last_operator_row = self.cursor_y;
             }
