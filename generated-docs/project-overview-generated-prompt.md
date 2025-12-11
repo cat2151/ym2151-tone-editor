@@ -1,4 +1,4 @@
-Last updated: 2025-12-11
+Last updated: 2025-12-12
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -502,4 +502,4 @@ tones/general_midi/000_AcousticGrand.json
 
 
 ---
-Generated at: 2025-12-11 07:08:52 JST
+Generated at: 2025-12-12 07:08:37 JST

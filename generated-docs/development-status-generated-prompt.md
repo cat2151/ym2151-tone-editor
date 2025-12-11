@@ -1,4 +1,4 @@
-Last updated: 2025-12-11
+Last updated: 2025-12-12
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -277,6 +277,20 @@ Last updated: 2025-12-11
 - ym2151-tone-editor.toml.example
 
 ## 現在のオープンIssues
+## [Issue #171](../issue-notes/171.md): Display operation guides on last operator row when cursor is on CH row
+Operation guides (keyboard shortcut hints) disappeared when the cursor moved to the CH row (ALG/FB/Note parameters), reducing discoverability of navigation shortcuts.
+
+## Changes
+
+- Added `last_operator_row` field to `App` struct to track which operator row (O1-O4) the cursor was on
+- Modified guide...
+ラベル: 
+--- issue-notes/171.md の内容 ---
+
+```markdown
+
+```
+
 ## [Issue #167](../issue-notes/167.md): プレビューを鳴らすとき、前の音のkeyoff時にプチノイズが乗ってしまう
 [issue-notes/167.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/167.md)
 
@@ -346,52 +360,6 @@ Last updated: 2025-12-11
 
 ```
 
-## [Issue #165](../issue-notes/165.md): 現在カーソルのある列に、「1」～「4」という操作ガイドを表示する。ADSRガイド表示を参考にする
-[issue-notes/165.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/165.md)
-
-...
-ラベル: 
---- issue-notes/165.md の内容 ---
-
-```markdown
-# issue 現在カーソルのある列に、「1」～「4」という操作ガイドを表示する。ADSRガイド表示を参考にする #165
-[issues #165](https://github.com/cat2151/ym2151-tone-editor/issues/165)
-
-
-
-```
-
-## [Issue #164](../issue-notes/164.md): compile時にwarningが出ている。それもcompileチェック時にエラーとみなすか、試して検証する
-[issue-notes/164.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/164.md)
-
-...
-ラベル: 
---- issue-notes/164.md の内容 ---
-
-```markdown
-# issue compile時にwarningが出ている。それもcompileチェック時にエラーとみなすか、試して検証する #164
-[issues #164](https://github.com/cat2151/ym2151-tone-editor/issues/164)
-
-
-
-```
-
-## [Issue #161](../issue-notes/161.md): Cargo test failed (387f691)
-Cargo test failed in push event.
-
-Branch/Ref: refs/heads/main
-Commit: 387f691991240b139bdca07a871b1f581c8e4ec1
-
-Please investigate the test failures and fix them.
-
-Workflow run: https://github.com/cat2151/ym2151-tone-editor/actions/runs/20045332056...
-ラベル: bug, test-failure
---- issue-notes/161.md の内容 ---
-
-```markdown
-
-```
-
 ## [Issue #155](../issue-notes/155.md): ドッグフーディングする
 [issue-notes/155.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/155.md)
 
@@ -408,152 +376,6 @@ Workflow run: https://github.com/cat2151/ym2151-tone-editor/actions/runs/2004533
 ```
 
 ## ドキュメントで言及されているファイルの内容
-### .github/actions-tmp/issue-notes/4.md
-```md
-{% raw %}
-# issue GitHub Actions「project概要生成」を共通ワークフロー化する #4
-[issues #4](https://github.com/cat2151/github-actions/issues/4)
-
-# prompt
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-このymlファイルを、以下の2つのファイルに分割してください。
-1. 共通ワークフロー       cat2151/github-actions/.github/workflows/daily-project-summary.yml
-2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-daily-project-summary.yml
-まずplanしてください
-```
-
-# 結果、あちこちハルシネーションのあるymlが生成された
-- agentの挙動があからさまにハルシネーション
-    - インデントが修正できない、「失敗した」という
-    - 構文誤りを認識できない
-- 人力で修正した
-
-# このagentによるセルフレビューが信頼できないため、別のLLMによるセカンドオピニオンを試す
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
-
---- 呼び出し元
-
-name: Call Daily Project Summary
-
-on:
-  schedule:
-    # 日本時間 07:00 (UTC 22:00 前日)
-    - cron: '0 22 * * *'
-  workflow_dispatch:
-
-jobs:
-  call-daily-project-summary:
-    uses: cat2151/github-actions/.github/workflows/daily-project-summary.yml
-    secrets:
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-
---- 共通ワークフロー
-name: Daily Project Summary
-on:
-  workflow_call:
-
-jobs:
-  generate-summary:
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-      issues: read
-      pull-requests: read
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0  # 履歴を取得するため
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: |
-          # 一時的なディレクトリで依存関係をインストール
-          mkdir -p /tmp/summary-deps
-          cd /tmp/summary-deps
-          npm init -y
-          npm install @google/generative-ai @octokit/rest
-          # generated-docsディレクトリを作成
-          mkdir -p $GITHUB_WORKSPACE/generated-docs
-
-      - name: Generate project summary
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          NODE_PATH: /tmp/summary-deps/node_modules
-        run: |
-          node .github/scripts/generate-project-summary.cjs
-
-      - name: Check for generated summaries
-        id: check_summaries
-        run: |
-          if [ -f "generated-docs/project-overview.md" ] && [ -f "generated-docs/development-status.md" ]; then
-            echo "summaries_generated=true" >> $GITHUB_OUTPUT
-          else
-            echo "summaries_generated=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Commit and push summaries
-        if: steps.check_summaries.outputs.summaries_generated == 'true'
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          # package.jsonの変更のみリセット（generated-docsは保持）
-          git restore package.json 2>/dev/null || true
-          # サマリーファイルのみを追加
-          git add generated-docs/project-overview.md
-          git add generated-docs/development-status.md
-          git commit -m "Update project summaries (overview & development status)"
-          git push
-
-      - name: Summary generation result
-        run: |
-          if [ "${{ steps.check_summaries.outputs.summaries_generated }}" == "true" ]; then
-            echo "✅ Project summaries updated successfully"
-            echo "📊 Generated: project-overview.md & development-status.md"
-          else
-            echo "ℹ️ No summaries generated (likely no user commits in the last 24 hours)"
-          fi
-```
-
-# 上記promptで、2つのLLMにレビューさせ、合格した
-
-# 細部を、先行する2つのymlを参照に手直しした
-
-# ローカルtestをしてからcommitできるとよい。方法を検討する
-- ローカルtestのメリット
-    - 素早く修正のサイクルをまわせる
-    - ムダにgit historyを汚さない
-        - これまでの事例：「実装したつもり」「エラー。修正したつもり」「エラー。修正したつもり」...（以降エラー多数）
-- 方法
-    - ※検討、WSL + act を環境構築済みである。test可能であると判断する
-    - 呼び出し元のURLをコメントアウトし、相対パス記述にする
-    - ※備考、テスト成功すると結果がcommit pushされる。それでよしとする
-- 結果
-    - OK
-    - secretsを簡略化できるか試した、できなかった、現状のsecrets記述が今わかっている範囲でベストと判断する
-    - OK
-
-# test green
-
-# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
-
-# closeとする
-
-{% endraw %}
-```
-
 ### .github/actions-tmp/issue-notes/7.md
 ```md
 {% raw %}
@@ -571,28 +393,6 @@ jobs:
 {% raw %}
 # issue ドッグフーディングする #155
 [issues #155](https://github.com/cat2151/ym2151-tone-editor/issues/155)
-
-
-
-{% endraw %}
-```
-
-### issue-notes/164.md
-```md
-{% raw %}
-# issue compile時にwarningが出ている。それもcompileチェック時にエラーとみなすか、試して検証する #164
-[issues #164](https://github.com/cat2151/ym2151-tone-editor/issues/164)
-
-
-
-{% endraw %}
-```
-
-### issue-notes/165.md
-```md
-{% raw %}
-# issue 現在カーソルのある列に、「1」～「4」という操作ガイドを表示する。ADSRガイド表示を参考にする #165
-[issues #165](https://github.com/cat2151/ym2151-tone-editor/issues/165)
 
 
 
@@ -662,16 +462,16 @@ jobs:
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
+9d71172 Merge pull request #170 from cat2151/copilot/add-operation-guides-display
+1159502 Add operator number guide display in current column
+0be84e7 Initial plan
+2f1b98b fix #164 Update issue notes for issue #164
+cc858ab Merge pull request #169 from cat2151/copilot/fix-windows-gcc-check-errors
+d818d6d Fix Windows GNU cross-compilation warnings by removing unused code
+e7ac519 Initial plan
+f0012e0 Update project summaries (overview & development status) [auto]
 04eb99b Document findings and hypotheses for issue #167
 b6b8e17 Add issue note for #167 [auto]
-d8fd87f Add issue note for #166 [auto]
-4236ca2 Add issue note for #165 [auto]
-1d8b8ac Add issue note for #164 [auto]
-ee45e40 Merge pull request #162 from cat2151/copilot/fix-cargo-test-failures
-4430bc8 Update project summaries (overview & development status) [auto]
-a4722c3 Revert slot mask changes - keep original implementation, fix tests instead
-5423bd5 Remove unused import to fix clippy warning
-6ad640f Fix jump+increase/decrease tests and remaining test failures
 
 ### 変更されたファイル:
 generated-docs/development-status-generated-prompt.md
@@ -679,15 +479,14 @@ generated-docs/development-status.md
 generated-docs/project-overview-generated-prompt.md
 generated-docs/project-overview.md
 issue-notes/164.md
-issue-notes/165.md
 issue-notes/166.md
 issue-notes/167.md
+src/audio.rs
 src/config.rs
-src/tests/app_tests.rs
-src/tests/midi_conversion_tests.rs
-src/tests/register_tests.rs
+src/register.rs
 src/tests/ui_tests.rs
+src/ui.rs
 
 
 ---
-Generated at: 2025-12-11 07:08:52 JST
+Generated at: 2025-12-12 07:08:37 JST
