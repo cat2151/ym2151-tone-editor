@@ -221,8 +221,10 @@ pub fn ui(f: &mut Frame, app: &App) {
 
             // Display guide to the left of the value
             // Show operator number guide in current column, or parameter key guide on current row
+            // When cursor is on CH row, show guides on operator row 0
             let is_current_row = app.cursor_y == display_row;
             let is_current_col = app.cursor_x == col;
+            let show_guide_for_ch_row = app.cursor_y == ROW_CH && display_row == 0;
 
             let line = if is_current_col {
                 // In current column, show operator number guide
@@ -238,8 +240,9 @@ pub fn ui(f: &mut Frame, app: &App) {
                     Line::from(Span::styled(format!(" {:2}", value), value_style))
                 }
             } else if let Some(key_guide) = get_key_guide(col) {
-                if is_current_row {
+                if is_current_row || show_guide_for_ch_row {
                     // Show parameter key guide on current row (for non-current columns)
+                    // or on row 0 when cursor is on CH row
                     let key_guide_style =
                         Style::default().fg(Color::DarkGray).bg(KEY_GUIDE_BG_COLOR);
                     Line::from(vec![
