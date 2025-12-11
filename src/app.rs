@@ -15,6 +15,9 @@ pub struct App {
     /// Envelope delay in seconds before tone parameters are set (default: 0.005)
     #[allow(dead_code)] // Used on Windows builds for audio playback
     pub envelope_delay_seconds: f64,
+    /// Last operator row (0-3) the cursor was on before moving to CH row
+    /// Used for displaying operation guides when cursor is on CH row
+    pub last_operator_row: usize,
 }
 
 impl App {
@@ -74,6 +77,11 @@ impl App {
         if self.cursor_y > 0 {
             self.cursor_y -= 1;
 
+            // Track the new position if it's an operator row
+            if self.cursor_y < ROW_CH {
+                self.last_operator_row = self.cursor_y;
+            }
+
             // Clamp cursor_x if moving from CH row to operator row or vice versa
             let max_x = if self.cursor_y == ROW_CH {
                 CH_PARAM_COUNT - 1
@@ -89,6 +97,11 @@ impl App {
 
     pub fn move_cursor_down(&mut self) {
         if self.cursor_y < GRID_HEIGHT - 1 {
+            // Track current position if it's an operator row (before moving)
+            if self.cursor_y < ROW_CH {
+                self.last_operator_row = self.cursor_y;
+            }
+
             self.cursor_y += 1;
 
             // Clamp cursor_x if moving from operator row to CH row or vice versa
@@ -503,6 +516,7 @@ impl App {
         // Note: cursor_y is always a display row. The increase_value() function
         // will use get_data_row() to map to the correct internal data row.
         self.cursor_y = operator_row;
+        self.last_operator_row = operator_row; // Track the operator row
 
         // Clamp cursor_x to valid range for operator rows
         let max_x = GRID_WIDTH - 1;
@@ -524,6 +538,7 @@ impl App {
         // Note: cursor_y is always a display row. The decrease_value() function
         // will use get_data_row() to map to the correct internal data row.
         self.cursor_y = operator_row;
+        self.last_operator_row = operator_row; // Track the operator row
 
         // Clamp cursor_x to valid range for operator rows
         let max_x = GRID_WIDTH - 1;
