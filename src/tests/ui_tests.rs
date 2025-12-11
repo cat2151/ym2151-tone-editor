@@ -22,6 +22,22 @@ fn test_get_key_guide() {
 }
 
 #[test]
+fn test_get_operator_guide() {
+    // Test that operator rows return the correct operator number
+    assert_eq!(get_operator_guide(0), Some('1')); // O1/M1
+    assert_eq!(get_operator_guide(1), Some('2')); // O2/M2
+    assert_eq!(get_operator_guide(2), Some('3')); // O3/C1
+    assert_eq!(get_operator_guide(3), Some('4')); // O4/C2
+
+    // Test that CH row returns None
+    assert_eq!(get_operator_guide(4), None);
+    assert_eq!(get_operator_guide(ROW_CH), None);
+
+    // Test out of bounds
+    assert_eq!(get_operator_guide(5), None);
+}
+
+#[test]
 fn test_get_param_color() {
     // Test operator row colors
     assert_eq!(get_param_color(PARAM_MUL, false), Color::Green);
