@@ -347,6 +347,7 @@ pub fn ui(f: &mut Frame, app: &App) {
                 Line::from(Span::styled(format!(" {:2}", value), value_style))
             }
         } else {
+            // No guide for parameters without keybindings
             Line::from(Span::styled(format!(" {:2}", value), value_style))
         };
 
