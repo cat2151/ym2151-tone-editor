@@ -59,6 +59,17 @@ pub(crate) fn get_operator_guide(row: usize) -> Option<char> {
     }
 }
 
+/// Get the keybinding guide letter for a CH row parameter column
+/// Returns the uppercase letter if there's a keybinding for that parameter
+/// Based on default keybindings from config.rs
+pub(crate) fn get_ch_key_guide(col: usize) -> Option<char> {
+    match col {
+        CH_PARAM_ALG => Some('G'), // 'g'/'G' for ALG (Algorithm)
+        CH_PARAM_FB => Some('F'),  // 'f'/'F' for FB (Feedback)
+        _ => None,
+    }
+}
+
 /// Get the color for a parameter based on its column index and row
 /// Returns the color to use for both the parameter name and value
 pub(crate) fn get_param_color(col: usize, is_ch_row: bool) -> Color {
@@ -310,7 +321,7 @@ pub fn ui(f: &mut Frame, app: &App) {
             height: cell_height,
         };
 
-        let style = if app.cursor_x == col && app.cursor_y == ROW_CH {
+        let value_style = if app.cursor_x == col && app.cursor_y == ROW_CH {
             Style::default()
                 .fg(Color::Black)
                 .bg(Color::White)
@@ -320,8 +331,20 @@ pub fn ui(f: &mut Frame, app: &App) {
             Style::default().fg(color)
         };
 
-        let text = format!("{:2}", value);
-        let paragraph = Paragraph::new(Span::styled(text, style));
+        // Display guide to the left of the value on the CH row
+        // ALG and FB guides are always shown because 'g'/'G' and 'f'/'F' can jump to them from anywhere
+        let line = if let Some(key_guide) = get_ch_key_guide(col) {
+            let key_guide_style = Style::default().fg(Color::DarkGray).bg(KEY_GUIDE_BG_COLOR);
+            Line::from(vec![
+                Span::styled(key_guide.to_string(), key_guide_style),
+                Span::styled(format!("{:2}", value), value_style),
+            ])
+        } else {
+            // No guide for parameters without keybindings
+            Line::from(Span::styled(format!(" {:2}", value), value_style))
+        };
+
+        let paragraph = Paragraph::new(line);
         f.render_widget(paragraph, area);
     }
 
