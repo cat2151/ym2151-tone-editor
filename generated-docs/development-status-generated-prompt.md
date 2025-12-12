@@ -1,4 +1,4 @@
-Last updated: 2025-12-12
+Last updated: 2025-12-13
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -249,6 +249,7 @@ Last updated: 2025-12-12
 - issue-notes/165.md
 - issue-notes/166.md
 - issue-notes/167.md
+- issue-notes/172.md
 - issue-notes/95.md
 - issue-notes/96.md
 - issue-notes/97.md
@@ -277,17 +278,31 @@ Last updated: 2025-12-12
 - ym2151-tone-editor.toml.example
 
 ## 現在のオープンIssues
-## [Issue #171](../issue-notes/171.md): Display operation guides on last operator row when cursor is on CH row
-Operation guides (keyboard shortcut hints) disappeared when the cursor moved to the CH row (ALG/FB/Note parameters), reducing discoverability of navigation shortcuts.
+## [Issue #173](../issue-notes/173.md): Add key guide display for ALG and FB parameters in CH row
+ALG and FB parameters lacked the keyboard shortcut guide indicators that ADSR parameters display. Users couldn't see which keys ('g'/'G' for ALG, 'f'/'F' for FB) allow jumping to these parameters from anywhere in the interface.
 
 ## Changes
 
-- Added `last_operator_row` field to `App` struct to track which operator row (O1-O4) the cursor was on
-- Modified guide...
+- **Added `get_ch_key_guide()` function** - Maps CH row par...
 ラベル: 
---- issue-notes/171.md の内容 ---
+--- issue-notes/173.md の内容 ---
 
 ```markdown
+
+```
+
+## [Issue #172](../issue-notes/172.md): ADSRのカーソルジャンプのキーのガイド表示と同様に、ALGとFBの値の左にもガイドを表示する
+[issue-notes/172.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/172.md)
+
+...
+ラベル: 
+--- issue-notes/172.md の内容 ---
+
+```markdown
+# issue ADSRのカーソルジャンプのキーのガイド表示と同様に、ALGとFBの値の左にもガイドを表示する #172
+[issues #172](https://github.com/cat2151/ym2151-tone-editor/issues/172)
+
+
 
 ```
 
@@ -345,21 +360,6 @@ Operation guides (keyboard shortcut hints) disappeared when the cursor moved to 
 
 ```
 
-## [Issue #166](../issue-notes/166.md): カーソルが、ALG や FB の行にあるときも、OP1～4のいずれか1行と1列に、操作ガイドを表示し続ける
-[issue-notes/166.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/166.md)
-
-...
-ラベル: 
---- issue-notes/166.md の内容 ---
-
-```markdown
-# issue カーソルが、ALG や FB の行にあるときも、OP1～4のいずれか1行と1列に、操作ガイドを表示し続ける #166
-[issues #166](https://github.com/cat2151/ym2151-tone-editor/issues/166)
-
-
-
-```
-
 ## [Issue #155](../issue-notes/155.md): ドッグフーディングする
 [issue-notes/155.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/155.md)
 
@@ -376,6 +376,262 @@ Operation guides (keyboard shortcut hints) disappeared when the cursor moved to 
 ```
 
 ## ドキュメントで言及されているファイルの内容
+### .github/actions-tmp/issue-notes/2.md
+```md
+{% raw %}
+# issue GitHub Actions「関数コールグラフhtmlビジュアライズ生成」を共通ワークフロー化する #2
+[issues #2](https://github.com/cat2151/github-actions/issues/2)
+
+
+# prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+このymlファイルを、以下の2つのファイルに分割してください。
+1. 共通ワークフロー       cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
+2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-callgraph_enhanced.yml
+まずplanしてください
+```
+
+# 結果
+- indent
+    - linter？がindentのエラーを出しているがyml内容は見た感じOK
+    - テキストエディタとagentの相性問題と判断する
+    - 別のテキストエディタでsaveしなおし、テキストエディタをreload
+    - indentのエラーは解消した
+- LLMレビュー
+    - agent以外の複数のLLMにレビューさせる
+    - prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューしてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
+
+--- 共通ワークフロー
+
+# GitHub Actions Reusable Workflow for Call Graph Generation
+name: Generate Call Graph
+
+# TODO Windowsネイティブでのtestをしていた名残が残っているので、今後整理していく。今はWSL act でtestしており、Windowsネイティブ環境依存問題が解決した
+#  ChatGPTにレビューさせるとそこそこ有用そうな提案が得られたので、今後それをやる予定
+#  agentに自己チェックさせる手も、セカンドオピニオンとして選択肢に入れておく
+
+on:
+  workflow_call:
+
+jobs:
+  check-commits:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50 # 過去のコミットを取得
+
+      - name: Check for user commits in last 24 hours
+        id: check
+        run: |
+          node .github/scripts/callgraph_enhanced/check-commits.cjs
+
+  generate-callgraph:
+    needs: check-commits
+    if: needs.check-commits.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Remove old CodeQL packages cache
+        run: rm -rf ~/.codeql/packages
+
+      - name: Check Node.js version
+        run: |
+          node .github/scripts/callgraph_enhanced/check-node-version.cjs
+
+      - name: Install CodeQL CLI
+        run: |
+          wget https://github.com/github/codeql-cli-binaries/releases/download/v2.22.1/codeql-linux64.zip
+          unzip codeql-linux64.zip
+          sudo mv codeql /opt/codeql
+          echo "/opt/codeql" >> $GITHUB_PATH
+
+      - name: Install CodeQL query packs
+        run: |
+          /opt/codeql/codeql pack install .github/codeql-queries
+
+      - name: Check CodeQL exists
+        run: |
+          node .github/scripts/callgraph_enhanced/check-codeql-exists.cjs
+
+      - name: Verify CodeQL Configuration
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs verify-config
+
+      - name: Remove existing CodeQL DB (if any)
+        run: |
+          rm -rf codeql-db
+
+      - name: Perform CodeQL Analysis
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs analyze
+
+      - name: Check CodeQL Analysis Results
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs check-results
+
+      - name: Debug CodeQL execution
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs debug
+
+      - name: Wait for CodeQL results
+        run: |
+          node -e "setTimeout(()=>{}, 10000)"
+
+      - name: Find and process CodeQL results
+        run: |
+          node .github/scripts/callgraph_enhanced/find-process-results.cjs
+
+      - name: Generate HTML graph
+        run: |
+          node .github/scripts/callgraph_enhanced/generate-html-graph.cjs
+
+      - name: Copy files to generated-docs and commit results
+        run: |
+          node .github/scripts/callgraph_enhanced/copy-commit-results.cjs
+
+--- 呼び出し元
+# 呼び出し元ワークフロー: call-callgraph_enhanced.yml
+name: Call Call Graph Enhanced
+
+on:
+  schedule:
+    # 毎日午前5時(JST) = UTC 20:00前日
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+jobs:
+  call-callgraph-enhanced:
+    # uses: cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
+    uses: ./.github/workflows/callgraph_enhanced.yml # ローカルでのテスト用
+```
+
+# レビュー結果OKと判断する
+- レビュー結果を人力でレビューした形になった
+
+# test
+- #4 同様にローカル WSL + act でtestする
+- エラー。userのtest設計ミス。
+  - scriptの挙動 : src/ がある前提
+  - 今回の共通ワークフローのリポジトリ : src/ がない
+  - 今回testで実現したいこと
+    - 仮のソースでよいので、関数コールグラフを生成させる
+  - 対策
+    - src/ にダミーを配置する
+- test green
+  - ただしcommit pushはしてないので、html内容が0件NG、といったケースの検知はできない
+  - もしそうなったら別issueとしよう
+
+# test green
+
+# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
+
+# closeとする
+- もしhtml内容が0件NG、などになったら、別issueとするつもり
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/3.md
+```md
+{% raw %}
+# issue GitHub Actions「issue note生成」を共通ワークフロー化する #3
+[issues #3](https://github.com/cat2151/github-actions/issues/3)
+
+- 前提
+  - userは、translateのworkflowを共通ワークフロー化し、動くようにしたので、共通ワークフロー化の知識がある
+  - よって、今回は、promptでplanさせ、そのplanをuserがレビューし、planの改善を指示できるので、ハルシネーションのリスクを下げることができる
+
+- prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+このymlはまだ共通ワークフロー化されず、
+呼び出し元からコピーされたままの状態です。
+このymlファイル名のまま、
+中身を共通ワークフロー化してください。
+呼び出し元ymlは別途書きますので気にしないでください。
+まずplanしてください
+```
+
+- plan 生成結果
+```
+共通ワークフロー化のためのplanは以下の通りです。
+
+1. 目的
+現在の issue-note.yml を「共通ワークフロー」として再設計し、他リポジトリや他ワークフローから workflow_call で呼び出せるようにする。
+2. 主な変更点
+on: トリガーを workflow_call に変更（直接イベントで起動しない）。
+必要な入力（inputs）やシークレット（secrets）を workflow_call セクションで定義。
+github.event.issue などのイベント依存部分を、inputs経由で受け取る形に修正。
+既存の処理（issueノート生成、コミット、issue body更新）はそのまま活かすが、パラメータ化する。
+3. 具体的な修正内容
+on: issues: → on: workflow_call: に変更。
+inputs で必要な値（例: issue_title, issue_number, issue_body, issue_url など）を受け取る。
+スクリプト内の ${{ github.event.issue.xxx }} を ${{ inputs.xxx }} に置換。
+github-script ステップも同様にinputsを参照。
+必要に応じて secrets も workflow_call で受け取れるようにする。
+4. ファイル名・配置
+ファイル名はそのまま issue-note.yml。
+配置場所は workflows でOK（共通ワークフローとしてもこの場所で良い）。
+5. 呼び出し元への影響
+呼び出し元ワークフローで uses: <repo>/.github/workflows/issue-note.yml@main のように参照し、inputsを渡す形になる。
+このplanで進めます。次に、実際の共通ワークフロー化のためのyml修正案を作成しますか？
+```
+
+- userがplanレビューし、OKを出した
+- agentに生成結果ymlをレビューさせた、OKとなった
+  - userはこのレビューは認知負荷が高いのでskipとする（単純な細かい間違い探し作業になるので、それはagentに任せた）
+-  エラー。呼び出し元ymlのエラーがあり修正。共通ワークフローのエラー指摘があり、共通ワークフロー側の修正が必要となった
+```
+原因の分析：
+
+呼び出し元（tonejs-mml-to-jsonのissue-note.yml）は、reusable workflow（cat2151/github-actions/.github/workflows/issue-note.yml@main）をusesで呼び出し、inputsをwithで渡しています。
+共通ワークフロー（reusable workflow）は inputs を workflow_call で受け取り、各ステップで ${{ inputs.xxx }} で参照しています。
+しかし、エラーが発生したのは actions/github-script@v7 の script 内です。
+エラーの本質的な原因：
+
+actions/github-script の script: で ${{ inputs.issue_number }} のような式を直接 JavaScript テンプレートリテラル内で使っていますが、これはサポートされていません。
+script: の中は JavaScript であり、YAMLの ${{ ... }} は展開されません（または意図通りに展開されません）。
+そのため、inputs 変数は script 内の JavaScript で未定義となり、ReferenceError になります。
+正しい書き方：
+
+actions/github-script の script: でワークフローの inputs を使いたい場合は、with: で input を environment 変数や script の引数として渡し、JavaScript で process.env から取得するか、github-script の input 機能を使う必要があります。
+例（修正版）：
+
+このように、inputs の値を env で渡し、script 内では process.env で参照してください。
+
+まとめ：
+
+actions/github-script の script 内で ${{ inputs.xxx }} を直接使うと ReferenceError になる
+env: で値を渡し、process.env で参照するのが正しい
+修正が必要です。修正版のワークフローが必要な場合はお知らせください。
+```
+
+- test green
+- closeとする
+
+{% endraw %}
+```
+
 ### .github/actions-tmp/issue-notes/7.md
 ```md
 {% raw %}
@@ -393,17 +649,6 @@ Operation guides (keyboard shortcut hints) disappeared when the cursor moved to 
 {% raw %}
 # issue ドッグフーディングする #155
 [issues #155](https://github.com/cat2151/ym2151-tone-editor/issues/155)
-
-
-
-{% endraw %}
-```
-
-### issue-notes/166.md
-```md
-{% raw %}
-# issue カーソルが、ALG や FB の行にあるときも、OP1～4のいずれか1行と1列に、操作ガイドを表示し続ける #166
-[issues #166](https://github.com/cat2151/ym2151-tone-editor/issues/166)
 
 
 
@@ -460,18 +705,29 @@ Operation guides (keyboard shortcut hints) disappeared when the cursor moved to 
 {% endraw %}
 ```
 
+### issue-notes/172.md
+```md
+{% raw %}
+# issue ADSRのカーソルジャンプのキーのガイド表示と同様に、ALGとFBの値の左にもガイドを表示する #172
+[issues #172](https://github.com/cat2151/ym2151-tone-editor/issues/172)
+
+
+
+{% endraw %}
+```
+
 ## 最近の変更（過去7日間）
 ### コミット履歴:
+241c56d Add issue note for #172 [auto]
+7d883a6 Merge pull request #171 from cat2151/copilot/fix-operation-guide-display
+584942e Update project summaries (overview & development status) [auto]
+22a7bc0 Improve comments for operator row tracking
+264748a Track last operator row for operation guides display
+26855ff Fix operation guide display when cursor is on CH row
+9a7e3a9 Initial plan
 9d71172 Merge pull request #170 from cat2151/copilot/add-operation-guides-display
 1159502 Add operator number guide display in current column
 0be84e7 Initial plan
-2f1b98b fix #164 Update issue notes for issue #164
-cc858ab Merge pull request #169 from cat2151/copilot/fix-windows-gcc-check-errors
-d818d6d Fix Windows GNU cross-compilation warnings by removing unused code
-e7ac519 Initial plan
-f0012e0 Update project summaries (overview & development status) [auto]
-04eb99b Document findings and hypotheses for issue #167
-b6b8e17 Add issue note for #167 [auto]
 
 ### 変更されたファイル:
 generated-docs/development-status-generated-prompt.md
@@ -479,8 +735,9 @@ generated-docs/development-status.md
 generated-docs/project-overview-generated-prompt.md
 generated-docs/project-overview.md
 issue-notes/164.md
-issue-notes/166.md
-issue-notes/167.md
+issue-notes/172.md
+src/app.rs
+src/app_init.rs
 src/audio.rs
 src/config.rs
 src/register.rs
@@ -489,4 +746,4 @@ src/ui.rs
 
 
 ---
-Generated at: 2025-12-12 07:08:37 JST
+Generated at: 2025-12-13 07:08:32 JST
