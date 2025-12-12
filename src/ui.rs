@@ -332,20 +332,13 @@ pub fn ui(f: &mut Frame, app: &App) {
         };
 
         // Display guide to the left of the value on the CH row
-        let is_current_col = app.cursor_x == col && app.cursor_y == ROW_CH;
-
+        // ALG and FB guides are always shown because 'g'/'G' and 'f'/'F' can jump to them from anywhere
         let line = if let Some(key_guide) = get_ch_key_guide(col) {
-            if is_current_col {
-                // Show guide on current column in CH row
-                let key_guide_style = Style::default().fg(Color::DarkGray).bg(KEY_GUIDE_BG_COLOR);
-                Line::from(vec![
-                    Span::styled(key_guide.to_string(), key_guide_style),
-                    Span::styled(format!("{:2}", value), value_style),
-                ])
-            } else {
-                // No guide on non-current columns
-                Line::from(Span::styled(format!(" {:2}", value), value_style))
-            }
+            let key_guide_style = Style::default().fg(Color::DarkGray).bg(KEY_GUIDE_BG_COLOR);
+            Line::from(vec![
+                Span::styled(key_guide.to_string(), key_guide_style),
+                Span::styled(format!("{:2}", value), value_style),
+            ])
         } else {
             // No guide for parameters without keybindings
             Line::from(Span::styled(format!(" {:2}", value), value_style))
