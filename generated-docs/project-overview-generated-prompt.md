@@ -1,4 +1,4 @@
-Last updated: 2025-12-13
+Last updated: 2025-12-14
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -421,6 +421,8 @@ cargo run
   📖 166.md
   📖 167.md
   📖 172.md
+  📖 174.md
+  📖 175.md
   📖 95.md
   📖 96.md
   📖 97.md
@@ -503,4 +505,4 @@ tones/general_midi/000_AcousticGrand.json
 
 
 ---
-Generated at: 2025-12-13 07:08:32 JST
+Generated at: 2025-12-14 07:07:46 JST
