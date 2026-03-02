@@ -140,7 +140,8 @@ impl App {
         }
     }
 
-    /// Jump to an operator row parameter and increase or decrease its value
+    /// Set cursor_x to the given parameter column and increase or decrease its value.
+    /// Only applies when the cursor is on an operator row (not CH row).
     fn jump_to_op_param(&mut self, param_x: usize, increase: bool) {
         self.cursor_x = param_x;
         if self.cursor_y < ROW_CH {
@@ -156,21 +157,11 @@ impl App {
     fn jump_to_ch_param(&mut self, ch_param: usize, increase: bool) {
         self.cursor_y = ROW_CH;
         self.cursor_x = ch_param;
-        let current = self.values[ROW_CH][ch_param];
-        let max = CH_PARAM_MAX[ch_param];
-        let new_value = if increase {
-            if current < max {
-                current + 1
-            } else {
-                return;
-            }
-        } else if current > 0 {
-            current - 1
+        if increase {
+            self.increase_value();
         } else {
-            return;
-        };
-        self.values[ROW_CH][ch_param] = new_value;
-        self.play_audio();
+            self.decrease_value();
+        }
     }
 
     pub fn increase_value(&mut self) {
