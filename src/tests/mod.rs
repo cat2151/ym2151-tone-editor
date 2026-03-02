@@ -16,6 +16,9 @@ mod midi_conversion_tests;
 mod register_tests;
 
 #[cfg(test)]
+mod register_roundtrip_tests;
+
+#[cfg(test)]
 mod ui_tests;
 
 #[cfg(test)]
