@@ -7,6 +7,21 @@
 mod app_tests;
 
 #[cfg(test)]
+mod app_ch_param_tests;
+
+#[cfg(test)]
+mod app_value_by_tests;
+
+#[cfg(test)]
+mod app_adsr_mul_sm_tests;
+
+#[cfg(test)]
+mod app_tl_d1l_dt_dt2_tests;
+
+#[cfg(test)]
+mod app_ks_ams_tests;
+
+#[cfg(test)]
 mod file_ops_tests;
 
 #[cfg(test)]
