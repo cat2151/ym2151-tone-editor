@@ -74,6 +74,10 @@ fn key_to_string(code: KeyCode, modifiers: KeyModifiers) -> Option<String> {
             else if modifiers.contains(KeyModifiers::CONTROL) {
                 Some(format!("Ctrl+{}", c))
             }
+            // Handle space key
+            else if c == ' ' {
+                Some("Space".to_string())
+            }
             // Handle SHIFT modifier for special characters
             else if modifiers.contains(KeyModifiers::SHIFT) {
                 // For shifted characters, return the character as-is
