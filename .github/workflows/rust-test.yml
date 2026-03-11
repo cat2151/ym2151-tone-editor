@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - main
-#      - 'copilot/**' # コメントアウト理由 : PR中にActions実行承認要求ボタンが表示されるとレビュアーUXが悪いことがわかったので
+#      - 'copilot/**' # コメントアウト理由 : PRレビュー中にActions実行承認要求ボタンが表示されるとレビュアーUXが悪いことがわかったので
   workflow_dispatch: # test用
 
 jobs:
