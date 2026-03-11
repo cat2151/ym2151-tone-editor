@@ -1,4 +1,4 @@
-Last updated: 2025-12-14
+Last updated: 2026-03-12
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -383,52 +383,25 @@ cargo run
 📁 generated-docs/
 🌐 googled947dc864c270e07.html
 📁 issue-notes/
-  📖 100.md
-  📖 101.md
-  📖 102.md
-  📖 103.md
-  📖 104.md
-  📖 105.md
-  📖 106.md
-  📖 107.md
-  📖 108.md
-  📖 109.md
-  📖 110.md
-  📖 111.md
-  📖 112.md
   📖 113.md
-  📖 114.md
   📖 115.md
-  📖 116.md
-  📖 130.md
-  📖 134.md
-  📖 136.md
-  📖 138.md
   📖 139.md
   📖 141.md
-  📖 144.md
-  📖 146.md
-  📖 147.md
   📖 148.md
-  📖 149.md
-  📖 150.md
-  📖 151.md
   📖 155.md
   📖 156.md
-  📖 158.md
   📖 164.md
-  📖 165.md
-  📖 166.md
   📖 167.md
-  📖 172.md
   📖 174.md
-  📖 175.md
+  📖 176.md
+  📖 177.md
+  📖 182.md
   📖 95.md
   📖 96.md
-  📖 97.md
-  📖 99.md
 📁 src/
-  📄 app.rs
+  📁 app/
+    📄 mod.rs
+    📄 shortcuts.rs
   📄 app_init.rs
   📄 audio.rs
   📄 config.rs
@@ -438,10 +411,16 @@ cargo run
   📄 models.rs
   📄 register.rs
   📁 tests/
+    📄 app_adsr_mul_sm_tests.rs
+    📄 app_ch_param_tests.rs
+    📄 app_ks_ams_tests.rs
     📄 app_tests.rs
+    📄 app_tl_d1l_dt_dt2_tests.rs
+    📄 app_value_by_tests.rs
     📄 file_ops_tests.rs
     📄 midi_conversion_tests.rs
     📄 mod.rs
+    📄 register_roundtrip_tests.rs
     📄 register_tests.rs
     📄 ui_tests.rs
     📄 variation_selector_tests.rs
@@ -468,32 +447,23 @@ README.md
 README_generate_gm_templates.md
 docs/KEYBINDS.ja.md
 googled947dc864c270e07.html
-issue-notes/100.md
-issue-notes/101.md
-issue-notes/102.md
-issue-notes/103.md
-issue-notes/104.md
-issue-notes/105.md
-issue-notes/106.md
-issue-notes/107.md
-issue-notes/108.md
-issue-notes/109.md
-issue-notes/110.md
-issue-notes/111.md
-issue-notes/112.md
 issue-notes/113.md
-issue-notes/114.md
 issue-notes/115.md
-issue-notes/116.md
-issue-notes/130.md
-issue-notes/134.md
-issue-notes/136.md
-issue-notes/138.md
 issue-notes/139.md
 issue-notes/141.md
-issue-notes/144.md
-issue-notes/146.md
+issue-notes/148.md
+issue-notes/155.md
+issue-notes/156.md
+issue-notes/164.md
+issue-notes/167.md
+issue-notes/174.md
+issue-notes/176.md
+issue-notes/177.md
+issue-notes/182.md
+issue-notes/95.md
+issue-notes/96.md
 tones/general_midi/000_AcousticGrand.json
+tones/general_midi/tone_names.json
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
 特に以下の点を重視してください：
@@ -505,4 +475,4 @@ tones/general_midi/000_AcousticGrand.json
 
 
 ---
-Generated at: 2025-12-14 07:07:46 JST
+Generated at: 2026-03-12 07:12:05 JST

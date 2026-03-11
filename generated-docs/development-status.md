@@ -1,51 +1,51 @@
-Last updated: 2025-12-14
+Last updated: 2026-03-12
 
 # Development Status
 
 ## 現在のIssues
-- [Issue #175](../issue-notes/175.md) は、[Issue #167](../issue-notes/167.md) で議論されたプチノイズ問題の効率的な検証ツールとして、JSON編集TUI Rustアプリの新規リポジトリ作成を計画しています。
-- [Issue #174](../issue-notes/174.md) では、ユーザーがローカルで音色テンプレートJSONファイルを生成できる機能の実装が進められており、これは既存の音色管理機能の拡張となります。
-- 現在のプロジェクトでは、[Issue #167](../issue-notes/167.md) のプレビュー音のKeyOff時のプチノイズ問題が主要な課題であり、その解決策として専用のJSONエディタの必要性が提起されています。
+- [Issue #177](../issue-notes/177.md) と [Issue #176](../issue-notes/176.md) は、sixelを用いて音色波形や各オペレータのエンベロープを描画し、ユーザーエクスペリエンスを検証することを目標としています。
+- [Issue #174](../issue-notes/174.md) では、Issue 149の結果に基づき、ユーザーがローカルに音色テンプレートJSONファイルを生成する機能の実装が計画されています。
+- [Issue #167](../issue-notes/167.md) ではプレビュー時のプチノイズ問題の解決が検討されていますが、現在は別リポジトリでのJSON編集GUIツール開発を待っている状態です。
 
 ## 次の一手候補
-1. [Issue #175](../issue-notes/175.md): JSON編集TUI Rustアプリの新規リポジトリ初期設定
-   - 最初の小さな一歩: 新規Rustプロジェクトの基本的なファイル構造（`Cargo.toml`, `src/main.rs`, `README.md`）を定義し、最小限のTUIスケルトンを作成する。
+1. [Issue #177](../issue-notes/177.md) sixelで音色波形を描画するために`cat-play-mml`でWAVを生成する
+   - 最初の小さな一歩: Rustアプリケーション内で`cat-play-mml`コマンドを外部プロセスとして実行し、指定されたMMLを元にWAVファイルを生成する基本的な関数を`src/audio.rs`に実装する。
+   - Agent実行プロンプ:
+     ```
+     対象ファイル: `src/audio.rs`, `src/config.rs`
+
+     実行内容: `cat-play-mml`コマンドを外部プロセスとして呼び出し、MML文字列を元にWAVファイルを生成し、指定されたパスに保存するRust関数 `generate_wav_from_mml(mml: &str, output_path: &Path) -> Result<(), Box<dyn std::error::Error>>` を `src/audio.rs` に実装してください。`cat-play-mml`実行可能ファイルへのパスは`src/config.rs`で設定可能とします。
+
+     確認事項: `cat-play-mml`コマンドがシステムパスにあるか、または設定ファイルで指定されたパスに存在するか。コマンド実行失敗、ファイル保存失敗などのエラーハンドリングが適切に行われているか。
+
+     期待する出力: `src/audio.rs` に上記の関数が実装され、必要であれば`src/config.rs`に`cat_play_mml_path`設定が追加される。
+     ```
+
+2. [Issue #176](../issue-notes/176.md) sixelで各OPごとのエンベロープを描画するために必要なパラメータを抽出する
+   - 最初の小さな一歩: 現在編集中の音色データ (`src/models.rs`の`Tone`構造体) から、選択されたオペレータのADSRパラメータ（AR, DR, SR, RR, TL, KS, AM, DT1, DT2, MUL）を抽出し、シンプルな文字列として表現する（例: "AR:15 DR:10 SR:5 RR:8 TL:30..."）。
    - Agent実行プロンプト:
      ```
-     対象ファイル: (新規プロジェクトのため存在しないが、一般的なRust TUIプロジェクトの構成を考慮)
+     対象ファイル: `src/models.rs`, `src/app/mod.rs`
 
-     実行内容: 新規Rust TUIプロジェクトの初期構造について検討し、`Cargo.toml` (依存関係として`crossterm`, `ratatui` (tui-rsの後継), `serde` を含める), `src/main.rs` の基本的なTUIループのスケルトン、`README.md` の初期記述を生成してください。
+     実行内容: `src/models.rs`内の`Tone`構造体に、特定のオペレータ（`operator_index: usize`）のADSR関連パラメータを分かりやすい文字列として返すメソッド `get_operator_envelope_params_string(&self, op_idx: usize) -> String` を追加してください。この文字列はsixel描画の前段階としてパラメータを可視化するためのものです。`src/app/mod.rs`内でのこのメソッドの呼び出し例をコメントとして追加してください。
 
-     確認事項: TUIライブラリの選定（ratatuiの使用を推奨）、基本的なエラーハンドリング、プロジェクトの目的（JSON編集）に合致する初期設定になっているかを確認してください。
+     確認事項: `Tone`構造体内のオペレータデータへのアクセス方法が適切であるか。パラメータが適切な形式で文字列に変換されているか。
 
-     期待する出力: 新規リポジトリで作成すべき `Cargo.toml`, `src/main.rs`, `README.md` の内容を、それぞれMarkdownのコードブロックで出力してください。
+     期待する出力: `src/models.rs`に上記メソッドが追加され、その利用例が`src/app/mod.rs`の関連する描画ロジックにコメントアウト形式で追加される。
      ```
 
-2. [Issue #174](../issue-notes/174.md): 音色テンプレートJSONの形式決定と生成機能の設計
-   - 最初の小さな一歩: 既存の音色データ構造を分析し、ユーザーが生成するテンプレートJSONの必須フィールドとそのデフォルト値を洗い出す。
+3. [Issue #174](../issue-notes/174.md) ユーザーがローカルに音色template jsonファイルを生成する機能の第一歩として、音色データのJSON保存機能を実装する
+   - 最初の小さな一歩: 現在編集中の音色データを表現するRustの構造体 (`src/models.rs`の`Tone`構造体) をJSON形式でシリアライズし、指定されたファイルパスに保存する関数を`src/file_ops.rs`に実装する。
    - Agent実行プロンプト:
      ```
-     対象ファイル: `tones/general_midi/000_AcousticGrand.json`, `src/models.rs`
+     対象ファイル: `src/file_ops.rs`, `src/models.rs`
 
-     実行内容: `tones/general_midi/000_AcousticGrand.json` のような既存の音色JSONファイルと `src/models.rs` に定義されている音色構造を分析し、ユーザーが「音色テンプレートJSONファイル」として生成する際に必要となる最小限かつ必須のフィールドと、それらの適切なデフォルト値をリストアップしてください。
+     実行内容: `src/file_ops.rs`に、`src/models.rs`で定義されている`Tone`構造体のインスタンスを受け取り、それをJSON形式で指定されたファイルパスに保存するRust関数 `save_tone_to_json(tone: &Tone, path: &Path) -> Result<(), Box<dyn std::error::Error>>` を実装してください。
 
-     確認事項: 既存の音色構造との互換性が保たれていること、ユーザーが編集しやすいように冗長なフィールドは除外されていることを確認してください。
+     確認事項: `Tone`構造体が`serde::Serialize`をderiveしていること。ファイル書き込み時のエラーハンドリング（例: ファイル作成失敗、書き込み失敗など）。ファイルパスの解決方法。
 
-     期待する出力: 提案する音色テンプレートJSONのスキーマ定義（フィールド名、型、説明、推奨デフォルト値）と、その具体的なJSON例をMarkdownのコードブロックで出力してください。
-     ```
-
-3. [Issue #167](../issue-notes/167.md): プチノイズ問題の再現テストケースの作成
-   - 最初の小さな一歩: [Issue #167](../issue-notes/167.md) で挙げられている仮説「キャリアのTLを127にしてからRR15」を検証するため、特定のADSR設定でキーオン/キーオフをシミュレートするテストMMLまたはJSONスニペットを生成する。
-   - Agent実行プロンプト:
-     ```
-     対象ファイル: `src/audio.rs`, `src/midi_conversion.rs`, `src/tests/midi_conversion_tests.rs`
-
-     実行内容: [Issue #167](../issue-notes/167.md) の仮説「キャリアのTLを127にしてからRR15」を検証するために、特定のYM2151音色パラメータ（特にTLとRR）を設定し、短いキーオン・キーオフイベントをシミュレートするMMLスニペット、または対応するJSON形式のデータスニペットを生成してください。このスニペットは、プチノイズの発生条件を絞り込むためのものです。
-
-     確認事項: 生成されるMML/JSONが、既存のMML/JSONパーサー（もしあれば）または音色構造と互換性があること。また、ADSR設定（特にRR）が正確に反映されていることを確認してください。
-
-     期待する出力: 指定された仮説を検証するためのMMLまたはJSONデータスニペットをMarkdownのコードブロックで出力してください。また、そのスニペットをどのように利用してテストを行うかの簡単な説明を含めてください。
+     期待する出力: `src/file_ops.rs` に`save_tone_to_json`関数が実装され、必要であれば`src/models.rs`に`#[derive(serde::Serialize)]`が追加される。
      ```
 
 ---
-Generated at: 2025-12-14 07:08:03 JST
+Generated at: 2026-03-12 07:12:21 JST

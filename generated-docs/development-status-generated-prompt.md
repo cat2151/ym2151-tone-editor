@@ -1,4 +1,4 @@
-Last updated: 2025-12-14
+Last updated: 2026-03-12
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -104,11 +104,13 @@ Last updated: 2025-12-14
 
 ## プロジェクトのファイル一覧
 - .github/actions-tmp/.github/workflows/call-callgraph.yml
+- .github/actions-tmp/.github/workflows/call-check-large-files.yml
 - .github/actions-tmp/.github/workflows/call-daily-project-summary.yml
 - .github/actions-tmp/.github/workflows/call-issue-note.yml
 - .github/actions-tmp/.github/workflows/call-rust-windows-check.yml
 - .github/actions-tmp/.github/workflows/call-translate-readme.yml
 - .github/actions-tmp/.github/workflows/callgraph.yml
+- .github/actions-tmp/.github/workflows/check-large-files.yml
 - .github/actions-tmp/.github/workflows/check-recent-human-commit.yml
 - .github/actions-tmp/.github/workflows/daily-project-summary.yml
 - .github/actions-tmp/.github/workflows/issue-note.yml
@@ -131,6 +133,9 @@ Last updated: 2025-12-14
 - .github/actions-tmp/.github_automation/callgraph/scripts/find-process-results.cjs
 - .github/actions-tmp/.github_automation/callgraph/scripts/generate-html-graph.cjs
 - .github/actions-tmp/.github_automation/callgraph/scripts/generateHTML.cjs
+- .github/actions-tmp/.github_automation/check-large-files/README.md
+- .github/actions-tmp/.github_automation/check-large-files/check-large-files.toml.default
+- .github/actions-tmp/.github_automation/check-large-files/scripts/check_large_files.py
 - .github/actions-tmp/.github_automation/check_recent_human_commit/scripts/check-recent-human-commit.cjs
 - .github/actions-tmp/.github_automation/project_summary/docs/daily-summary-setup.md
 - .github/actions-tmp/.github_automation/project_summary/prompts/development-status-prompt.md
@@ -187,7 +192,12 @@ Last updated: 2025-12-14
 - .github/actions-tmp/issue-notes/29.md
 - .github/actions-tmp/issue-notes/3.md
 - .github/actions-tmp/issue-notes/30.md
+- .github/actions-tmp/issue-notes/35.md
+- .github/actions-tmp/issue-notes/38.md
 - .github/actions-tmp/issue-notes/4.md
+- .github/actions-tmp/issue-notes/40.md
+- .github/actions-tmp/issue-notes/44.md
+- .github/actions-tmp/issue-notes/52.md
 - .github/actions-tmp/issue-notes/7.md
 - .github/actions-tmp/issue-notes/8.md
 - .github/actions-tmp/issue-notes/9.md
@@ -195,6 +205,7 @@ Last updated: 2025-12-14
 - .github/actions-tmp/package.json
 - .github/actions-tmp/src/main.js
 - .github/copilot-instructions.md
+- .github/workflows/call-check-large-files.yml
 - .github/workflows/call-daily-project-summary.yml
 - .github/workflows/call-issue-note.yml
 - .github/workflows/call-rust-windows-check.yml
@@ -212,51 +223,23 @@ Last updated: 2025-12-14
 - generate_gm_templates.rs
 - generated-docs/project-overview-generated-prompt.md
 - googled947dc864c270e07.html
-- issue-notes/100.md
-- issue-notes/101.md
-- issue-notes/102.md
-- issue-notes/103.md
-- issue-notes/104.md
-- issue-notes/105.md
-- issue-notes/106.md
-- issue-notes/107.md
-- issue-notes/108.md
-- issue-notes/109.md
-- issue-notes/110.md
-- issue-notes/111.md
-- issue-notes/112.md
 - issue-notes/113.md
-- issue-notes/114.md
 - issue-notes/115.md
-- issue-notes/116.md
-- issue-notes/130.md
-- issue-notes/134.md
-- issue-notes/136.md
-- issue-notes/138.md
 - issue-notes/139.md
 - issue-notes/141.md
-- issue-notes/144.md
-- issue-notes/146.md
-- issue-notes/147.md
 - issue-notes/148.md
-- issue-notes/149.md
-- issue-notes/150.md
-- issue-notes/151.md
 - issue-notes/155.md
 - issue-notes/156.md
-- issue-notes/158.md
 - issue-notes/164.md
-- issue-notes/165.md
-- issue-notes/166.md
 - issue-notes/167.md
-- issue-notes/172.md
 - issue-notes/174.md
-- issue-notes/175.md
+- issue-notes/176.md
+- issue-notes/177.md
+- issue-notes/182.md
 - issue-notes/95.md
 - issue-notes/96.md
-- issue-notes/97.md
-- issue-notes/99.md
-- src/app.rs
+- src/app/mod.rs
+- src/app/shortcuts.rs
 - src/app_init.rs
 - src/audio.rs
 - src/config.rs
@@ -265,10 +248,16 @@ Last updated: 2025-12-14
 - src/midi_conversion.rs
 - src/models.rs
 - src/register.rs
+- src/tests/app_adsr_mul_sm_tests.rs
+- src/tests/app_ch_param_tests.rs
+- src/tests/app_ks_ams_tests.rs
 - src/tests/app_tests.rs
+- src/tests/app_tl_d1l_dt_dt2_tests.rs
+- src/tests/app_value_by_tests.rs
 - src/tests/file_ops_tests.rs
 - src/tests/midi_conversion_tests.rs
 - src/tests/mod.rs
+- src/tests/register_roundtrip_tests.rs
 - src/tests/register_tests.rs
 - src/tests/ui_tests.rs
 - src/tests/variation_selector_tests.rs
@@ -280,16 +269,31 @@ Last updated: 2025-12-14
 - ym2151-tone-editor.toml.example
 
 ## 現在のオープンIssues
-## [Issue #175](../issue-notes/175.md): issue 167 のissue-notes を参考に、json編集TUI Rustアプリのrepositoryを新規作成する
-[issue-notes/175.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/175.md)
+## [Issue #177](../issue-notes/177.md): sixelを使って音色波形を描画できるか試し、UXを検証する。音色変更後5秒したらbackgroundでcat-play-mmlをwav生成モードで呼び出してwavを得て表示
+[issue-notes/177.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/177.md)
 
 ...
 ラベル: 
---- issue-notes/175.md の内容 ---
+--- issue-notes/177.md の内容 ---
 
 ```markdown
-# issue issue 167 のissue-notes を参考に、json編集TUI Rustアプリのrepositoryを新規作成する #175
-[issues #175](https://github.com/cat2151/ym2151-tone-editor/issues/175)
+# issue sixelを使って音色波形を描画できるか試し、UXを検証する。音色変更後5秒したらbackgroundでcat-play-mmlをwav生成モードで呼び出してwavを得て表示 #177
+[issues #177](https://github.com/cat2151/ym2151-tone-editor/issues/177)
+
+
+
+```
+
+## [Issue #176](../issue-notes/176.md): sixelを使って各OPごとのエンベロープを描画できるか試し、UXを検証する
+[issue-notes/176.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/176.md)
+
+...
+ラベル: 
+--- issue-notes/176.md の内容 ---
+
+```markdown
+# issue sixelを使って各OPごとのエンベロープを描画できるか試し、UXを検証する #176
+[issues #176](https://github.com/cat2151/ym2151-tone-editor/issues/176)
 
 
 
@@ -310,7 +314,7 @@ Last updated: 2025-12-14
 
 ```
 
-## [Issue #167](../issue-notes/167.md): プレビューを鳴らすとき、前の音のkeyoff時にプチノイズが乗ってしまう
+## [Issue #167](../issue-notes/167.md): （待ち）プレビューを鳴らすとき、前の音のkeyoff時にプチノイズが乗ってしまう
 [issue-notes/167.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/167.md)
 
 ...
@@ -361,6 +365,10 @@ Last updated: 2025-12-14
 - これまでもそのprojectの必要性は予想していた
 - 「次にそのprojectがないと困る段階」になったら、実施しよう、と計画していた
 - なぜならそれが一番のそのprojectのtestになるので
+
+# 状況
+- 別リポジトリで、webpageで軽量GUIを作成し、json編集でプチノイズ調査、を進めている
+- それを待つ
 
 ```
 
@@ -596,6 +604,10 @@ jobs:
 - 「次にそのprojectがないと困る段階」になったら、実施しよう、と計画していた
 - なぜならそれが一番のそのprojectのtestになるので
 
+# 状況
+- 別リポジトリで、webpageで軽量GUIを作成し、json編集でプチノイズ調査、を進めている
+- それを待つ
+
 {% endraw %}
 ```
 
@@ -610,11 +622,22 @@ jobs:
 {% endraw %}
 ```
 
-### issue-notes/175.md
+### issue-notes/176.md
 ```md
 {% raw %}
-# issue issue 167 のissue-notes を参考に、json編集TUI Rustアプリのrepositoryを新規作成する #175
-[issues #175](https://github.com/cat2151/ym2151-tone-editor/issues/175)
+# issue sixelを使って各OPごとのエンベロープを描画できるか試し、UXを検証する #176
+[issues #176](https://github.com/cat2151/ym2151-tone-editor/issues/176)
+
+
+
+{% endraw %}
+```
+
+### issue-notes/177.md
+```md
+{% raw %}
+# issue sixelを使って音色波形を描画できるか試し、UXを検証する。音色変更後5秒したらbackgroundでcat-play-mmlをwav生成モードで呼び出してwavを得て表示 #177
+[issues #177](https://github.com/cat2151/ym2151-tone-editor/issues/177)
 
 
 
@@ -623,30 +646,64 @@ jobs:
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-2d64584 Add issue note for #175 [auto]
-4fe1dd9 Add issue note for #174 [auto]
-3401ef2 Merge pull request #173 from cat2151/copilot/add-guide-display-for-alg-fb-values
-a5d3ba2 Update project summaries (overview & development status) [auto]
-f6d2c1b Display ALG and FB guides always, not just when cursor is on them
-29d6c3f Add clarifying comment for parameters without keybindings
-a352a89 Add key guide display for ALG and FB parameters in CH row
-d4601ab Initial plan
-241c56d Add issue note for #172 [auto]
-7d883a6 Merge pull request #171 from cat2151/copilot/fix-operation-guide-display
+aa24be4 Merge pull request #183 from cat2151/copilot/implement-replay-with-space
+37610d2 Uncomment copilot branch in rust-test.yml
+fc7f6c7 Comment out copilot branch in rust-test.yml
+f8fc83c Add unit tests for Space key mapping in key_to_string
+a52dad6 Fix space key to trigger PlayCurrentTone (replay) action
+42538e5 Initial plan
+554a644 Add issue note for #182 [auto]
 
 ### 変更されたファイル:
-generated-docs/development-status-generated-prompt.md
-generated-docs/development-status.md
-generated-docs/project-overview-generated-prompt.md
-generated-docs/project-overview.md
+.github/workflows/rust-test.yml
+issue-notes/100.md
+issue-notes/101.md
+issue-notes/102.md
+issue-notes/103.md
+issue-notes/104.md
+issue-notes/105.md
+issue-notes/106.md
+issue-notes/107.md
+issue-notes/108.md
+issue-notes/109.md
+issue-notes/110.md
+issue-notes/111.md
+issue-notes/112.md
+issue-notes/114.md
+issue-notes/116.md
+issue-notes/130.md
+issue-notes/134.md
+issue-notes/136.md
+issue-notes/138.md
+issue-notes/144.md
+issue-notes/146.md
+issue-notes/147.md
+issue-notes/149.md
+issue-notes/150.md
+issue-notes/151.md
+issue-notes/158.md
+issue-notes/165.md
+issue-notes/166.md
+issue-notes/167.md
 issue-notes/172.md
-issue-notes/174.md
 issue-notes/175.md
+issue-notes/182.md
+issue-notes/97.md
+issue-notes/99.md
 src/app.rs
-src/app_init.rs
-src/tests/ui_tests.rs
-src/ui.rs
+src/app/mod.rs
+src/app/shortcuts.rs
+src/main.rs
+src/tests/app_adsr_mul_sm_tests.rs
+src/tests/app_ch_param_tests.rs
+src/tests/app_ks_ams_tests.rs
+src/tests/app_tests.rs
+src/tests/app_tl_d1l_dt_dt2_tests.rs
+src/tests/app_value_by_tests.rs
+src/tests/mod.rs
+src/tests/register_roundtrip_tests.rs
+src/tests/register_tests.rs
 
 
 ---
-Generated at: 2025-12-14 07:07:46 JST
+Generated at: 2026-03-12 07:12:05 JST
