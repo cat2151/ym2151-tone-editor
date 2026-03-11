@@ -74,6 +74,10 @@ fn key_to_string(code: KeyCode, modifiers: KeyModifiers) -> Option<String> {
             else if modifiers.contains(KeyModifiers::CONTROL) {
                 Some(format!("Ctrl+{}", c))
             }
+            // Handle space key
+            else if c == ' ' {
+                Some("Space".to_string())
+            }
             // Handle SHIFT modifier for special characters
             else if modifiers.contains(KeyModifiers::SHIFT) {
                 // For shifted characters, return the character as-is
@@ -409,5 +413,29 @@ fn run_app<B: ratatui::backend::Backend>(
             }
             _ => {}
         }
+    }
+}
+
+#[cfg(test)]
+mod key_to_string_tests {
+    use super::*;
+    use crossterm::event::{KeyCode, KeyModifiers};
+
+    #[test]
+    fn test_space_maps_to_space_string() {
+        let result = key_to_string(KeyCode::Char(' '), KeyModifiers::NONE);
+        assert_eq!(result, Some("Space".to_string()));
+    }
+
+    #[test]
+    fn test_shift_space_maps_to_space_string() {
+        let result = key_to_string(KeyCode::Char(' '), KeyModifiers::SHIFT);
+        assert_eq!(result, Some("Space".to_string()));
+    }
+
+    #[test]
+    fn test_regular_char_maps_to_itself() {
+        let result = key_to_string(KeyCode::Char('a'), KeyModifiers::NONE);
+        assert_eq!(result, Some("a".to_string()));
     }
 }
