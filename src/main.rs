@@ -349,6 +349,7 @@ fn run_app<B: ratatui::backend::Backend>(
                                     handle_open_variation_selector(terminal, app)?;
                                 }
                                 Action::RandomizeTone => app.randomize_tone(),
+                                Action::ToggleHelp => app.toggle_help(),
                                 Action::Exit => {
                                     // Save tone data to JSON before exiting
                                     app.save_to_json()?;

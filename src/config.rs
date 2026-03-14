@@ -79,6 +79,7 @@ pub enum Action {
     SaveToGmVariations,
     OpenVariationSelector,
     RandomizeTone,
+    ToggleHelp,
     Exit,
 }
 
@@ -248,6 +249,9 @@ impl Default for Config {
 
         // Random tone (F5)
         keybinds.insert("F5".to_string(), Action::RandomizeTone);
+
+        // Toggle keybind help
+        keybinds.insert("?".to_string(), Action::ToggleHelp);
 
         // Exit
         keybinds.insert("Esc".to_string(), Action::Exit);
