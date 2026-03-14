@@ -78,6 +78,7 @@ pub enum Action {
     JumpToNoteAndDecrease,
     SaveToGmVariations,
     OpenVariationSelector,
+    RandomizeTone,
     Exit,
 }
 
@@ -245,6 +246,9 @@ impl Default for Config {
         // Open variation selector
         keybinds.insert("Ctrl+o".to_string(), Action::OpenVariationSelector);
 
+        // Random tone (F5)
+        keybinds.insert("F5".to_string(), Action::RandomizeTone);
+
         // Exit
         keybinds.insert("Esc".to_string(), Action::Exit);
 
@@ -310,6 +314,7 @@ mod tests {
         assert_eq!(config.get_action("Esc"), Some(&Action::Exit));
         assert_eq!(config.get_action("1"), Some(&Action::JumpToOp1AndIncrease));
         assert_eq!(config.get_action("h"), Some(&Action::MoveCursorLeft));
+        assert_eq!(config.get_action("F5"), Some(&Action::RandomizeTone));
     }
 
     #[test]
