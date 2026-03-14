@@ -6,6 +6,7 @@ mod config;
 mod file_ops;
 mod midi_conversion;
 mod models;
+mod random_tone;
 mod register;
 #[cfg(test)]
 mod tests;
@@ -95,6 +96,7 @@ fn key_to_string(code: KeyCode, modifiers: KeyModifiers) -> Option<String> {
         KeyCode::PageUp => Some("PageUp".to_string()),
         KeyCode::PageDown => Some("PageDown".to_string()),
         KeyCode::Esc => Some("Esc".to_string()),
+        KeyCode::F(n) => Some(format!("F{}", n)),
         _ => None,
     }
 }
@@ -346,6 +348,7 @@ fn run_app<B: ratatui::backend::Backend>(
                                 Action::OpenVariationSelector => {
                                     handle_open_variation_selector(terminal, app)?;
                                 }
+                                Action::RandomizeTone => app.randomize_tone(),
                                 Action::Exit => {
                                     // Save tone data to JSON before exiting
                                     app.save_to_json()?;
@@ -437,5 +440,19 @@ mod key_to_string_tests {
     fn test_regular_char_maps_to_itself() {
         let result = key_to_string(KeyCode::Char('a'), KeyModifiers::NONE);
         assert_eq!(result, Some("a".to_string()));
+    }
+
+    #[test]
+    fn test_function_key_f5_maps_to_f5_string() {
+        let result = key_to_string(KeyCode::F(5), KeyModifiers::NONE);
+        assert_eq!(result, Some("F5".to_string()));
+    }
+
+    #[test]
+    fn test_function_key_maps_generically() {
+        let result = key_to_string(KeyCode::F(1), KeyModifiers::NONE);
+        assert_eq!(result, Some("F1".to_string()));
+        let result = key_to_string(KeyCode::F(12), KeyModifiers::NONE);
+        assert_eq!(result, Some("F12".to_string()));
     }
 }

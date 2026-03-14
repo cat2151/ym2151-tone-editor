@@ -41,3 +41,6 @@ mod variation_selector_tests;
 
 #[cfg(test)]
 mod verbose_logging_tests;
+
+#[cfg(test)]
+mod random_tone_tests;
