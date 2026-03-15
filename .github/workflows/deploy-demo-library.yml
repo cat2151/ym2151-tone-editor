@@ -1,11 +1,15 @@
-# 用途: demo-library/index.html と wasm/pkg/ を GitHub Pages にデプロイする
-name: Deploy demo-library to GitHub Pages
+# 用途: GitHub Pages にデプロイする
+# - プロジェクトルート: Jekyll が README.md から生成
+# - demo-library/: WASM デモページ
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches:
       - main
     paths:
+      - 'README.md'
+      - '_config.yml'
       - 'demo-library/**'
       - 'wasm/src/**'
       - 'wasm/Cargo.toml'
@@ -64,11 +68,20 @@ jobs:
       - name: Build WASM
         run: wasm-pack build --target web wasm
 
-      - name: Assemble Pages artifact
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build Jekyll site
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+
+      - name: Copy demo-library into Pages artifact
         run: |
-          mkdir -p _site
-          cp -r demo-library/. _site/
-          cp -r wasm/pkg _site/pkg
+          mkdir -p _site/demo-library
+          cp -r demo-library/. _site/demo-library/
+          cp -r wasm/pkg _site/demo-library/pkg
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
