@@ -373,7 +373,7 @@ pub fn ui(f: &mut Frame, app: &App) {
     }
 
     // Draw keybind hints at the bottom of the screen (left-aligned)
-    draw_keybind_hints(f, app, size);
+    draw_keybind_hints(f, app, inner);
 }
 
 fn draw_virtual_pentatonic_keyboard_at_y(f: &mut Frame, app: &App, inner: Rect, keyboard_y: u16) {
@@ -432,15 +432,15 @@ fn draw_virtual_pentatonic_keyboard_at_y(f: &mut Frame, app: &App, inner: Rect, 
     }
 }
 
-fn draw_keybind_hints(f: &mut Frame, app: &App, size: Rect) {
-    // Bottom line inside the block border
-    let bottom_y = size.height.saturating_sub(2);
-    if bottom_y == 0 {
+fn draw_keybind_hints(f: &mut Frame, app: &App, inner: Rect) {
+    // Bottom line inside the inner area (inside the block border)
+    let inner_bottom = inner.y + inner.height.saturating_sub(1);
+    if inner.height == 0 {
         return;
     }
 
     if app.show_help {
-        // Detailed keybind help: render lines from bottom up
+        // Detailed keybind help: render lines from bottom up, clamped to inner area
         let help_lines: &[&str] = &[
             "move:hjkl/wasd  dec/inc:q/e  max/min:Home/End  +1/-1:./,  +10/-10:>/<",
             "1-4:OP row  a/A:AR  d/D:D1R  s/S:D2R  r/R:RR  t/T:TL  m/M:MUL  l/L:D1L",
@@ -449,12 +449,12 @@ fn draw_keybind_hints(f: &mut Frame, app: &App, size: Rect) {
         ];
         let num_lines = help_lines.len() as u16;
         for (i, line) in help_lines.iter().enumerate() {
-            let y = bottom_y.saturating_sub(num_lines) + i as u16;
-            if y < size.height.saturating_sub(1) {
+            let y = inner_bottom.saturating_sub(num_lines) + i as u16;
+            if y >= inner.y && y <= inner_bottom {
                 let area = Rect {
-                    x: 1,
+                    x: inner.x,
                     y,
-                    width: size.width.saturating_sub(2),
+                    width: inner.width,
                     height: 1,
                 };
                 let paragraph =
@@ -463,11 +463,11 @@ fn draw_keybind_hints(f: &mut Frame, app: &App, size: Rect) {
             }
         }
     } else {
-        // Brief hint
+        // Brief hint on the last line of the inner area
         let area = Rect {
-            x: 1,
-            y: bottom_y,
-            width: size.width.saturating_sub(2),
+            x: inner.x,
+            y: inner_bottom,
+            width: inner.width,
             height: 1,
         };
         let paragraph = Paragraph::new(Span::styled(

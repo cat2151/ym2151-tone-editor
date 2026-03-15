@@ -322,6 +322,12 @@ mod tests {
     }
 
     #[test]
+    fn test_default_keybinds_question_mark_is_toggle_help() {
+        let config = KeybindsConfig::default();
+        assert_eq!(config.get_action("?"), Some(&Action::ToggleHelp));
+    }
+
+    #[test]
     fn test_load_from_toml_string() {
         let toml_str = r#"
 [keybinds]

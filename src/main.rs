@@ -456,4 +456,17 @@ mod key_to_string_tests {
         let result = key_to_string(KeyCode::F(12), KeyModifiers::NONE);
         assert_eq!(result, Some("F12".to_string()));
     }
+
+    #[test]
+    fn test_question_mark_shift_slash_maps_to_question_mark() {
+        // On most keyboard layouts, '?' is Shift+/ and crossterm delivers it as Char('?') with SHIFT
+        let result = key_to_string(KeyCode::Char('?'), KeyModifiers::SHIFT);
+        assert_eq!(result, Some("?".to_string()));
+    }
+
+    #[test]
+    fn test_question_mark_no_modifier_maps_to_question_mark() {
+        let result = key_to_string(KeyCode::Char('?'), KeyModifiers::NONE);
+        assert_eq!(result, Some("?".to_string()));
+    }
 }
