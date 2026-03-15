@@ -87,17 +87,48 @@ fn test_save_to_history_newest_first() {
 }
 
 #[test]
-fn test_save_to_history_skips_duplicate_latest() {
+fn test_save_to_history_deduplicates_replayed_tone() {
     let path = temp_history_path();
-    let values = [[0u8; GRID_WIDTH]; GRID_HEIGHT];
 
-    save_to_history_at_path(&path, &values).unwrap();
-    save_to_history_at_path(&path, &values).unwrap();
+    let mut values1 = [[0u8; GRID_WIDTH]; GRID_HEIGHT];
+    values1[0][PARAM_MUL] = 1;
+
+    let mut values2 = [[0u8; GRID_WIDTH]; GRID_HEIGHT];
+    values2[0][PARAM_MUL] = 2;
+
+    // Save values1, then values2, then replay values1
+    save_to_history_at_path(&path, &values1).unwrap();
+    save_to_history_at_path(&path, &values2).unwrap();
+    save_to_history_at_path(&path, &values1).unwrap();
 
     let content = std::fs::read_to_string(&path).unwrap();
     let history: Vec<String> = serde_json::from_str(&content).unwrap();
 
-    assert_eq!(history.len(), 1, "Duplicate entry should not be added");
+    // values1 should be at the front; no duplicate; total length = 2
+    let expected1 = register::editor_rows_to_registers(&values1);
+    let expected2 = register::editor_rows_to_registers(&values2);
+    assert_eq!(history.len(), 2, "Replayed tone should not duplicate");
+    assert_eq!(history[0], expected1, "Replayed tone should be at front");
+    assert_eq!(history[1], expected2);
+
+    std::fs::remove_file(&path).ok();
+}
+
+#[test]
+fn test_save_to_history_corrupted_file_returns_error() {
+    let path = temp_history_path();
+
+    // Write invalid JSON to simulate corruption
+    std::fs::write(&path, b"not valid json").unwrap();
+
+    let values = [[0u8; GRID_WIDTH]; GRID_HEIGHT];
+    let result = save_to_history_at_path(&path, &values);
+
+    assert!(
+        result.is_err(),
+        "Corrupted history file should return an error"
+    );
+    assert_eq!(result.unwrap_err().kind(), std::io::ErrorKind::InvalidData);
 
     std::fs::remove_file(&path).ok();
 }
@@ -148,4 +179,6 @@ fn test_history_format_is_compact_registers_per_line() {
         "registers string '{}' should appear in the compact file content",
         registers
     );
+
+    std::fs::remove_file(&path).ok();
 }

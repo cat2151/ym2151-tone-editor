@@ -15,21 +15,26 @@ pub fn history_file_path() -> Option<PathBuf> {
 
 /// Save tone data to history at the given path.
 /// Adds the current tone as the newest entry (index 0), keeping up to HISTORY_MAX entries.
-/// Skips saving if the new entry is identical to the most recent entry.
+/// Any existing occurrence of the same registers is removed first so each entry is unique.
+/// Returns an error if the file exists but cannot be parsed (corrupted), rather than silently
+/// overwriting history.
 pub fn save_to_history_at_path(path: &Path, values: &ToneData) -> io::Result<()> {
     let registers = register::editor_rows_to_registers(values);
 
     let mut history: Vec<String> = if path.exists() {
         let content = fs::read_to_string(path)?;
-        serde_json::from_str(&content).unwrap_or_default()
+        serde_json::from_str(&content).map_err(|e| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("history_tone.json is corrupted: {}", e),
+            )
+        })?
     } else {
         Vec::new()
     };
 
-    // Skip if identical to most recent entry
-    if history.first().map(|s| s.as_str()) == Some(registers.as_str()) {
-        return Ok(());
-    }
+    // Remove any existing occurrence of the same registers so history stays unique
+    history.retain(|s| s != &registers);
 
     history.insert(0, registers);
     history.truncate(HISTORY_MAX);

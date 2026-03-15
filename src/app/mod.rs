@@ -127,7 +127,8 @@ impl App {
         }
     }
 
-    /// Play audio feedback for the current tone (Windows only)
+    /// Play audio feedback for the current tone.
+    /// History saving runs on all platforms; audio playback is Windows-only.
     fn play_audio(&self) {
         let _ = crate::history::save_to_history(&self.values);
         #[cfg(windows)]
