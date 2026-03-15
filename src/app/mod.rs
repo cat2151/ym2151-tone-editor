@@ -129,6 +129,7 @@ impl App {
 
     /// Play audio feedback for the current tone (Windows only)
     fn play_audio(&self) {
+        let _ = crate::history::save_to_history(&self.values);
         #[cfg(windows)]
         audio::play_tone(
             &self.values,
