@@ -27,7 +27,6 @@ permissions:
   contents: read
   pages: write
   id-token: write
-  issues: write
 
 jobs:
   build:
@@ -102,8 +101,11 @@ jobs:
 
   report-failure:
     needs: [build, deploy]
-    if: failure()
+    if: ${{ always() && (needs.build.result == 'failure' || needs.deploy.result == 'failure') }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     steps:
       - name: Create issue on failure
         uses: actions/github-script@v7
@@ -111,14 +113,19 @@ jobs:
           script: |
             const sha = '${{ github.sha }}';
             const shortSha = sha.substring(0, 7);
-            const title = `Deploy to GitHub Pages failed (${shortSha})`;
+            const buildResult = '${{ needs.build.result }}';
+            const deployResult = '${{ needs.deploy.result }}';
+            const failedJob = buildResult === 'failure' ? 'build' : 'deploy';
+            const title = `Deploy to GitHub Pages failed: ${failedJob} job (${shortSha})`;
             const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
             const ref = '${{ github.ref }}';
             const body = [
-              'Deploy to GitHub Pages failed.',
+              `Deploy to GitHub Pages workflow failed (job: ${failedJob}).`,
               '',
               `Branch/Ref: ${ref}`,
               `Commit: ${sha}`,
+              `Build job result: ${buildResult}`,
+              `Deploy job result: ${deployResult}`,
               '',
               'Please investigate the failures and fix them.',
               '',
