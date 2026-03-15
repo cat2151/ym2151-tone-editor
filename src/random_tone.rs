@@ -1,15 +1,15 @@
 //! Random tone generation module.
 //!
-//! Thin native wrapper around `ym2151_core::generate_random_tone_with_seed`.
+//! Thin native wrapper around `ym2151_tone_params::generate_random_tone_with_seed`.
 //! The core logic (parameter ranges, RNG algorithm, carrier/modulator rules)
-//! lives in `ym2151-core` as the Single Source of Truth shared with the WASM crate.
+//! lives in `ym2151-tone-params` as the Single Source of Truth shared with the WASM crate.
 
 use crate::models::ToneData;
 
 /// Generate a random YM2151 tone using a platform-native random seed.
 ///
 /// The actual generation logic (parameter ranges, LCG RNG, carrier/modulator TL
-/// rules) lives in `ym2151_core::generate_random_tone_with_seed`, which is the
+/// rules) lives in `ym2151_tone_params::generate_random_tone_with_seed`, which is the
 /// Single Source of Truth shared with the WASM bindings.
 ///
 /// - `current_note`: MIDI note number (0–127) preserved in the channel row.
@@ -18,14 +18,14 @@ pub fn generate_random_tone(current_note: u8) -> ToneData {
     use std::hash::BuildHasher;
     let rs = RandomState::new();
     let seed: u64 = rs.hash_one(std::time::SystemTime::now());
-    ym2151_core::generate_random_tone_with_seed(seed, current_note)
+    ym2151_tone_params::generate_random_tone_with_seed(seed, current_note)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::models::*;
-    use ym2151_core::{CARRIERS_PER_ALG, MODULATOR_TL_PER_ALG};
+    use ym2151_tone_params::{CARRIERS_PER_ALG, MODULATOR_TL_PER_ALG};
 
     #[test]
     fn test_generate_random_tone_values_in_range() {

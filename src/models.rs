@@ -1,16 +1,16 @@
 use serde::{Deserialize, Serialize};
 
-// Re-export platform-independent constants and types from ym2151-core (Single Source of Truth).
-// Both this crate and the WASM crate depend on ym2151-core; these re-exports keep
+// Re-export platform-independent constants and types from ym2151-tone-params (Single Source of Truth).
+// Both this crate and the WASM crate depend on ym2151-tone-params; these re-exports keep
 // existing call-sites (`use crate::models::*`) working without any change.
-pub use ym2151_core::ToneData;
-pub use ym2151_core::{
+pub use ym2151_tone_params::ToneData;
+pub use ym2151_tone_params::{
     CH_PARAM_ALG, CH_PARAM_FB, CH_PARAM_NOTE, GRID_HEIGHT, GRID_WIDTH, PARAM_AMS, PARAM_AR,
     PARAM_D1L, PARAM_D1R, PARAM_D2R, PARAM_DT, PARAM_DT2, PARAM_KS, PARAM_MAX, PARAM_MUL, PARAM_RR,
     PARAM_SM, PARAM_TL, ROW_CH,
 };
 
-// Parameter names for each column (UI display only; not needed by ym2151-core)
+// Parameter names for each column (UI display only; not needed by ym2151-tone-params)
 pub const PARAM_NAMES: [&str; GRID_WIDTH] = [
     "SM", "TL", "MUL", "AR", "D1R", "D1L", "D2R", "RR", "DT", "DT2", "KS", "AMS",
 ];

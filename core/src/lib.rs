@@ -1,9 +1,12 @@
-//! Platform-independent YM2151 tone generation and register encoding.
+//! Platform-independent YM2151 FM tone parameter model and register encoding.
 //!
-//! This crate is the **Single Source of Truth** for the core YM2151 logic that is
-//! shared between the native TUI application (`ym2151-tone-editor`) and the WASM
-//! bindings (`ym2151-wasm`).  It has **no external dependencies** and compiles for
-//! any target including `wasm32-unknown-unknown`.
+//! This crate is the **Single Source of Truth** for the parameter-level YM2151
+//! logic shared between the native TUI application (`ym2151-tone-editor`) and the
+//! WASM bindings (`ym2151-wasm`).  It covers FM tone data structures, constants,
+//! random tone generation, MIDI pitch conversion, and register hex encoding.
+//!
+//! It has **no external dependencies** and compiles for any target including
+//! `wasm32-unknown-unknown`.
 
 use core::fmt::Write as _;
 

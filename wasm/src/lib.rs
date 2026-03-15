@@ -1,8 +1,8 @@
 //! WASM bindings for YM2151 tone generation.
 //!
-//! This crate is a thin `wasm-bindgen` wrapper around [`ym2151-core`].  All
+//! This crate is a thin `wasm-bindgen` wrapper around [`ym2151-tone-params`].  All
 //! logic (random tone generation, register encoding, MIDI pitch conversion)
-//! lives in `ym2151-core` as the Single Source of Truth shared with the native
+//! lives in `ym2151-tone-params` as the Single Source of Truth shared with the native
 //! TUI application.
 //!
 //! # Usage from TypeScript
@@ -30,8 +30,8 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub fn generate_random_tone_registers(seed: f64, current_note: u8) -> String {
     let seed_u64 = seed.abs() as u64;
-    let tone = ym2151_core::generate_random_tone_with_seed(seed_u64, current_note);
-    ym2151_core::editor_rows_to_registers(&tone)
+    let tone = ym2151_tone_params::generate_random_tone_with_seed(seed_u64, current_note);
+    ym2151_tone_params::editor_rows_to_registers(&tone)
 }
 
 // ---------------------------------------------------------------------------
@@ -110,7 +110,7 @@ mod tests {
 
     #[test]
     fn test_generate_random_tone_registers_carrier_tl_zero() {
-        use ym2151_core::{CARRIERS_PER_ALG, MODULATOR_TL_PER_ALG};
+        use ym2151_tone_params::{CARRIERS_PER_ALG, MODULATOR_TL_PER_ALG};
         let result = generate_random_tone_registers(7777.0, 69);
         let (alg, _, _, tl) = decode_registers(&result);
         for (op, &v) in tl.iter().enumerate() {
