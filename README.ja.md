@@ -34,6 +34,10 @@ WindowsにRustがインストールされていれば、GitHubから楽にイン
 cargo install --force --git https://github.com/cat2151/ym2151-tone-editor/
 ```
 
+## ランダム音色関数ライブラリの利用方法
+
+https://cat2151.github.io/ym2151-tone-editor/demo-library/
+
 ## コツ
 - 画面いっぱいに表示したいとき：
   - Windows Terminalなら、`ALT+ENTER`や`F11`でウィンドウ最大化したあと、`CTRL`+`+`でフォントを拡大できます
