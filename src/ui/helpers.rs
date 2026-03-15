@@ -1,7 +1,7 @@
 use crate::models::*;
 use ratatui::style::Color;
 
-pub fn get_operator_roles_for_alg(alg: u8) -> [bool; 4] {
+pub(crate) fn get_operator_roles_for_alg(alg: u8) -> [bool; 4] {
     match alg {
         0 => [false, false, false, true], // O4のみキャリア
         1 => [false, false, false, true], // O4のみキャリア
@@ -18,7 +18,7 @@ pub fn get_operator_roles_for_alg(alg: u8) -> [bool; 4] {
 /// Get the keybinding guide letter for a parameter column
 /// Returns the uppercase letter if there's a jump keybinding for that parameter
 /// Based on default keybindings from config.rs
-pub fn get_key_guide(col: usize) -> Option<char> {
+pub(crate) fn get_key_guide(col: usize) -> Option<char> {
     match col {
         PARAM_SM => Some('O'),  // 'o'/'O' for SM (Slot Mask)
         PARAM_TL => Some('T'),  // 't'/'T' for TL (Total Level)
@@ -40,7 +40,7 @@ pub fn get_key_guide(col: usize) -> Option<char> {
 /// Returns the operator number ('1'-'4') for operator rows (0-3)
 /// Returns None for the CH row
 /// Based on operator jump keybindings: '1'-'4' to jump to operators
-pub fn get_operator_guide(row: usize) -> Option<char> {
+pub(crate) fn get_operator_guide(row: usize) -> Option<char> {
     match row {
         0 => Some('1'), // O1/M1 - Operator 1
         1 => Some('2'), // O2/M2 - Operator 2
@@ -53,7 +53,7 @@ pub fn get_operator_guide(row: usize) -> Option<char> {
 /// Get the keybinding guide letter for a CH row parameter column
 /// Returns the uppercase letter if there's a keybinding for that parameter
 /// Based on default keybindings from config.rs
-pub fn get_ch_key_guide(col: usize) -> Option<char> {
+pub(crate) fn get_ch_key_guide(col: usize) -> Option<char> {
     match col {
         CH_PARAM_ALG => Some('G'), // 'g'/'G' for ALG (Algorithm)
         CH_PARAM_FB => Some('F'),  // 'f'/'F' for FB (Feedback)
@@ -63,7 +63,7 @@ pub fn get_ch_key_guide(col: usize) -> Option<char> {
 
 /// Get the color for a parameter based on its column index and row
 /// Returns the color to use for both the parameter name and value
-pub fn get_param_color(col: usize, is_ch_row: bool) -> Color {
+pub(crate) fn get_param_color(col: usize, is_ch_row: bool) -> Color {
     if is_ch_row {
         // CH row colors
         match col {

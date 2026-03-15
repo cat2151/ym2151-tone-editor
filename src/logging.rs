@@ -3,9 +3,9 @@ use std::io::Write;
 use std::sync::Mutex;
 
 /// Global verbose logging flag
-pub static VERBOSE_LOGGING: Mutex<bool> = Mutex::new(false);
+static VERBOSE_LOGGING: Mutex<bool> = Mutex::new(false);
 
-pub static LOG_FILENAME: &str = "ym2151-tone-editor.log";
+static LOG_FILENAME: &str = "ym2151-tone-editor.log";
 
 /// Log a message to ym2151-tone-editor.log if verbose logging is enabled
 pub fn log_verbose(message: &str) {

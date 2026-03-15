@@ -17,7 +17,7 @@ use std::io;
 use crate::models::{CH_PARAM_ALG, ROW_CH};
 
 /// Convert KeyCode and KeyModifiers to a key string for config lookup
-pub fn key_to_string(code: KeyCode, modifiers: KeyModifiers) -> Option<String> {
+fn key_to_string(code: KeyCode, modifiers: KeyModifiers) -> Option<String> {
     match code {
         KeyCode::Char(c) => {
             // Handle CTRL+SHIFT modifier (for CTRL+SHIFT+1,2,3,4)
@@ -57,7 +57,7 @@ pub fn key_to_string(code: KeyCode, modifiers: KeyModifiers) -> Option<String> {
 
 /// Handle variation selector action by suspending TUI, running selector, and restoring state
 /// Returns Ok(()) if successful, Err if terminal operations fail
-pub fn handle_open_variation_selector<B: Backend>(
+fn handle_open_variation_selector<B: Backend>(
     terminal: &mut Terminal<B>,
     app: &mut App,
 ) -> io::Result<()> {
@@ -103,7 +103,7 @@ pub fn handle_open_variation_selector<B: Backend>(
     Ok(())
 }
 
-pub fn run_app<B: Backend>(
+pub(crate) fn run_app<B: Backend>(
     terminal: &mut Terminal<B>,
     app: &mut App,
     config: &Config,
