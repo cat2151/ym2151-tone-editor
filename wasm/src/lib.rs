@@ -8,10 +8,11 @@
 //! import init, { generate_random_tone_registers } from './ym2151_wasm.js';
 //! await init();
 //! const seed = Date.now();
-//! const registers = generate_random_tone_registers(seed);
+//! const registers = generate_random_tone_registers(seed, 69); // 69 = A4, MIDI note 0–127
 //! // registers: hex string e.g. "4000600080001F..."
 //! ```
 
+use core::fmt::Write as _;
 use wasm_bindgen::prelude::*;
 
 // ---------------------------------------------------------------------------
@@ -226,10 +227,11 @@ fn editor_rows_to_registers(values: &ToneData) -> String {
     let rl_fb_con = 0xC0u8 | ((fb & 0x07) << 3) | (alg & 0x07);
     push_reg_pair(&mut result, (0x20 + channel) as u8, rl_fb_con);
 
-    // KC (Key Code) – Register $28-$2F
+    // KC (Key Code) and KF (Key Fraction) – Registers $28-$2F and $30-$37
     let midi_note = values[ROW_CH][CH_PARAM_NOTE];
-    let kc = midi_to_kc(midi_note);
+    let (kc, kf) = midi_to_kc_kf(midi_note);
     push_reg_pair(&mut result, (0x28 + channel) as u8, kc);
+    push_reg_pair(&mut result, (0x30 + channel) as u8, kf);
 
     // Key On – Register $08 (all slots enabled, channel 0)
     let sm0 = values[0][PARAM_SM];
@@ -247,14 +249,15 @@ fn editor_rows_to_registers(values: &ToneData) -> String {
 
 #[inline]
 fn push_reg_pair(out: &mut String, addr: u8, data: u8) {
-    out.push_str(&format!("{:02X}{:02X}", addr, data));
+    write!(out, "{:02X}{:02X}", addr, data).unwrap();
 }
 
-/// Minimal MIDI note → YM2151 KC conversion (mirrored from midi_conversion.rs /
-/// smf_to_ym2151log `midi_to_kc_kf`).
+/// MIDI note → YM2151 KC/KF conversion (mirrored from
+/// `smf_to_ym2151log::midi::midi_to_kc_kf`).
 ///
-/// Returns the KC byte for the given MIDI note number (0-127).
-fn midi_to_kc(midi_note: u8) -> u8 {
+/// Returns `(kc, kf)` for the given MIDI note number (0-127).
+/// `kf` is always 0 (no fine tuning), matching the native implementation.
+fn midi_to_kc_kf(midi_note: u8) -> (u8, u8) {
     // YM2151 KC format: bits 6-4 = octave (0-7), bits 3-0 = note in YM2151 encoding.
     // YM2151 uses 14 note values (0-14, skipping 3, 7, 11) to represent 12 semitones.
     const NOTE_MAP: [u8; 12] = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14];
@@ -265,7 +268,7 @@ fn midi_to_kc(midi_note: u8) -> u8 {
     let ym_octave = ((adjusted / 12) as i8 - 2).clamp(0, 7) as u8;
     let kc_note = NOTE_MAP[note_in_octave];
 
-    (ym_octave << 4) | kc_note
+    ((ym_octave << 4) | kc_note, 0)
 }
 
 // ---------------------------------------------------------------------------
@@ -415,25 +418,32 @@ mod tests {
     }
 
     #[test]
-    fn test_note_is_embedded_in_kc_register() {
-        // Generate with note=69 (A4) and verify the KC register contains a plausible value
+    fn test_note_is_embedded_in_kc_and_kf_registers() {
+        // Generate with note=69 (A4) and verify KC and KF registers are present
         let result = generate_random_tone_registers(1234.0, 69);
         let chars: Vec<char> = result.chars().collect();
         let mut found_kc = false;
+        let mut found_kf = false;
         for chunk in chars.chunks(4) {
             let addr = u8::from_str_radix(&chunk[0..2].iter().collect::<String>(), 16).unwrap();
+            let data = u8::from_str_radix(&chunk[2..4].iter().collect::<String>(), 16).unwrap();
             if (0x28..=0x2F).contains(&addr) {
                 found_kc = true;
-                let kc = u8::from_str_radix(&chunk[2..4].iter().collect::<String>(), 16).unwrap();
-                // MIDI 69 = A4; KC should be non-zero and within valid range
+                // MIDI 69 = A4; KC should be within valid YM2151 range
                 assert!(
-                    kc <= 0x77,
+                    data <= 0x77,
                     "KC should be in valid YM2151 range, got 0x{:02X}",
-                    kc
+                    data
                 );
+            }
+            if (0x30..=0x37).contains(&addr) {
+                found_kf = true;
+                // KF=0 (no fine tuning), matching native implementation
+                assert_eq!(data, 0, "KF should be 0, got 0x{:02X}", data);
             }
         }
         assert!(found_kc, "KC register (0x28) not found in output");
+        assert!(found_kf, "KF register (0x30) not found in output");
     }
 
     #[test]
