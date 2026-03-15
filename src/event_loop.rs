@@ -113,6 +113,15 @@ pub(crate) fn run_app<B: Backend>(
             crate::ui::ui(f, app);
         })?;
 
+        // アップデートが利用可能になったら自動的にループを抜けてアップデートを実行する
+        if app.is_update_available() {
+            return Ok(());
+        }
+
+        if !event::poll(std::time::Duration::from_millis(50))? {
+            continue;
+        }
+
         match event::read()? {
             Event::Key(key) => {
                 // Only process key press and repeat events, ignore release events

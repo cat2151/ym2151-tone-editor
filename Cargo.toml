@@ -13,6 +13,9 @@ smf-to-ym2151log-rust = { git = "https://github.com/cat2151/smf-to-ym2151log-rus
 clap = "4.5"
 chrono = { version = "0.4", features = ["clock", "std"] }
 fuzzy-matcher = "0.3"
+anyhow = "1"
+dirs = "5"
+ureq = { version = "2", features = ["json"] }
 
 [target.'cfg(windows)'.dependencies]
 ym2151-log-play-server = { git = "https://github.com/cat2151/ym2151-log-play-server" }
