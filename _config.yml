@@ -6,6 +6,7 @@ github:
   repository_url: https://github.com/cat2151/ym2151-tone-editor
 plugins:
   - jekyll-sitemap
+  - jekyll-readme-index
 exclude:
   - src/
   - core/

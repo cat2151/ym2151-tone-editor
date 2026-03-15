@@ -68,6 +68,9 @@ jobs:
       - name: Build WASM
         run: wasm-pack build --target web wasm
 
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
       - name: Build Jekyll site
         uses: actions/jekyll-build-pages@v1
         with:
