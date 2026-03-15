@@ -79,6 +79,7 @@ jobs:
 
       - name: Copy demo-library into Pages artifact
         run: |
+          sudo chmod -R 755 _site
           mkdir -p _site/demo-library
           cp -r demo-library/. _site/demo-library/
           cp -r wasm/pkg _site/demo-library/pkg
