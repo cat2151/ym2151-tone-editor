@@ -67,9 +67,9 @@ fn draw_ui(f: &mut Frame, entries: &[String], selected_index: Option<usize>) {
 
     // Help text
     let help_text = if cfg!(windows) {
-        "a-z: play and load tone  ESC: back  (audio preview on Windows)"
+        "a-z: play and load tone  Shift+F: add to favorites  ESC: back  (audio preview on Windows)"
     } else {
-        "a-z: load tone  ESC: back"
+        "a-z: load tone  Shift+F: add to favorites  ESC: back"
     };
     let help =
         Paragraph::new(help_text).block(Block::default().borders(Borders::ALL).title("Help"));
@@ -116,6 +116,14 @@ pub fn open_history_selector(
                 match key.code {
                     KeyCode::Esc => {
                         break;
+                    }
+                    KeyCode::Char('F') => {
+                        // Add the currently selected tone to favorites
+                        if let Some((_, ref tone_data)) = selected {
+                            if let Err(e) = crate::favorites::save_to_favorites(tone_data) {
+                                eprintln!("Warning: could not save to favorites: {}", e);
+                            }
+                        }
                     }
                     KeyCode::Char(c) if c.is_ascii_lowercase() => {
                         let index = (c as u8 - b'a') as usize;
