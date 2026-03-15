@@ -108,16 +108,21 @@ pub(crate) fn run_app<B: Backend>(
     app: &mut App,
     config: &Config,
 ) -> io::Result<()> {
-    loop {
-        terminal.draw(|f| {
-            crate::ui::ui(f, app);
-        })?;
+    // 初回描画
+    terminal.draw(|f| {
+        crate::ui::ui(f, app);
+    })?;
 
-        // アップデートが利用可能になったら自動的にループを抜けてアップデートを実行する
+    loop {
+        // アップデートが利用可能になったら保存・後始末してループを抜ける
         if app.is_update_available() {
+            app.save_to_json()?;
+            #[cfg(windows)]
+            app.cleanup();
             return Ok(());
         }
 
+        // イベントをポーリング（タイムアウト付き）。イベントがなければ再描画せずに次ループへ
         if !event::poll(std::time::Duration::from_millis(50))? {
             continue;
         }
@@ -292,6 +297,11 @@ pub(crate) fn run_app<B: Backend>(
             }
             _ => {}
         }
+
+        // イベント処理後に再描画
+        terminal.draw(|f| {
+            crate::ui::ui(f, app);
+        })?;
     }
 }
 

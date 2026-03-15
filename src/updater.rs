@@ -194,7 +194,10 @@ pub fn run_foreground_update() -> Result<()> {
                 }
             }
         } else {
-            eprintln!("アップデートに失敗しました。");
+            return Err(anyhow::anyhow!(
+                "アップデートに失敗しました。exit code: {:?}",
+                status.code()
+            ));
         }
 
         Ok(())
@@ -222,4 +225,55 @@ fn spawn_updater_process() -> Result<()> {
         .args(["/C", "start", "ym2151-tone-editor updater", script_str])
         .spawn()?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_valid_sha1_with_valid_hash() {
+        assert!(is_valid_sha1("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"));
+    }
+
+    #[test]
+    fn test_is_valid_sha1_with_all_zeros() {
+        assert!(is_valid_sha1("0000000000000000000000000000000000000000"));
+    }
+
+    #[test]
+    fn test_is_valid_sha1_too_short() {
+        assert!(!is_valid_sha1("abc123"));
+    }
+
+    #[test]
+    fn test_is_valid_sha1_too_long() {
+        assert!(!is_valid_sha1("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3ff"));
+    }
+
+    #[test]
+    fn test_is_valid_sha1_non_hex_char() {
+        // 'z' はhex文字でない
+        assert!(!is_valid_sha1("z94a8fe5ccb19ba61c4c0873d391e987982fbbd3"));
+    }
+
+    #[test]
+    fn test_is_valid_sha1_with_unknown_string() {
+        assert!(!is_valid_sha1("unknown"));
+    }
+
+    #[test]
+    fn test_is_valid_sha1_empty() {
+        assert!(!is_valid_sha1(""));
+    }
+
+    /// デバッグビルド（テスト実行時）では check_for_update は早期リターンし、
+    /// update_available フラグは変化しないことを確認する。
+    #[test]
+    fn test_check_for_update_skips_in_debug_build() {
+        let flag = Arc::new(AtomicBool::new(false));
+        let _ = check_for_update(Arc::clone(&flag));
+        // cfg!(debug_assertions) == true のテスト実行時は常にスキップされる
+        assert!(!flag.load(Ordering::Relaxed));
+    }
 }
