@@ -47,3 +47,6 @@ mod random_tone_tests;
 
 #[cfg(test)]
 mod history_tests;
+
+#[cfg(test)]
+mod favorites_tests;

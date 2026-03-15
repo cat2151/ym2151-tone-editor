@@ -1,23 +1,15 @@
 use crate::models::ToneData;
 use crate::register;
+use crate::register_list;
 use std::{
-    fs, io,
+    io,
     path::{Path, PathBuf},
 };
 
 /// Load history register strings from the given path.
 /// Returns an empty Vec if the file does not exist.
 pub fn load_history_at_path(path: &Path) -> io::Result<Vec<String>> {
-    if !path.exists() {
-        return Ok(Vec::new());
-    }
-    let content = fs::read_to_string(path)?;
-    serde_json::from_str(&content).map_err(|e| {
-        io::Error::new(
-            io::ErrorKind::InvalidData,
-            format!("{} is corrupted: {}", path.display(), e),
-        )
-    })
+    register_list::load_register_list_at_path(path)
 }
 
 /// Load history register strings from the local config directory.
@@ -45,33 +37,7 @@ pub fn history_file_path() -> Option<PathBuf> {
 /// overwriting history.
 pub fn save_to_history_at_path(path: &Path, values: &ToneData) -> io::Result<()> {
     let registers = register::editor_rows_to_registers(values);
-
-    let mut history: Vec<String> = if path.exists() {
-        let content = fs::read_to_string(path)?;
-        serde_json::from_str(&content).map_err(|e| {
-            io::Error::new(
-                io::ErrorKind::InvalidData,
-                format!("{} is corrupted: {}", path.display(), e),
-            )
-        })?
-    } else {
-        Vec::new()
-    };
-
-    // Remove any existing occurrence of the same registers so history stays unique
-    history.retain(|s| s != &registers);
-
-    history.insert(0, registers);
-    history.truncate(HISTORY_MAX);
-
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent)?;
-    }
-
-    let json_string = serde_json::to_string(&history).map_err(io::Error::other)?;
-    fs::write(path, json_string)?;
-
-    Ok(())
+    register_list::save_register_list_at_path(path, &registers, HISTORY_MAX)
 }
 
 /// Save tone data to history in the local config directory.

@@ -4,6 +4,7 @@ mod app_init;
 mod audio;
 mod config;
 mod event_loop;
+mod favorites;
 mod file_ops;
 mod history;
 mod history_selector;
@@ -12,6 +13,7 @@ mod midi_conversion;
 mod models;
 mod random_tone;
 mod register;
+mod register_list;
 #[cfg(test)]
 mod tests;
 mod ui;
