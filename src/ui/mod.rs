@@ -380,12 +380,14 @@ fn draw_help_dialog(f: &mut Frame, inner: Rect) {
         ),
     ];
 
-    // Calculate dialog content: header line + blank + group header + lines + blank between groups
+    // Build content lines: group header + key lines, separated by blank lines between groups.
+    // A footer note clarifies that these are the default keybinds (may differ if TOML overrides exist).
     let mut content_lines: Vec<Line> = Vec::new();
     let header_style = Style::default()
         .fg(Color::Yellow)
         .add_modifier(Modifier::BOLD);
     let key_style = Style::default().fg(Color::Cyan);
+    let note_style = Style::default().fg(Color::DarkGray);
 
     for (i, (group_header, lines)) in groups.iter().enumerate() {
         if i > 0 {
@@ -396,9 +398,15 @@ fn draw_help_dialog(f: &mut Frame, inner: Rect) {
             content_lines.push(Line::from(Span::styled(*line, key_style)));
         }
     }
+    content_lines.push(Line::from(""));
+    content_lines.push(Line::from(Span::styled(
+        "(default keybinds — may differ if ym2151-tone-editor.toml overrides exist)",
+        note_style,
+    )));
 
-    // Width chosen to fit the longest content line with border (2 chars) and a small margin
-    let dialog_width: u16 = 54;
+    // Compute dialog width from the longest content line + 2 for left/right borders
+    let max_content_width = content_lines.iter().map(|l| l.width()).max().unwrap_or(0) as u16;
+    let dialog_width: u16 = max_content_width + 2;
     // +2 for top and bottom border lines
     let dialog_height: u16 = content_lines.len() as u16 + 2;
 
