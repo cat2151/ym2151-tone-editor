@@ -8,4 +8,5 @@ description = "WASM bindings for YM2151 tone generation functions"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+ym2151-core = { path = "../core" }
 wasm-bindgen = "0.2"

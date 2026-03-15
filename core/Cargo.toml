@@ -1,0 +1,7 @@
+[package]
+name = "ym2151-core"
+version = "0.1.0"
+edition = "2021"
+description = "Platform-independent YM2151 tone generation and register encoding — Single Source of Truth shared by the native TUI app and the WASM crate"
+
+[dependencies]

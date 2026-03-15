@@ -2345,6 +2345,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9edde0db4769d2dc68579893f2306b26c6ecfbe0ef499b013d731b7b9247e0b9"
 
 [[package]]
+name = "ym2151-core"
+version = "0.1.0"
+
+[[package]]
 name = "ym2151-log-play-server"
 version = "0.1.0"
 source = "git+https://github.com/cat2151/ym2151-log-play-server#2f82c7ee45a5efb74a9149606748bcf8566190ac"
@@ -2378,7 +2382,16 @@ dependencies = [
  "smf-to-ym2151log-rust",
  "toml",
  "ureq",
+ "ym2151-core",
  "ym2151-log-play-server",
+]
+
+[[package]]
+name = "ym2151-wasm"
+version = "0.1.0"
+dependencies = [
+ "wasm-bindgen",
+ "ym2151-core",
 ]
 
 [[package]]
