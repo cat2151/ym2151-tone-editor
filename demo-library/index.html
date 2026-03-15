@@ -59,7 +59,7 @@
 
   <h2>利用例 (TypeScript / JavaScript)</h2>
   <pre>
-// wasm/pkg/ を配置してから import する
+// pkg/ を同じディレクトリに配置してから import する
 import init, { generate_random_tone_registers } from './pkg/ym2151_wasm.js';
 
 await init();
@@ -90,6 +90,10 @@ console.log(registers);
     const outputEl = document.getElementById('output');
 
     function showRegisters(registers, seed, note) {
+      if (typeof registers !== 'string' || registers.length === 0 || registers.length % 4 !== 0) {
+        outputEl.textContent = `エラー: 予期しないレジスタ形式 (length=${registers.length})`;
+        return;
+      }
       // 4文字ごとに分割して読みやすく表示
       const pairs = [];
       for (let i = 0; i < registers.length; i += 4) {

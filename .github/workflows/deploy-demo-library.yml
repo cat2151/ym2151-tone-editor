@@ -7,7 +7,11 @@ on:
       - main
     paths:
       - 'demo-library/**'
-      - 'wasm/**'
+      - 'wasm/src/**'
+      - 'wasm/Cargo.toml'
+      - 'core/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
       - '.github/workflows/deploy-demo-library.yml'
   workflow_dispatch: # 手動実行
 
@@ -52,10 +56,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cargo/bin/wasm-pack
-          key: ${{ runner.os }}-wasm-pack-bin
+          key: ${{ runner.os }}-wasm-pack-0.14.0
 
       - name: Install wasm-pack
-        run: command -v wasm-pack || cargo install wasm-pack --locked
+        run: command -v wasm-pack || cargo install wasm-pack --version 0.14.0 --locked
 
       - name: Build WASM
         run: wasm-pack build --target web wasm
