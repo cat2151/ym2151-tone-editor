@@ -15,13 +15,14 @@ pub fn load_history_at_path(path: &Path) -> io::Result<Vec<String>> {
     serde_json::from_str(&content).map_err(|e| {
         io::Error::new(
             io::ErrorKind::InvalidData,
-            format!("history_tone.json is corrupted: {}", e),
+            format!("{} is corrupted: {}", path.display(), e),
         )
     })
 }
 
 /// Load history register strings from the local config directory.
-/// Returns an empty Vec if the file does not exist or the config directory cannot be found.
+/// Returns an empty Vec if the file does not exist.
+/// Returns an error if the config directory cannot be determined or the file is corrupted.
 pub fn load_history() -> io::Result<Vec<String>> {
     let path = history_file_path().ok_or_else(|| {
         io::Error::new(io::ErrorKind::NotFound, "Could not find config directory")
@@ -29,7 +30,7 @@ pub fn load_history() -> io::Result<Vec<String>> {
     load_history_at_path(&path)
 }
 
-const HISTORY_MAX: usize = 20;
+const HISTORY_MAX: usize = 26;
 
 /// Get the path to the history file in the local config directory.
 /// Returns None if the config directory cannot be determined.
@@ -50,7 +51,7 @@ pub fn save_to_history_at_path(path: &Path, values: &ToneData) -> io::Result<()>
         serde_json::from_str(&content).map_err(|e| {
             io::Error::new(
                 io::ErrorKind::InvalidData,
-                format!("history_tone.json is corrupted: {}", e),
+                format!("{} is corrupted: {}", path.display(), e),
             )
         })?
     } else {

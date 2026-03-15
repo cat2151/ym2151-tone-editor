@@ -115,7 +115,11 @@ fn handle_open_history_selector<B: Backend>(
     execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
 
     // Run history selector
-    let selection_result = crate::history_selector::open_history_selector();
+    #[cfg(windows)]
+    let use_interactive_mode = app.use_interactive_mode;
+    #[cfg(not(windows))]
+    let use_interactive_mode = false;
+    let selection_result = crate::history_selector::open_history_selector(use_interactive_mode);
 
     // Restore terminal UI first
     enable_raw_mode()?;

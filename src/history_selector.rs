@@ -79,7 +79,9 @@ fn draw_ui(f: &mut Frame, entries: &[String], selected_index: Option<usize>) {
 /// Open the history selector screen.
 /// Returns the selected `ToneData` if a history entry was chosen, or `None` if ESC was pressed.
 /// Playing from history does NOT save to history.
-pub fn open_history_selector() -> io::Result<Option<ToneData>> {
+pub fn open_history_selector(
+    #[cfg_attr(not(windows), allow(unused_variables))] use_interactive_mode: bool,
+) -> io::Result<Option<ToneData>> {
     let history = match crate::history::load_history() {
         Ok(h) => h,
         Err(e) => {
@@ -123,7 +125,13 @@ pub fn open_history_selector() -> io::Result<Option<ToneData>> {
                             {
                                 // Play without saving to history (Windows only)
                                 #[cfg(windows)]
-                                audio::play_tone(&tone_data, true, 0, 0, PREVIEW_ENVELOPE_DELAY);
+                                audio::play_tone(
+                                    &tone_data,
+                                    use_interactive_mode,
+                                    0,
+                                    0,
+                                    PREVIEW_ENVELOPE_DELAY,
+                                );
                                 selected = Some((index, tone_data));
                             }
                         }

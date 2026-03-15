@@ -134,20 +134,20 @@ fn test_save_to_history_corrupted_file_returns_error() {
 }
 
 #[test]
-fn test_save_to_history_limits_to_20_entries() {
+fn test_save_to_history_limits_to_26_entries() {
     let path = temp_history_path();
 
-    for i in 0u8..25 {
+    for i in 0u8..30 {
         let mut values = [[0u8; GRID_WIDTH]; GRID_HEIGHT];
         values[0][PARAM_MUL] = i % 16; // MUL 0-15
-        values[0][PARAM_TL] = i; // TL 0-24 (unique per iteration)
+        values[0][PARAM_TL] = i % 100; // TL unique per iteration
         save_to_history_at_path(&path, &values).unwrap();
     }
 
     let content = std::fs::read_to_string(&path).unwrap();
     let history: Vec<String> = serde_json::from_str(&content).unwrap();
 
-    assert_eq!(history.len(), 20, "History should be limited to 20 entries");
+    assert_eq!(history.len(), 26, "History should be limited to 26 entries");
 
     std::fs::remove_file(&path).ok();
 }
