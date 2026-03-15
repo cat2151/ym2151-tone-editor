@@ -6,6 +6,7 @@ mod config;
 mod event_loop;
 mod file_ops;
 mod history;
+mod history_selector;
 mod logging;
 mod midi_conversion;
 mod models;

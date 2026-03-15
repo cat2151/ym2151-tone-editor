@@ -182,3 +182,53 @@ fn test_history_format_is_compact_registers_per_line() {
 
     std::fs::remove_file(&path).ok();
 }
+
+#[test]
+fn test_load_history_at_path_returns_empty_when_no_file() {
+    let path = temp_history_path();
+    // Ensure the file does not exist
+    assert!(!path.exists());
+
+    let history = load_history_at_path(&path).unwrap();
+    assert!(
+        history.is_empty(),
+        "Should return empty Vec when file does not exist"
+    );
+}
+
+#[test]
+fn test_load_history_at_path_returns_saved_entries() {
+    let path = temp_history_path();
+
+    let mut values1 = [[0u8; GRID_WIDTH]; GRID_HEIGHT];
+    values1[0][PARAM_MUL] = 3;
+
+    let mut values2 = [[0u8; GRID_WIDTH]; GRID_HEIGHT];
+    values2[0][PARAM_MUL] = 7;
+
+    save_to_history_at_path(&path, &values1).unwrap();
+    save_to_history_at_path(&path, &values2).unwrap();
+
+    let history = load_history_at_path(&path).unwrap();
+
+    assert_eq!(history.len(), 2);
+    // Newest entry (values2) should be first
+    let expected2 = register::editor_rows_to_registers(&values2);
+    let expected1 = register::editor_rows_to_registers(&values1);
+    assert_eq!(history[0], expected2);
+    assert_eq!(history[1], expected1);
+
+    std::fs::remove_file(&path).ok();
+}
+
+#[test]
+fn test_load_history_at_path_corrupted_file_returns_error() {
+    let path = temp_history_path();
+    std::fs::write(&path, b"not valid json").unwrap();
+
+    let result = load_history_at_path(&path);
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().kind(), std::io::ErrorKind::InvalidData);
+
+    std::fs::remove_file(&path).ok();
+}

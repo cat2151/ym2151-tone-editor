@@ -78,6 +78,7 @@ pub enum Action {
     JumpToNoteAndDecrease,
     SaveToGmVariations,
     OpenVariationSelector,
+    OpenHistorySelector,
     RandomizeTone,
     ToggleHelp,
     Exit,
@@ -246,6 +247,9 @@ impl Default for Config {
 
         // Open variation selector
         keybinds.insert("Ctrl+o".to_string(), Action::OpenVariationSelector);
+
+        // Open history selector
+        keybinds.insert("H".to_string(), Action::OpenHistorySelector);
 
         // Random tone (F5)
         keybinds.insert("F5".to_string(), Action::RandomizeTone);

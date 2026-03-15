@@ -103,6 +103,54 @@ fn handle_open_variation_selector<B: Backend>(
     Ok(())
 }
 
+/// Handle history selector action by suspending TUI, running selector, and restoring state
+/// Returns Ok(()) if successful, Err if terminal operations fail
+fn handle_open_history_selector<B: Backend>(
+    terminal: &mut Terminal<B>,
+    app: &mut App,
+) -> io::Result<()> {
+    // Suspend terminal UI to allow history selector to take over
+    let mut stdout = io::stdout();
+    disable_raw_mode()?;
+    execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
+
+    // Run history selector
+    let selection_result = crate::history_selector::open_history_selector();
+
+    // Restore terminal UI first
+    enable_raw_mode()?;
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    terminal.clear()?;
+
+    // Process selection result after UI is restored
+    match selection_result {
+        Ok(Some(tone_data)) => {
+            app.values = tone_data;
+            #[cfg(windows)]
+            {
+                if app.use_interactive_mode {
+                    // Play the loaded tone with current cursor position
+                    audio::play_tone(
+                        &app.values,
+                        app.use_interactive_mode,
+                        app.cursor_x,
+                        app.cursor_y,
+                        app.envelope_delay_seconds,
+                    );
+                }
+            }
+        }
+        Ok(None) => {
+            // User pressed ESC without selecting, do nothing
+        }
+        Err(e) => {
+            eprintln!("Error loading history entry: {}", e);
+        }
+    }
+
+    Ok(())
+}
+
 pub(crate) fn run_app<B: Backend>(
     terminal: &mut Terminal<B>,
     app: &mut App,
@@ -227,6 +275,9 @@ pub(crate) fn run_app<B: Backend>(
                                 }
                                 Action::OpenVariationSelector => {
                                     handle_open_variation_selector(terminal, app)?;
+                                }
+                                Action::OpenHistorySelector => {
+                                    handle_open_history_selector(terminal, app)?;
                                 }
                                 Action::RandomizeTone => app.randomize_tone(),
                                 Action::ToggleHelp => app.toggle_help(),

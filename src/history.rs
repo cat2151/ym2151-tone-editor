@@ -5,6 +5,30 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Load history register strings from the given path.
+/// Returns an empty Vec if the file does not exist.
+pub fn load_history_at_path(path: &Path) -> io::Result<Vec<String>> {
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
+    let content = fs::read_to_string(path)?;
+    serde_json::from_str(&content).map_err(|e| {
+        io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!("history_tone.json is corrupted: {}", e),
+        )
+    })
+}
+
+/// Load history register strings from the local config directory.
+/// Returns an empty Vec if the file does not exist or the config directory cannot be found.
+pub fn load_history() -> io::Result<Vec<String>> {
+    let path = history_file_path().ok_or_else(|| {
+        io::Error::new(io::ErrorKind::NotFound, "Could not find config directory")
+    })?;
+    load_history_at_path(&path)
+}
+
 const HISTORY_MAX: usize = 20;
 
 /// Get the path to the history file in the local config directory.
