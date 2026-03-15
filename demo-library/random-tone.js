@@ -100,12 +100,27 @@ const NOTE_MAP = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14];
 /**
  * Seed-based LCG state initialisation.
  *
- * @param {number} seed - Any finite number; `Math.abs` and truncation are
- *   applied automatically (mirrors `seed.abs() as u64` in the WASM wrapper).
+ * Mirrors `seed.abs() as u64` in the WASM wrapper, which uses Rust's
+ * saturating float-to-integer cast semantics:
+ *   - NaN              → 0
+ *   - ±Infinity or any value ≥ 2^64  → u64::MAX (2^64 − 1)
+ *   - finite negative  → trunc(abs(seed))   (same as positive mirror)
+ *   - finite positive  → trunc(seed)
+ *
+ * @param {number} seed - Any JS Number.
  * @returns {bigint} Initial LCG state.
  */
 function lcgInit(seed) {
-  const s = BigInt(Math.trunc(Math.abs(seed))) & U64_MASK;
+  const abs = Math.abs(seed);
+  let s;
+  if (isNaN(abs)) {
+    s = 0n;
+  } else if (!isFinite(abs) || abs >= 18446744073709551616) {
+    // 18446744073709551616 === 2**64, exactly representable as float64
+    s = U64_MASK; // saturate to u64::MAX
+  } else {
+    s = BigInt(Math.trunc(abs));
+  }
   return (s * LCG_MUL + LCG_ADD) & U64_MASK;
 }
 
@@ -122,9 +137,9 @@ function lcgNext(state) {
 /**
  * Draw a uniform integer in [min, max] from the LCG.
  *
- * When `min >= max` the function returns `min` without further computation —
- * this mirrors the `SimpleRng::range` early-return in `core/src/lib.rs` and
- * is only hit for fixed single-value parameters; it is not an error path.
+ * When `min >= max` the function returns `min` **without advancing the LCG
+ * state** — exactly mirroring `SimpleRng::range` in `core/src/lib.rs`, which
+ * performs an early return before calling `next_u64`.
  *
  * @param {bigint} state   Current LCG state.
  * @param {number} min     Inclusive lower bound.
@@ -132,8 +147,8 @@ function lcgNext(state) {
  * @returns {{ state: bigint, value: number }}
  */
 function lcgRange(state, min, max) {
+  if (min >= max) return { state, value: min };
   const next = lcgNext(state);
-  if (min >= max) return { state: next, value: min };
   const span = BigInt(max - min + 1);
   return { state: next, value: min + Number(next % span) };
 }
