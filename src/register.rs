@@ -29,7 +29,8 @@ fn add_key_on(values: &ToneData, events: &mut Vec<Ym2151Event>) {
 
 // YM2151 hardware operator register order: O1, O3, O2, O4
 // We display as: O1, O2, O3, O4 (reordered for user-friendly layout)
-pub const REG_FROM_O1_O4: [usize; 4] = [0, 2, 1, 3];
+// Re-exported from ym2151-tone-params (Single Source of Truth).
+pub use ym2151_tone_params::REG_FROM_O1_O4;
 pub const O1_O4_FROM_REG: [usize; 4] = [0, 2, 1, 3]; // 内容は同じだが、可読性を優先し、別名で定義
 
 /// Helper function to generate complete ADSR envelope reset events
@@ -352,27 +353,14 @@ pub fn to_json_string_with_envelope_reset(
     serde_json::to_string_pretty(&log)
 }
 
-/// Convert tone data to registers hex string format
-/// Format: pairs of address (2 hex chars) + data (2 hex chars)
-/// Example: "204F204C364037808003812D" represents 3 register writes:
-/// - Register 0x20 = 0x4F
-/// - Register 0x20 = 0x4C (this example shows duplicate addresses are allowed)
-/// - Register 0x36 = 0x40
-///   etc.
-pub fn editor_rows_to_registers(values: &ToneData) -> String {
-    let events = editor_rows_to_ym2151_events(values);
-    let mut result = String::new();
-
-    for event in events {
-        // Remove "0x" prefix from addr and data
-        let addr_hex = event.addr.trim_start_matches("0x");
-        let data_hex = event.data.trim_start_matches("0x");
-        result.push_str(addr_hex);
-        result.push_str(data_hex);
-    }
-
-    result
-}
+/// Convert tone data to registers hex string format.
+///
+/// Delegates to `ym2151_tone_params::editor_rows_to_registers`, which is the
+/// Single Source of Truth shared with the WASM crate.
+///
+/// Format: pairs of address (2 hex chars) + data (2 hex chars).
+/// Example: `"2047400060001F..."` — hex addr/data pairs consumable by `web-ym2151`.
+pub use ym2151_tone_params::editor_rows_to_registers;
 
 /// Convert registers hex string to tone data
 /// Format: pairs of address (2 hex chars) + data (2 hex chars)

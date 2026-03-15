@@ -248,9 +248,9 @@ impl App {
     /// Randomize all tone parameters using web-ym2151 random-tone logic.
     /// Triggered by F5 key.
     pub fn randomize_tone(&mut self) {
-        use crate::random_tone::{generate_random_tone, RandomToneConfig};
+        use crate::random_tone::generate_random_tone;
         let current_note = self.values[ROW_CH][CH_PARAM_NOTE];
-        self.values = generate_random_tone(&RandomToneConfig::default(), current_note);
+        self.values = generate_random_tone(current_note);
         self.play_audio();
     }
 

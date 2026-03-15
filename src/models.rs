@@ -1,11 +1,16 @@
 use serde::{Deserialize, Serialize};
 
-// Grid dimensions for the UI layout
-pub const GRID_WIDTH: usize = 12;
-pub const GRID_HEIGHT: usize = 5;
+// Re-export platform-independent constants and types from ym2151-tone-params (Single Source of Truth).
+// Both this crate and the WASM crate depend on ym2151-tone-params; these re-exports keep
+// existing call-sites (`use crate::models::*`) working without any change.
+pub use ym2151_tone_params::ToneData;
+pub use ym2151_tone_params::{
+    CH_PARAM_ALG, CH_PARAM_FB, CH_PARAM_NOTE, GRID_HEIGHT, GRID_WIDTH, PARAM_AMS, PARAM_AR,
+    PARAM_D1L, PARAM_D1R, PARAM_D2R, PARAM_DT, PARAM_DT2, PARAM_KS, PARAM_MAX, PARAM_MUL, PARAM_RR,
+    PARAM_SM, PARAM_TL, ROW_CH,
+};
 
-// Parameter names for each column
-// New order: SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS
+// Parameter names for each column (UI display only; not needed by ym2151-tone-params)
 pub const PARAM_NAMES: [&str; GRID_WIDTH] = [
     "SM", "TL", "MUL", "AR", "D1R", "D1L", "D2R", "RR", "DT", "DT2", "KS", "AMS",
 ];
@@ -13,23 +18,6 @@ pub const PARAM_NAMES: [&str; GRID_WIDTH] = [
 // CH row has 3 parameters: ALG, FB, and MIDI note number
 pub const CH_PARAM_COUNT: usize = 3;
 pub const CH_PARAM_NAMES: [&str; CH_PARAM_COUNT] = ["ALG", "FB", "Note"];
-
-// Maximum values for each parameter (respecting YM2151 bit ranges)
-// New order: SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS
-pub const PARAM_MAX: [u8; GRID_WIDTH] = [
-    1,  // SM (SlotMask): 0 or 1
-    99, // TL: 7 bits (0-127, limited to 99 for display)
-    15, // MUL: 4 bits (0-15)
-    31, // AR: 5 bits (0-31)
-    31, // D1R: 5 bits (0-31)
-    15, // D1L: 4 bits (0-15)
-    15, // D2R: 4 bits (0-15)
-    15, // RR: 4 bits (0-15)
-    7,  // DT: 3 bits (0-7)
-    3,  // DT2: 2 bits (0-3)
-    3,  // KS: 2 bits (0-3)
-    3,  // AMS: 2 bits (0-3)
-];
 
 // Maximum values for CH row parameters
 pub const CH_PARAM_MAX: [u8; CH_PARAM_COUNT] = [
@@ -41,35 +29,9 @@ pub const CH_PARAM_MAX: [u8; CH_PARAM_COUNT] = [
 // Row names for operators
 pub const ROW_NAMES: [&str; GRID_HEIGHT] = ["O1", "O2", "O3", "O4", "CH"];
 
-// Parameter column indices for operator rows (matching PARAM_NAMES order)
-// order: SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS
-pub const PARAM_SM: usize = 0;
-pub const PARAM_TL: usize = 1;
-pub const PARAM_MUL: usize = 2;
-pub const PARAM_AR: usize = 3;
-pub const PARAM_D1R: usize = 4;
-pub const PARAM_D1L: usize = 5;
-pub const PARAM_D2R: usize = 6;
-pub const PARAM_RR: usize = 7;
-pub const PARAM_DT: usize = 8;
-pub const PARAM_DT2: usize = 9;
-pub const PARAM_KS: usize = 10;
-pub const PARAM_AMS: usize = 11;
-
-// Parameter column indices for CH row (matching CH_PARAM_NAMES order)
-pub const CH_PARAM_ALG: usize = 0;
-pub const CH_PARAM_FB: usize = 1;
-pub const CH_PARAM_NOTE: usize = 2;
-
-// Row index for channel settings
-pub const ROW_CH: usize = 4;
-
 /// Default envelope delay in seconds before tone parameters are set
 /// This is the default value used when no configuration is provided
 pub const DEFAULT_ENVELOPE_DELAY_SECONDS: f64 = 0.01;
-
-/// Type alias for tone data grid
-pub type ToneData = [[u8; GRID_WIDTH]; GRID_HEIGHT];
 
 /// JSON event structure for ym2151-log-play-server
 #[derive(Serialize, Deserialize, Debug, Clone)]

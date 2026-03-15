@@ -29,3 +29,6 @@ test_load
 
 # User's custom keybinds configuration
 ym2151-tone-editor.toml
+
+# wasm-pack build output
+wasm/pkg/

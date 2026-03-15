@@ -2379,6 +2379,19 @@ dependencies = [
  "toml",
  "ureq",
  "ym2151-log-play-server",
+ "ym2151-tone-params",
+]
+
+[[package]]
+name = "ym2151-tone-params"
+version = "0.1.0"
+
+[[package]]
+name = "ym2151-wasm"
+version = "0.1.0"
+dependencies = [
+ "wasm-bindgen",
+ "ym2151-tone-params",
 ]
 
 [[package]]
