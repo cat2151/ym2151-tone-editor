@@ -1,0 +1,62 @@
+# 用途: mainへのpushでwasmをビルドし、生成ファイルをcommit pushする
+name: Build WASM
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'wasm/pkg/**'
+  workflow_dispatch: # test用
+
+concurrency:
+  group: build-wasm
+  cancel-in-progress: false
+
+jobs:
+  build-wasm:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-git-
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
+
+      - name: Build WASM
+        run: wasm-pack build --target web wasm
+
+      - name: Commit and push WASM files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add wasm/pkg/
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: update WASM build artifacts"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
