@@ -13,6 +13,7 @@ mod midi_conversion;
 mod models;
 mod random_tone;
 mod register;
+mod register_list;
 #[cfg(test)]
 mod tests;
 mod ui;

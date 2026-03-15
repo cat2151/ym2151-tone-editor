@@ -1,23 +1,15 @@
 use crate::models::ToneData;
 use crate::register;
+use crate::register_list;
 use std::{
-    fs, io,
+    io,
     path::{Path, PathBuf},
 };
 
 /// Load favorites register strings from the given path.
 /// Returns an empty Vec if the file does not exist.
 pub fn load_favorites_at_path(path: &Path) -> io::Result<Vec<String>> {
-    if !path.exists() {
-        return Ok(Vec::new());
-    }
-    let content = fs::read_to_string(path)?;
-    serde_json::from_str(&content).map_err(|e| {
-        io::Error::new(
-            io::ErrorKind::InvalidData,
-            format!("{} is corrupted: {}", path.display(), e),
-        )
-    })
+    register_list::load_register_list_at_path(path)
 }
 
 /// Load favorites register strings from the local config directory.
@@ -46,33 +38,7 @@ pub fn favorites_file_path() -> Option<PathBuf> {
 /// overwriting favorites.
 pub fn save_to_favorites_at_path(path: &Path, values: &ToneData) -> io::Result<()> {
     let registers = register::editor_rows_to_registers(values);
-
-    let mut favorites: Vec<String> = if path.exists() {
-        let content = fs::read_to_string(path)?;
-        serde_json::from_str(&content).map_err(|e| {
-            io::Error::new(
-                io::ErrorKind::InvalidData,
-                format!("{} is corrupted: {}", path.display(), e),
-            )
-        })?
-    } else {
-        Vec::new()
-    };
-
-    // Remove any existing occurrence of the same registers so favorites stays unique
-    favorites.retain(|s| s != &registers);
-
-    favorites.insert(0, registers);
-    favorites.truncate(FAVORITES_MAX);
-
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent)?;
-    }
-
-    let json_string = serde_json::to_string(&favorites).map_err(io::Error::other)?;
-    fs::write(path, json_string)?;
-
-    Ok(())
+    register_list::save_register_list_at_path(path, &registers, FAVORITES_MAX)
 }
 
 /// Save tone data to favorites in the local config directory.
