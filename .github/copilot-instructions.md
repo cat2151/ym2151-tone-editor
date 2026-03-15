@@ -63,6 +63,30 @@ struct Ym2151Event { time: u32, addr: String, data: String }
 
 ## プロジェクト固有パターン
 
+### RustソースをSSoT（Single Source of Truth）とする原則
+
+**Rustソース（`core/`クレート）はすべてのYM2151ロジックのSSoTである。**
+
+- **禁止**: RustロジックをJS・Python・その他の言語にportingすること。これは典型的なアンチパターンである。Rustが変更されたとき、portされたコードは手動で同期する必要があり、乖離・バグ・保守コスト増大の原因となる。
+- **代替手段**: JSコンシューマーには、RustからコンパイルされたWASMを提供する。WASMはRustソースから自動生成されるため、SSoTが保たれる。
+
+#### Chrome拡張機能など、外部URLからのWASMロードがCSPで禁止されている環境向け
+
+**WASMのベンダリング**が正しい解決策である：
+
+1. GitHub Pagesから`demo-library/pkg/`ディレクトリ（`ym2151_wasm.js`と`ym2151_wasm_bg.wasm`）をダウンロードする
+2. 自分のプロジェクトにローカルコピーとして配置する（ベンダリング）
+3. 外部URLではなくローカルファイルとしてインポートする
+
+```js
+// ベンダリングしたpkg/をローカルに配置してからimport
+import init, { generate_random_tone_registers } from './pkg/ym2151_wasm.js';
+await init();
+const registers = generate_random_tone_registers(Date.now(), 69);
+```
+
+WASMバイナリはRustから直接コンパイルされるため、Rustソースがそのまま実行される。JS側にロジックの複製は一切不要である。
+
 ### 条件付きコンパイル
 Windows限定音声機能は`ym2151-log-play-server`統合周辺で`#[cfg(windows)]`ガードを使用。
 

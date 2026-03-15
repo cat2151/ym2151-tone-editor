@@ -71,6 +71,22 @@ const registers = generate_random_tone_registers(seed, note);
 console.log(registers);
   </pre>
 
+  <h2>Chrome拡張機能など CSP制限環境でのベンダリング方法</h2>
+  <p>
+    Chrome拡張機能など、外部URLからのWASMロードがCSP（Content Security Policy）で制限される環境では、
+    <code>pkg/</code> ディレクトリをローカルにベンダリング（コピー）してください。
+  </p>
+  <ol>
+    <li>このページの <code>pkg/</code> ディレクトリ（<code>ym2151_wasm.js</code> と <code>ym2151_wasm_bg.wasm</code>）を自分のプロジェクトにダウンロード</li>
+    <li>ローカルの <code>pkg/</code> からインポートする（外部URLは不要）</li>
+  </ol>
+  <pre>
+// ベンダリング済みのローカルpkg/からimport — 外部URLへのアクセスなし
+import init, { generate_random_tone_registers } from './pkg/ym2151_wasm.js';
+await init();
+const registers = generate_random_tone_registers(Date.now(), 69);
+  </pre>
+
   <h2>レジスタ形式</h2>
   <p>
     戻り値は <strong>4文字単位</strong> の16進数文字列です。<br>
