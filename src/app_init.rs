@@ -24,6 +24,7 @@ pub fn init_app(
         hovered_penta_x: None,
         envelope_delay_seconds,
         last_operator_row: 0, // Initialize to O1 (row 0)
+        show_help: false,
     };
     const GM_FILE_PATH: &str = "tones/general_midi/000_AcousticGrand.json";
     #[cfg(windows)]

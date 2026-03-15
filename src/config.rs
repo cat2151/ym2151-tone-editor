@@ -79,6 +79,7 @@ pub enum Action {
     SaveToGmVariations,
     OpenVariationSelector,
     RandomizeTone,
+    ToggleHelp,
     Exit,
 }
 
@@ -249,6 +250,9 @@ impl Default for Config {
         // Random tone (F5)
         keybinds.insert("F5".to_string(), Action::RandomizeTone);
 
+        // Toggle keybind help
+        keybinds.insert("?".to_string(), Action::ToggleHelp);
+
         // Exit
         keybinds.insert("Esc".to_string(), Action::Exit);
 
@@ -315,6 +319,12 @@ mod tests {
         assert_eq!(config.get_action("1"), Some(&Action::JumpToOp1AndIncrease));
         assert_eq!(config.get_action("h"), Some(&Action::MoveCursorLeft));
         assert_eq!(config.get_action("F5"), Some(&Action::RandomizeTone));
+    }
+
+    #[test]
+    fn test_default_keybinds_question_mark_is_toggle_help() {
+        let config = KeybindsConfig::default();
+        assert_eq!(config.get_action("?"), Some(&Action::ToggleHelp));
     }
 
     #[test]

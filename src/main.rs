@@ -349,6 +349,7 @@ fn run_app<B: ratatui::backend::Backend>(
                                     handle_open_variation_selector(terminal, app)?;
                                 }
                                 Action::RandomizeTone => app.randomize_tone(),
+                                Action::ToggleHelp => app.toggle_help(),
                                 Action::Exit => {
                                     // Save tone data to JSON before exiting
                                     app.save_to_json()?;
@@ -454,5 +455,18 @@ mod key_to_string_tests {
         assert_eq!(result, Some("F1".to_string()));
         let result = key_to_string(KeyCode::F(12), KeyModifiers::NONE);
         assert_eq!(result, Some("F12".to_string()));
+    }
+
+    #[test]
+    fn test_question_mark_shift_slash_maps_to_question_mark() {
+        // On most keyboard layouts, '?' is Shift+/ and crossterm delivers it as Char('?') with SHIFT
+        let result = key_to_string(KeyCode::Char('?'), KeyModifiers::SHIFT);
+        assert_eq!(result, Some("?".to_string()));
+    }
+
+    #[test]
+    fn test_question_mark_no_modifier_maps_to_question_mark() {
+        let result = key_to_string(KeyCode::Char('?'), KeyModifiers::NONE);
+        assert_eq!(result, Some("?".to_string()));
     }
 }

@@ -20,6 +20,8 @@ pub struct App {
     /// Last operator row (0-3) the cursor was on before moving to CH row
     /// Used for displaying operation guides when cursor is on CH row
     pub last_operator_row: usize,
+    /// Whether the keybind help overlay is shown
+    pub show_help: bool,
 }
 
 impl App {
@@ -368,6 +370,12 @@ impl App {
     /// This is triggered by 'P' or 'SPACE' key
     pub fn play_current_tone(&self) {
         self.play_audio();
+    }
+
+    /// Toggle the keybind help overlay
+    /// This is triggered by '?' (SHIFT+/) key
+    pub fn toggle_help(&mut self) {
+        self.show_help = !self.show_help;
     }
 
     /// Move cursor to FB parameter and increase its value

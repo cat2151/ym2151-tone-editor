@@ -143,9 +143,7 @@ pub fn ui(f: &mut Frame, app: &App) {
     let size = f.area();
 
     let block = Block::default()
-        .title(
-            "YM2151 Tone Editor (hjkl/wasd:move, q/e:dec/inc, mouse wheel:change value, ESC:quit)",
-        )
+        .title("YM2151 Tone Editor")
         .borders(Borders::ALL);
     let inner = block.inner(size);
     f.render_widget(block, size);
@@ -373,6 +371,9 @@ pub fn ui(f: &mut Frame, app: &App) {
     if penta_keyboard_y < size.height - 1 {
         draw_virtual_pentatonic_keyboard_at_y(f, app, inner, penta_keyboard_y);
     }
+
+    // Draw keybind hints at the bottom of the screen (left-aligned)
+    draw_keybind_hints(f, app, inner);
 }
 
 fn draw_virtual_pentatonic_keyboard_at_y(f: &mut Frame, app: &App, inner: Rect, keyboard_y: u16) {
@@ -428,5 +429,51 @@ fn draw_virtual_pentatonic_keyboard_at_y(f: &mut Frame, app: &App, inner: Rect, 
             ROW_CH,
             app.envelope_delay_seconds,
         );
+    }
+}
+
+fn draw_keybind_hints(f: &mut Frame, app: &App, inner: Rect) {
+    // Bottom line inside the inner area (inside the block border)
+    let inner_bottom = inner.y + inner.height.saturating_sub(1);
+    if inner.height == 0 {
+        return;
+    }
+
+    if app.show_help {
+        // Detailed keybind help: render lines from bottom up, clamped to inner area
+        let help_lines: &[&str] = &[
+            "move:hjkl/wasd  dec/inc:q/e  max/min:Home/End  +1/-1:./,  +10/-10:>/<",
+            "1-4:OP row  a/A:AR  d/D:D1R  s/S:D2R  r/R:RR  t/T:TL  m/M:MUL  l/L:D1L",
+            "u/U:DT  n/N:DT2  k/K:KS  i/I:AMS  o/O:SM  f/F:FB  g/G:ALG  j/J:Note",
+            "Space/p:play  F5:random  Ctrl+s:save  Ctrl+o:select  ?:close help  ESC:quit",
+        ];
+        let num_lines = help_lines.len() as u16;
+        for (i, line) in help_lines.iter().enumerate() {
+            let y = inner_bottom.saturating_sub(num_lines) + i as u16;
+            if y >= inner.y && y <= inner_bottom {
+                let area = Rect {
+                    x: inner.x,
+                    y,
+                    width: inner.width,
+                    height: 1,
+                };
+                let paragraph =
+                    Paragraph::new(Span::styled(*line, Style::default().fg(Color::DarkGray)));
+                f.render_widget(paragraph, area);
+            }
+        }
+    } else {
+        // Brief hint on the last line of the inner area
+        let area = Rect {
+            x: inner.x,
+            y: inner_bottom,
+            width: inner.width,
+            height: 1,
+        };
+        let paragraph = Paragraph::new(Span::styled(
+            "?:help | hjkl/wasd:move  q/e:dec/inc  ESC:quit",
+            Style::default().fg(Color::DarkGray),
+        ));
+        f.render_widget(paragraph, area);
     }
 }
