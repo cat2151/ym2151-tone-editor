@@ -1,51 +1,60 @@
-Last updated: 2026-03-12
+Last updated: 2026-03-16
 
 # Development Status
 
 ## 現在のIssues
-- [Issue #177](../issue-notes/177.md) と [Issue #176](../issue-notes/176.md) は、sixelを用いて音色波形や各オペレータのエンベロープを描画し、ユーザーエクスペリエンスを検証することを目標としています。
-- [Issue #174](../issue-notes/174.md) では、Issue 149の結果に基づき、ユーザーがローカルに音色テンプレートJSONファイルを生成する機能の実装が計画されています。
-- [Issue #167](../issue-notes/167.md) ではプレビュー時のプチノイズ問題の解決が検討されていますが、現在は別リポジトリでのJSON編集GUIツール開発を待っている状態です。
+- [Issue #213](../issue-notes/213.md) は、`core/src/lib.rs` が500行を超えているため、リファクタリングによるコード品質向上が推奨されています。
+- [Issue #212](../issue-notes/212.md) では、WASM版のランダム音色機能が `bluesky-text-to-audio` リポジトリで利用できない状態であることが報告されています。
+- [Issue #177](../issue-notes/177.md) は、sixelを利用して音色波形を描画し、変更後5秒でバックグラウンドでwavを生成・表示することでUXを検証することを目的としています。
 
 ## 次の一手候補
-1. [Issue #177](../issue-notes/177.md) sixelで音色波形を描画するために`cat-play-mml`でWAVを生成する
-   - 最初の小さな一歩: Rustアプリケーション内で`cat-play-mml`コマンドを外部プロセスとして実行し、指定されたMMLを元にWAVファイルを生成する基本的な関数を`src/audio.rs`に実装する。
-   - Agent実行プロンプ:
-     ```
-     対象ファイル: `src/audio.rs`, `src/config.rs`
-
-     実行内容: `cat-play-mml`コマンドを外部プロセスとして呼び出し、MML文字列を元にWAVファイルを生成し、指定されたパスに保存するRust関数 `generate_wav_from_mml(mml: &str, output_path: &Path) -> Result<(), Box<dyn std::error::Error>>` を `src/audio.rs` に実装してください。`cat-play-mml`実行可能ファイルへのパスは`src/config.rs`で設定可能とします。
-
-     確認事項: `cat-play-mml`コマンドがシステムパスにあるか、または設定ファイルで指定されたパスに存在するか。コマンド実行失敗、ファイル保存失敗などのエラーハンドリングが適切に行われているか。
-
-     期待する出力: `src/audio.rs` に上記の関数が実装され、必要であれば`src/config.rs`に`cat_play_mml_path`設定が追加される。
-     ```
-
-2. [Issue #176](../issue-notes/176.md) sixelで各OPごとのエンベロープを描画するために必要なパラメータを抽出する
-   - 最初の小さな一歩: 現在編集中の音色データ (`src/models.rs`の`Tone`構造体) から、選択されたオペレータのADSRパラメータ（AR, DR, SR, RR, TL, KS, AM, DT1, DT2, MUL）を抽出し、シンプルな文字列として表現する（例: "AR:15 DR:10 SR:5 RR:8 TL:30..."）。
+1. `core/src/lib.rs` のモジュール分割によるリファクタリング ([Issue #213](../issue-notes/213.md))
+   - 最初の小さな一歩: `core/src/lib.rs` の内容を分析し、論理的に関連性の高い機能群（例: `SimpleRng`、`midi_to_kc_kf`、`editor_rows_to_registers`）を個別のモジュールに分割するプランを立てる。
    - Agent実行プロンプト:
      ```
-     対象ファイル: `src/models.rs`, `src/app/mod.rs`
+     対象ファイル: `core/src/lib.rs`
 
-     実行内容: `src/models.rs`内の`Tone`構造体に、特定のオペレータ（`operator_index: usize`）のADSR関連パラメータを分かりやすい文字列として返すメソッド `get_operator_envelope_params_string(&self, op_idx: usize) -> String` を追加してください。この文字列はsixel描画の前段階としてパラメータを可視化するためのものです。`src/app/mod.rs`内でのこのメソッドの呼び出し例をコメントとして追加してください。
+     実行内容: `core/src/lib.rs`の内容を分析し、以下の機能群をそれぞれ別のモジュールとして切り出す場合の抽象的な分割方針と、各モジュールに移動する関数・定数をリストアップしてください。
+     1) `SimpleRng` 関連の乱数生成ロジック
+     2) `midi_to_kc_kf` 関連のMIDI変換ロジック
+     3) `editor_rows_to_registers` および `push_reg_pair` 関連のレジスタエンコーディングロジック
+     4) `ToneData` などの共通データ構造や定数
 
-     確認事項: `Tone`構造体内のオペレータデータへのアクセス方法が適切であるか。パラメータが適切な形式で文字列に変換されているか。
+     確認事項: 各機能が他の機能に依存していないか、依存している場合はどのようにモジュール間で連携させるかを考慮してください。分割後のクレートの公開APIに影響がないよう留意してください。
 
-     期待する出力: `src/models.rs`に上記メソッドが追加され、その利用例が`src/app/mod.rs`の関連する描画ロジックにコメントアウト形式で追加される。
+     期待する出力: 各機能群の分割案と、それぞれに含める関数・定数のリストをMarkdown形式で出力してください。
      ```
 
-3. [Issue #174](../issue-notes/174.md) ユーザーがローカルに音色template jsonファイルを生成する機能の第一歩として、音色データのJSON保存機能を実装する
-   - 最初の小さな一歩: 現在編集中の音色データを表現するRustの構造体 (`src/models.rs`の`Tone`構造体) をJSON形式でシリアライズし、指定されたファイルパスに保存する関数を`src/file_ops.rs`に実装する。
+2. WASM版ランダム音色機能の不具合原因調査 ([Issue #212](../issue-notes/212.md))
+   - 最初の小さな一歩: `wasm/src/lib.rs` と `ym2151-tone-params` クレートの `generate_random_tone_registers` 関数が `bluesky-text-to-audio` リポジトリでどのように利用されているかを調査し、問題発生箇所の特定に着手する。
    - Agent実行プロンプト:
      ```
-     対象ファイル: `src/file_ops.rs`, `src/models.rs`
+     対象ファイル: `wasm/src/lib.rs`, `core/src/lib.rs`, および `bluesky-text-to-audio` リポジトリの関連する利用箇所（仮定として `bluesky-text-to-audio` の `package.json` と `src` ディレクトリ内で `ym2151-wasm` をimportしている箇所）。
 
-     実行内容: `src/file_ops.rs`に、`src/models.rs`で定義されている`Tone`構造体のインスタンスを受け取り、それをJSON形式で指定されたファイルパスに保存するRust関数 `save_tone_to_json(tone: &Tone, path: &Path) -> Result<(), Box<dyn std::error::Error>>` を実装してください。
+     実行内容: `ym2151-wasm` クレートの `generate_random_tone_registers` が `bluesky-text-to-audio` プロジェクトで利用できない原因を特定するため、以下の観点から調査し、考えられる原因と調査方針を提案してください。
+     1) `wasm/src/lib.rs` の変更点と、それに伴う `ym2151-tone-params` の変更が `bluesky-text-to-audio` でどのように影響しているか。
+     2) `bluesky-text-to-audio` 側での `ym2151-wasm` の呼び出し方法に変更があったか。
+     3) ビルド環境や依存関係のバージョンミスマッチの可能性。
 
-     確認事項: `Tone`構造体が`serde::Serialize`をderiveしていること。ファイル書き込み時のエラーハンドリング（例: ファイル作成失敗、書き込み失敗など）。ファイルパスの解決方法。
+     確認事項: `bluesky-text-to-audio` リポジトリのコードは直接参照できないため、一般的な問題パターンと、提供されたファイル情報（`wasm/src/lib.rs`, `core/src/lib.rs` の内容）に基づいて推論してください。
 
-     期待する出力: `src/file_ops.rs` に`save_tone_to_json`関数が実装され、必要であれば`src/models.rs`に`#[derive(serde::Serialize)]`が追加される。
+     期待する出力: 考えられる原因を複数リストアップし、それぞれの原因を検証するための具体的な調査ステップをMarkdown形式で出力してください。
      ```
+
+3. Sixelによる音色波形描画の技術検証とPoC作成 ([Issue #177](../issue-notes/177.md))
+   - 最初の小さな一歩: RustアプリケーションでSixel出力を生成し、対応するターミナルに表示するための基本的な技術調査と、概念実証 (PoC) のコードスニペットを作成する。
+   - Agent実行プロンプト:
+     ```
+     対象ファイル: なし（新規コードの検討）
+
+     実行内容: RustでSixelグラフィックを生成し、対応するターミナルで表示するための基本的なアプローチを調査し、以下の点について記述してください。
+     1) Sixel形式でイメージデータをエンコードするためのRustクレートやライブラリの有無。
+     2) Sixelデータを標準出力または特定のファイルに書き出す方法。
+     3) 簡単な波形データ（例: 正弦波）をSixelとして描画するための概念的なコードスニペット。
+
+     確認事項: Sixelのサポート状況はターミナルエミュレータに依存するため、一般的な利用可能性について言及してください。複雑なグラフィック描画ではなく、あくまで「基本的な波形表示」に焦点を当ててください。
+
+     期待する出力: Sixel描画の技術調査結果と、波形表示の概念的なRustコードスニペットをMarkdown形式で出力してください。
 
 ---
-Generated at: 2026-03-12 07:12:21 JST
+Generated at: 2026-03-16 07:11:39 JST
