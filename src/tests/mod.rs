@@ -44,3 +44,6 @@ mod verbose_logging_tests;
 
 #[cfg(test)]
 mod random_tone_tests;
+
+#[cfg(test)]
+mod history_tests;
