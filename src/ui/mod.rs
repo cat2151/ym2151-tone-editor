@@ -257,6 +257,7 @@ fn draw_virtual_pentatonic_keyboard_at_y(f: &mut Frame, app: &App, inner: Rect, 
     const PENTA_LABELS: [&str; 5] = ["C", "D", "E", "G", "A"];
 
     let center_x = width / 2;
+    #[cfg(windows)]
     let mut hovered_note: Option<u8> = None;
     for x in 0..width {
         let rel = x - center_x;
@@ -277,6 +278,7 @@ fn draw_virtual_pentatonic_keyboard_at_y(f: &mut Frame, app: &App, inner: Rect, 
             Some(hx) => hx == x as usize,
             None => false,
         };
+        #[cfg(windows)]
         if is_hovered {
             hovered_note = Some(note as u8);
         }
@@ -319,7 +321,7 @@ fn draw_keybind_hints(f: &mut Frame, app: &App, inner: Rect) {
             "move:hjkl/wasd  dec/inc:q/e  max/min:Home/End  +1/-1:./,  +10/-10:>/<",
             "1-4:OP row  a/A:AR  d/D:D1R  s/S:D2R  r/R:RR  t/T:TL  m/M:MUL  l/L:D1L",
             "u/U:DT  n/N:DT2  k/K:KS  i/I:AMS  o/O:SM  f/F:FB  g/G:ALG  j/J:Note",
-            "Space/p:play  F5:random  Ctrl+s:save  Ctrl+o:select  ?:close help  ESC:quit",
+            "Space/p:play  F5:random  Ctrl+s:save  Ctrl+o:select  H:history  ?:close help  ESC:quit",
         ];
         let num_lines = help_lines.len() as u16;
         for (i, line) in help_lines.iter().enumerate() {
@@ -345,7 +347,7 @@ fn draw_keybind_hints(f: &mut Frame, app: &App, inner: Rect) {
             height: 1,
         };
         let paragraph = Paragraph::new(Span::styled(
-            "?:help | hjkl/wasd:move  q/e:dec/inc  ESC:quit",
+            "?:help | hjkl/wasd:move  q/e:dec/inc  H:history  ESC:quit",
             Style::default().fg(Color::DarkGray),
         ));
         f.render_widget(paragraph, area);
