@@ -13,6 +13,7 @@ mod register;
 #[cfg(test)]
 mod tests;
 mod ui;
+mod updater;
 mod variation_selector;
 
 pub use logging::{enable_verbose_logging, log_verbose};
@@ -89,6 +90,9 @@ fn main() -> Result<(), io::Error> {
         config.audio.envelope_delay_seconds,
     );
 
+    // バックグラウンドで自動アップデートチェックを開始する
+    updater::spawn_update_check(std::sync::Arc::clone(&app.update_available));
+
     #[cfg(windows)]
     {
         if use_interactive_mode {
@@ -110,6 +114,13 @@ fn main() -> Result<(), io::Error> {
 
     if let Err(err) = res {
         println!("Error: {:?}", err);
+    }
+
+    // アップデートが利用可能な場合、問答無用でアップデートを実行する
+    if app.is_update_available() {
+        if let Err(e) = updater::run_foreground_update() {
+            eprintln!("アップデートに失敗しました: {}", e);
+        }
     }
 
     Ok(())

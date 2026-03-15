@@ -1,6 +1,7 @@
 use crate::app::App;
 use crate::file_ops;
 use crate::models::*;
+use std::sync::{atomic::AtomicBool, Arc};
 
 pub fn init_app(
     #[allow(unused_variables)] use_interactive_mode: bool,
@@ -25,6 +26,7 @@ pub fn init_app(
         envelope_delay_seconds,
         last_operator_row: 0, // Initialize to O1 (row 0)
         show_help: false,
+        update_available: Arc::new(AtomicBool::new(false)),
     };
     const GM_FILE_PATH: &str = "tones/general_midi/000_AcousticGrand.json";
     #[cfg(windows)]

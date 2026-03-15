@@ -4,6 +4,10 @@ mod shortcuts;
 use crate::audio;
 use crate::file_ops;
 use crate::models::*;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 
 pub struct App {
     pub values: ToneData,
@@ -22,6 +26,8 @@ pub struct App {
     pub last_operator_row: usize,
     /// Whether the keybind help overlay is shown
     pub show_help: bool,
+    /// バックグラウンドのアップデートチェックがtrueにセットしたらアップデートを実行
+    pub update_available: Arc<AtomicBool>,
 }
 
 impl App {
@@ -446,5 +452,10 @@ impl App {
         if self.use_interactive_mode {
             audio::cleanup_interactive_mode();
         }
+    }
+
+    /// アップデートが利用可能かどうかを返す
+    pub fn is_update_available(&self) -> bool {
+        self.update_available.load(Ordering::Relaxed)
     }
 }
