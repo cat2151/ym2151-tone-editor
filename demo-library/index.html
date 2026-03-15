@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ym2151-wasm demo</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    h1 { color: #00d4ff; }
+    h2 { color: #7ec8e3; margin-top: 2em; }
+    button {
+      background: #00d4ff;
+      color: #1a1a2e;
+      border: none;
+      padding: 10px 24px;
+      font-size: 1em;
+      font-family: monospace;
+      cursor: pointer;
+      border-radius: 4px;
+      margin: 8px 4px;
+    }
+    button:hover { background: #7ec8e3; }
+    pre {
+      background: #0d0d1a;
+      border: 1px solid #00d4ff44;
+      border-radius: 4px;
+      padding: 16px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .label { color: #7ec8e3; }
+    .value { color: #ffd700; }
+    .status { color: #90ee90; margin: 8px 0; }
+    .error  { color: #ff6b6b; margin: 8px 0; }
+    code { background: #0d0d1a; padding: 2px 6px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <h1>ym2151-wasm demo</h1>
+  <p>
+    YM2151 (OPM) FM音源のランダムトーンをWASMで生成するデモです。<br>
+    <code>generate_random_tone_registers(seed, note)</code> を呼び出し、
+    レジスタデータ（16進数文字列）を取得します。
+  </p>
+
+  <h2>ランダムトーン生成</h2>
+  <button id="btn-generate">ランダム生成 (seed = Date.now())</button>
+  <button id="btn-seed42">seed=42 で生成</button>
+  <div id="status" class="status"></div>
+  <pre id="output">（ボタンを押してください）</pre>
+
+  <h2>利用例 (TypeScript / JavaScript)</h2>
+  <pre>
+// wasm/pkg/ を配置してから import する
+import init, { generate_random_tone_registers } from './pkg/ym2151_wasm.js';
+
+await init();
+
+const seed = Date.now();          // シード値
+const note = 69;                  // MIDI ノート番号 (69 = A4)
+const registers = generate_random_tone_registers(seed, note);
+// 例: "2000280060001F607F..."  (4文字ごとに addr+data)
+console.log(registers);
+  </pre>
+
+  <h2>レジスタ形式</h2>
+  <p>
+    戻り値は <strong>4文字単位</strong> の16進数文字列です。<br>
+    先頭2文字がレジスタアドレス、後ろ2文字がデータです。
+  </p>
+  <pre>
+例: "20002800600080009F00..."
+    ^^^^    → addr=0x20, data=0x00  (ALG/FB/PAN)
+        ^^^^  → addr=0x28, data=0x00  (KC)
+            ^^^^→ addr=0x60, data=0x00  (TL OP1)
+  </pre>
+
+  <script type="module">
+    import init, { generate_random_tone_registers } from './pkg/ym2151_wasm.js';
+
+    const statusEl = document.getElementById('status');
+    const outputEl = document.getElementById('output');
+
+    function showRegisters(registers, seed, note) {
+      // 4文字ごとに分割して読みやすく表示
+      const pairs = [];
+      for (let i = 0; i < registers.length; i += 4) {
+        const addr = registers.slice(i, i + 2);
+        const data = registers.slice(i + 2, i + 4);
+        pairs.push(`0x${addr} => 0x${data}`);
+      }
+      outputEl.textContent = [
+        `seed        : ${seed}`,
+        `note (MIDI) : ${note}`,
+        `registers   : ${registers}`,
+        ``,
+        `---（addr => data）---`,
+        ...pairs,
+      ].join('\n');
+    }
+
+    async function run() {
+      try {
+        await init();
+        statusEl.textContent = 'WASM initialized ✓';
+        statusEl.className = 'status';
+
+        document.getElementById('btn-generate').addEventListener('click', () => {
+          const seed = Date.now();
+          const note = 69;
+          const regs = generate_random_tone_registers(seed, note);
+          showRegisters(regs, seed, note);
+        });
+
+        document.getElementById('btn-seed42').addEventListener('click', () => {
+          const seed = 42;
+          const note = 69;
+          const regs = generate_random_tone_registers(seed, note);
+          showRegisters(regs, seed, note);
+        });
+
+      } catch (e) {
+        statusEl.textContent = `エラー: ${e}`;
+        statusEl.className = 'error';
+        outputEl.textContent = String(e);
+      }
+    }
+
+    run();
+  </script>
+</body>
+</html>
