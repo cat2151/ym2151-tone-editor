@@ -37,6 +37,9 @@ pub struct App {
     /// sixel波形生成スレッドが起動中かどうか
     #[cfg(windows)]
     pub waveform_generating: bool,
+    /// 波形生成の世代カウンタ。音色変更時にインクリメントし、古いスレッドの結果を無効化する
+    #[cfg(windows)]
+    pub waveform_generation: std::sync::Arc<std::sync::atomic::AtomicU32>,
 }
 
 impl App {
@@ -463,6 +466,9 @@ impl App {
     pub fn on_tone_changed(&mut self) {
         self.last_tone_change = std::time::Instant::now();
         self.waveform_generating = false;
+        // 世代をインクリメントして実行中スレッドの結果を無効化する
+        self.waveform_generation
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         if let Ok(mut guard) = self.sixel_waveform.lock() {
             *guard = None;
         }

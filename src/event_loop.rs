@@ -191,13 +191,24 @@ pub(crate) fn run_app<B: Backend>(
             {
                 app.waveform_generating = true;
                 let sixel_arc = std::sync::Arc::clone(&app.sixel_waveform);
-                crate::waveform::spawn_waveform_generation(app.values, sixel_arc);
+                let expected_gen = app
+                    .waveform_generation
+                    .load(std::sync::atomic::Ordering::SeqCst);
+                let generation_arc = std::sync::Arc::clone(&app.waveform_generation);
+                crate::waveform::spawn_waveform_generation(
+                    app.values,
+                    sixel_arc,
+                    expected_gen,
+                    generation_arc,
+                );
             }
         }
 
         // イベントをポーリング（タイムアウト付き）。イベントがなければ再描画せずに次ループへ
         if !event::poll(std::time::Duration::from_millis(50))? {
-            // sixel生成が完了していたら再描画して表示を更新する
+            // sixel生成が完了していたら再描画して表示を更新する。
+            // waveform_generating フラグは使わない: 生成カウンタが世代ミスマッチを防ぐため
+            // sixel_ready が true なら常に有効な波形が格納されている。
             #[cfg(windows)]
             {
                 let sixel_ready = app
@@ -206,7 +217,7 @@ pub(crate) fn run_app<B: Backend>(
                     .ok()
                     .map(|g| g.is_some())
                     .unwrap_or(false);
-                if app.waveform_generating && sixel_ready {
+                if sixel_ready {
                     terminal.draw(|f| {
                         crate::ui::ui(f, app);
                     })?;

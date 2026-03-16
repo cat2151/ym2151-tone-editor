@@ -21,6 +21,11 @@ const KEY_GUIDE_BG_COLOR: Color = Color::Rgb(40, 40, 40);
 /// Each row in Braille mode provides 4 pixels of vertical resolution.
 const ENVELOPE_CANVAS_HEIGHT: u16 = 6;
 
+/// Terminal row at which the CH parameter values are drawn, assuming the outer
+/// block starts at y=0 (full-screen mode).
+/// Derivation: border_top(1) + label_offset(1) + op_rows(4) + ch_header(1) = 7.
+pub const LAYOUT_CH_ROW_Y: u16 = 7;
+
 /// Colors used to draw the four operator envelopes (O1–O4).
 const OP_ENVELOPE_COLORS: [Color; 4] = [Color::Cyan, Color::Green, Color::Yellow, Color::Magenta];
 

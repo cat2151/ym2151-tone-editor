@@ -33,6 +33,8 @@ pub fn init_app(
         sixel_waveform: std::sync::Arc::new(std::sync::Mutex::new(None)),
         #[cfg(windows)]
         waveform_generating: false,
+        #[cfg(windows)]
+        waveform_generation: std::sync::Arc::new(std::sync::atomic::AtomicU32::new(0)),
     };
     const GM_FILE_PATH: &str = "tones/general_midi/000_AcousticGrand.json";
     #[cfg(windows)]

@@ -171,9 +171,8 @@ pub(crate) fn compute_op_envelope_points(row: &[u8; GRID_WIDTH]) -> Vec<(f64, f6
 /// duplicating the layout constants.
 #[cfg_attr(not(windows), allow(dead_code))]
 pub fn compute_envelope_area_y(alg_value: u8) -> u16 {
-    // inner.y(1) + label_offset(1) + 5 operator/CH rows
-    let ch_row_y: u16 = 7;
-    let diagram_start_y = ch_row_y + 2;
+    // Use the shared constant to avoid diverging from ui() when the layout changes.
+    let diagram_start_y = super::LAYOUT_CH_ROW_Y + 2; // +2: blank gap after CH row
     let diagram_len = get_algorithm_diagram(alg_value).len() as u16;
     let penta_keyboard_y = diagram_start_y + diagram_len + 1;
     penta_keyboard_y + 1 // envelope_y

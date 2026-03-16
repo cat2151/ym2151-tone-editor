@@ -9,7 +9,10 @@
 //! Windows-only dependency.
 
 #[cfg(windows)]
-use std::sync::{Arc, Mutex};
+use std::sync::{
+    atomic::{AtomicU32, Ordering},
+    Arc, Mutex,
+};
 
 #[cfg(windows)]
 use crate::models::ToneData;
@@ -26,11 +29,26 @@ const SIXEL_HEIGHT: usize = 24;
 /// Spawn a background thread that generates a sixel waveform from `values`
 /// and stores the result in `sixel_arc`.
 ///
+/// `expected_gen` is the value of `generation_arc` at the time of spawning.
+/// Before writing the result, the thread checks that `generation_arc` still
+/// holds `expected_gen`; if it has been incremented by `on_tone_changed()`
+/// (because the user edited a parameter while the thread was running), the
+/// stale result is discarded to prevent displaying a waveform for the wrong tone.
+///
 /// On error, the failure is logged via `log_verbose` and `sixel_arc` is left unchanged.
 #[cfg(windows)]
-pub fn spawn_waveform_generation(values: ToneData, sixel_arc: Arc<Mutex<Option<String>>>) {
+pub fn spawn_waveform_generation(
+    values: ToneData,
+    sixel_arc: Arc<Mutex<Option<String>>>,
+    expected_gen: u32,
+    generation_arc: Arc<AtomicU32>,
+) {
     std::thread::spawn(move || match generate_waveform_sixel(&values) {
         Ok(sixel) => {
+            // Discard the result if the tone was modified while generating.
+            if generation_arc.load(Ordering::SeqCst) != expected_gen {
+                return;
+            }
             if let Ok(mut guard) = sixel_arc.lock() {
                 *guard = Some(sixel);
             }
@@ -223,6 +241,10 @@ fn encode_sixel(bitmap: &[Vec<bool>], width: usize, height: usize) -> String {
     out
 }
 
+// waveform.rs is only compiled on Windows (declared as `#[cfg(windows)] mod waveform`
+// in main.rs), so these tests run on Windows only. The pure sixel-encoding functions
+// have no Windows-specific dependencies; if cross-platform testing becomes needed, the
+// encoding helpers can be moved to a platform-independent submodule.
 #[cfg(all(test, windows))]
 mod tests {
     use super::*;
