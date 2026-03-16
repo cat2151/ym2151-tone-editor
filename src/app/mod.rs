@@ -28,6 +28,18 @@ pub struct App {
     pub show_help: bool,
     /// バックグラウンドのアップデートチェックがtrueにセットしたらアップデートを実行
     pub update_available: Arc<AtomicBool>,
+    /// 音色が最後に変更された時刻（アイドル検出用）
+    #[cfg(windows)]
+    pub last_tone_change: std::time::Instant,
+    /// バックグラウンドスレッドが生成したsixelグラフィクス文字列（Noneなら未生成）
+    #[cfg(windows)]
+    pub sixel_waveform: std::sync::Arc<std::sync::Mutex<Option<String>>>,
+    /// sixel波形生成スレッドが起動中かどうか
+    #[cfg(windows)]
+    pub waveform_generating: bool,
+    /// 波形生成の世代カウンタ。音色変更時にインクリメントし、古いスレッドの結果を無効化する
+    #[cfg(windows)]
+    pub waveform_generation: std::sync::Arc<std::sync::atomic::AtomicU32>,
 }
 
 impl App {
@@ -446,6 +458,20 @@ impl App {
     /// This is triggered by 'J' key (Shift+j)
     pub fn jump_to_note_and_decrease(&mut self) {
         self.jump_to_ch_param(CH_PARAM_NOTE, false);
+    }
+
+    /// 音色パラメータが変更されたときに呼び出す。
+    /// アイドルタイマーをリセットし、古いsixel波形をクリアする。
+    #[cfg(windows)]
+    pub fn on_tone_changed(&mut self) {
+        self.last_tone_change = std::time::Instant::now();
+        self.waveform_generating = false;
+        // 世代をインクリメントして実行中スレッドの結果を無効化する
+        self.waveform_generation
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        if let Ok(mut guard) = self.sixel_waveform.lock() {
+            *guard = None;
+        }
     }
 
     /// Cleanup - stop interactive mode if active

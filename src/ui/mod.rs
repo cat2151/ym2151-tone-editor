@@ -21,6 +21,11 @@ const KEY_GUIDE_BG_COLOR: Color = Color::Rgb(40, 40, 40);
 /// Each row in Braille mode provides 4 pixels of vertical resolution.
 const ENVELOPE_CANVAS_HEIGHT: u16 = 6;
 
+/// Terminal row at which the CH parameter values are drawn, assuming the outer
+/// block starts at y=0 (full-screen mode).
+/// Derivation: border_top(1) + label_offset(1) + op_rows(4) + ch_header(1) = 7.
+pub const LAYOUT_CH_ROW_Y: u16 = 7;
+
 /// Colors used to draw the four operator envelopes (O1–O4).
 const OP_ENVELOPE_COLORS: [Color; 4] = [Color::Cyan, Color::Green, Color::Yellow, Color::Magenta];
 
@@ -262,7 +267,21 @@ pub fn ui(f: &mut Frame, app: &App) {
     let envelope_y = penta_keyboard_y + 1;
     // Reserve 1 row at the bottom for keybind hints and 1 row for border.
     let available_for_envelope = size.height.saturating_sub(2).saturating_sub(envelope_y);
-    if available_for_envelope >= ENVELOPE_CANVAS_HEIGHT {
+
+    // On Windows, prefer the sixel waveform when it has been generated.
+    // The sixel is printed by event_loop.rs after each terminal draw,
+    // so we only need to skip the braille canvas here to avoid overlap.
+    #[cfg(windows)]
+    let has_sixel_waveform = app
+        .sixel_waveform
+        .lock()
+        .ok()
+        .map(|g| g.is_some())
+        .unwrap_or(false);
+    #[cfg(not(windows))]
+    let has_sixel_waveform = false;
+
+    if available_for_envelope >= ENVELOPE_CANVAS_HEIGHT && !has_sixel_waveform {
         let envelope_area = Rect {
             x: inner.x,
             y: envelope_y,
