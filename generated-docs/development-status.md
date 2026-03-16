@@ -1,60 +1,71 @@
-Last updated: 2026-03-16
+Last updated: 2026-03-17
 
 # Development Status
 
 ## 現在のIssues
-- [Issue #213](../issue-notes/213.md) は、`core/src/lib.rs` が500行を超えているため、リファクタリングによるコード品質向上が推奨されています。
-- [Issue #212](../issue-notes/212.md) では、WASM版のランダム音色機能が `bluesky-text-to-audio` リポジトリで利用できない状態であることが報告されています。
-- [Issue #177](../issue-notes/177.md) は、sixelを利用して音色波形を描画し、変更後5秒でバックグラウンドでwavを生成・表示することでUXを検証することを目的としています。
+- 現在、[Issue #221](../issue-notes/221.md)で`src/ui/mod.rs`の500行超過リファクタリングが推奨されており、UIコード品質の向上が求められています。
+- [Issue #220](../issue-notes/220.md)と[Issue #219](../issue-notes/219.md)ではTUIのキーバインドとヘルプ表示のUX改善が計画されており、操作性の一貫性が目指されています。
+- [Issue #218](../issue-notes/218.md)と[Issue #177](../issue-notes/177.md)はsixelを用いたエンベロープ/音色波形グラフの表示改善とUX検証を進めています。
 
 ## 次の一手候補
-1. `core/src/lib.rs` のモジュール分割によるリファクタリング ([Issue #213](../issue-notes/213.md))
-   - 最初の小さな一歩: `core/src/lib.rs` の内容を分析し、論理的に関連性の高い機能群（例: `SimpleRng`、`midi_to_kc_kf`、`editor_rows_to_registers`）を個別のモジュールに分割するプランを立てる。
-   - Agent実行プロンプト:
-     ```
-     対象ファイル: `core/src/lib.rs`
+1.  `src/ui/mod.rs` のリファクタリング ([Issue #221](../issue-notes/221.md))
+    -   最初の小さな一歩: `src/ui/mod.rs` 内の`draw_virtual_pentatonic_keyboard_at_y`、`draw_keybind_hints`、`draw_help_dialog`関数を`src/ui/helpers.rs`に移動する。
+    -   Agent実行プロンプ:
+        ```
+        対象ファイル: src/ui/mod.rs, src/ui/helpers.rs
 
-     実行内容: `core/src/lib.rs`の内容を分析し、以下の機能群をそれぞれ別のモジュールとして切り出す場合の抽象的な分割方針と、各モジュールに移動する関数・定数をリストアップしてください。
-     1) `SimpleRng` 関連の乱数生成ロジック
-     2) `midi_to_kc_kf` 関連のMIDI変換ロジック
-     3) `editor_rows_to_registers` および `push_reg_pair` 関連のレジスタエンコーディングロジック
-     4) `ToneData` などの共通データ構造や定数
+        実行内容: `src/ui/mod.rs` 内の`draw_virtual_pentatonic_keyboard_at_y`、`draw_keybind_hints`、`draw_help_dialog`関数を`src/ui/helpers.rs`に移動し、`src/ui/mod.rs`から呼び出すように修正してください。移動後、`src/ui/mod.rs`から`src/ui/helpers.rs`で定義された関数を`use`ステートメントで適切にインポートしてください。
 
-     確認事項: 各機能が他の機能に依存していないか、依存している場合はどのようにモジュール間で連携させるかを考慮してください。分割後のクレートの公開APIに影響がないよう留意してください。
+        確認事項:
+        - すべての関数移動後、`src/ui/mod.rs`がコンパイルエラーなく、以前と同じようにUIを描画できることを確認してください。
+        - `draw_keybind_hints`と`draw_help_dialog`は`app.show_help`に依存するので、ヘルプ表示のトグル機能が引き続き正しく動作することを確認してください。
+        - `draw_virtual_pentatonic_keyboard_at_y`はWindowsでのみ`audio::play_tone`を呼び出すため、`#[cfg(windows)]`属性が適切に引き継がれているか確認してください。
+        - `src/app/mod.rs`内で定義されている`ROW_CH`等の定数が適切に参照されていることを確認してください。
 
-     期待する出力: 各機能群の分割案と、それぞれに含める関数・定数のリストをMarkdown形式で出力してください。
-     ```
+        期待する出力: `src/ui/mod.rs`と`src/ui/helpers.rs`の修正されたコード。および、修正箇所の説明をmarkdown形式で出力。
+        ```
 
-2. WASM版ランダム音色機能の不具合原因調査 ([Issue #212](../issue-notes/212.md))
-   - 最初の小さな一歩: `wasm/src/lib.rs` と `ym2151-tone-params` クレートの `generate_random_tone_registers` 関数が `bluesky-text-to-audio` リポジトリでどのように利用されているかを調査し、問題発生箇所の特定に着手する。
-   - Agent実行プロンプト:
-     ```
-     対象ファイル: `wasm/src/lib.rs`, `core/src/lib.rs`, および `bluesky-text-to-audio` リポジトリの関連する利用箇所（仮定として `bluesky-text-to-audio` の `package.json` と `src` ディレクトリ内で `ym2151-wasm` をimportしている箇所）。
+2.  キーバインドとヘルプ表示のUX改善 ([Issue #220](../issue-notes/220.md), [Issue #219](../issue-notes/219.md))
+    -   最初の小さな一歩: `src/app/mod.rs`から`q`と`e`キーの`decrease_value`/`increase_value`へのマッピングを削除し、`q`キーでアプリケーションが終了するように`src/app/shortcuts.rs`を更新する。
+    -   Agent実行プロンプト:
+        ```
+        対象ファイル: src/app/mod.rs, src/app/shortcuts.rs, src/ui/mod.rs
 
-     実行内容: `ym2151-wasm` クレートの `generate_random_tone_registers` が `bluesky-text-to-audio` プロジェクトで利用できない原因を特定するため、以下の観点から調査し、考えられる原因と調査方針を提案してください。
-     1) `wasm/src/lib.rs` の変更点と、それに伴う `ym2151-tone-params` の変更が `bluesky-text-to-audio` でどのように影響しているか。
-     2) `bluesky-text-to-audio` 側での `ym2151-wasm` の呼び出し方法に変更があったか。
-     3) ビルド環境や依存関係のバージョンミスマッチの可能性。
+        実行内容:
+        1. `src/app/mod.rs`から`q`と`e`キーの`decrease_value`/`increase_value`へのマッピングを削除してください。
+        2. `q`キーがアプリケーションを終了するように、`src/app/shortcuts.rs`または関連する入力処理ロジックを更新してください（現在の`ESC`キーの終了ロジックを参考にしてください）。
+        3. `src/ui/mod.rs`の`draw_keybind_hints`および`draw_help_dialog`から、`q/e:dec/inc`および`hjkl/wasd:move`の表記を削除してください。
+        4. `src/ui/mod.rs`でヘルプ画面の表示が`keybinds`設定から生成されるように、`src/app/shortcuts.rs`の内容を読み込み、動的にヘルプテキストを生成する仕組みを導入してください。`src/app/shortcuts.rs`に新しい関数`get_keybind_help_text()`を実装し、それが`src/ui/mod.rs`から呼び出されるようにしてください。
 
-     確認事項: `bluesky-text-to-audio` リポジトリのコードは直接参照できないため、一般的な問題パターンと、提供されたファイル情報（`wasm/src/lib.rs`, `core/src/lib.rs` の内容）に基づいて推論してください。
+        確認事項:
+        - `q`キーを押下するとアプリケーションが終了すること。
+        - `e`キーがどの機能にもマッピングされていないこと（または適切に再マッピングされていること）。
+        - ヘルプ画面から`q/e:dec/inc`と`hjkl/wasd:move`の表記が消えていること。
+        - 新しいヘルプ表示が、`src/app/shortcuts.rs`の内容を反映していること。
+        - アプリケーションが引き続き正常にコンパイル・実行できること。
 
-     期待する出力: 考えられる原因を複数リストアップし、それぞれの原因を検証するための具体的な調査ステップをMarkdown形式で出力してください。
-     ```
+        期待する出力: 修正された`src/app/mod.rs`, `src/app/shortcuts.rs`, `src/ui/mod.rs`のコード。および、変更内容のmarkdown形式での説明。
+        ```
 
-3. Sixelによる音色波形描画の技術検証とPoC作成 ([Issue #177](../issue-notes/177.md))
-   - 最初の小さな一歩: RustアプリケーションでSixel出力を生成し、対応するターミナルに表示するための基本的な技術調査と、概念実証 (PoC) のコードスニペットを作成する。
-   - Agent実行プロンプト:
-     ```
-     対象ファイル: なし（新規コードの検討）
+3.  Envelope折れ線グラフの改善 ([Issue #218](../issue-notes/218.md))
+    -   最初の小さな一歩: `src/ui/mod.rs`内の`draw_envelope_canvas`関数を分析し、OP1, OP2, OP3, OP4それぞれのエンベロープを個別のグラフとして描画するために必要な変更点を特定する。
+    -   Agent実行プロンプト:
+        ```
+        対象ファイル: src/ui/mod.rs, src/ui/helpers.rs
 
-     実行内容: RustでSixelグラフィックを生成し、対応するターミナルで表示するための基本的なアプローチを調査し、以下の点について記述してください。
-     1) Sixel形式でイメージデータをエンコードするためのRustクレートやライブラリの有無。
-     2) Sixelデータを標準出力または特定のファイルに書き出す方法。
-     3) 簡単な波形データ（例: 正弦波）をSixelとして描画するための概念的なコードスニペット。
+        実行内容: `src/ui/mod.rs`の`draw_envelope_canvas`関数を、オペレータごとに個別のキャンバスまたはサブグラフとして描画するように修正してください。具体的には、
+        1. 各オペレータ(OP1-OP4)のエンベロープが、隣接してまたは重ねて描画されつつも、それぞれが明確に区別できるようにしてください。
+        2. キャリア/モジュレータの区別を視覚的に表示するための要素（例: キャリアを太線にする、異なるパターンで描画する、ラベルを追加するなど）を導入してください。`get_operator_roles_for_alg(alg_value)`の結果を参考にしてください。
+        3. Slow attackやlong decayなど、エンベロープの形状がより明確に視覚化されるように、グラフの描画ロジックを調整してください。
 
-     確認事項: Sixelのサポート状況はターミナルエミュレータに依存するため、一般的な利用可能性について言及してください。複雑なグラフィック描画ではなく、あくまで「基本的な波形表示」に焦点を当ててください。
+        確認事項:
+        - 4つのオペレータのエンベロープが個別に、かつ明確に表示されていること。
+        - アルゴリズムに応じたキャリア/モジュレータの区別が視覚的に表現されていること。
+        - 異なるADSR設定がグラフ形状に反映され、視覚的に区別できること。
+        - UIのレイアウトが崩れていないこと。
+        - コンパイルエラーがないこと。
 
-     期待する出力: Sixel描画の技術調査結果と、波形表示の概念的なRustコードスニペットをMarkdown形式で出力してください。
+        期待する出力: 修正された`src/ui/mod.rs`と`src/ui/helpers.rs`のコード。および、エンベロープ描画改善内容のmarkdown形式での説明。
 
 ---
-Generated at: 2026-03-16 07:11:39 JST
+Generated at: 2026-03-17 07:16:40 JST

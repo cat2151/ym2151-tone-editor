@@ -1,4 +1,4 @@
-Last updated: 2026-03-16
+Last updated: 2026-03-17
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -224,6 +224,7 @@ Last updated: 2026-03-16
 - build.rs
 - core/Cargo.toml
 - core/src/lib.rs
+- core/src/tests.rs
 - demo-library/index.html
 - docs/KEYBINDS.ja.md
 - generate_gm_templates.rs
@@ -239,10 +240,10 @@ Last updated: 2026-03-16
 - issue-notes/164.md
 - issue-notes/167.md
 - issue-notes/174.md
-- issue-notes/176.md
 - issue-notes/177.md
-- issue-notes/210.md
-- issue-notes/212.md
+- issue-notes/218.md
+- issue-notes/219.md
+- issue-notes/220.md
 - issue-notes/95.md
 - issue-notes/96.md
 - src/app/mod.rs
@@ -291,14 +292,14 @@ Last updated: 2026-03-16
 - ym2151-tone-editor.toml.example
 
 ## 現在のオープンIssues
-## [Issue #213](../issue-notes/213.md): 大きなファイルの検出: 1個のファイルが500行を超えています
+## [Issue #221](../issue-notes/221.md): 大きなファイルの検出: 1個のファイルが500行を超えています
 以下のファイルが500行を超えています。リファクタリングを検討してください。
 
 ## 検出されたファイル
 
 | ファイル | 行数 | 超過行数 |
 |---------|------|----------|
-| `core/src/lib.rs` | 519 | +19 |
+| `src/ui/mod.rs` | 525 | +25 |
 
 ## テスト実施のお願い
 
@@ -308,30 +309,79 @@ Last updated: 2026-03-16
 ## 推奨事項
 
 1. 単一責任の原則に従い、ファイルを分割する
-2...
+2. ...
 ラベル: refactoring, code-quality, automated
---- issue-notes/213.md の内容 ---
+--- issue-notes/221.md の内容 ---
 
 ```markdown
 
 ```
 
-## [Issue #212](../issue-notes/212.md): ランダム音色機能のWASM版が、bluesky-text-to-audioリポジトリで、利用できない状態になってしまっている
-[issue-notes/212.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/212.md)
+## [Issue #220](../issue-notes/220.md): q と eのdecrement increment をやめて、qをquitにする
+[issue-notes/220.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/220.md)
 
 ...
 ラベル: 
---- issue-notes/212.md の内容 ---
+--- issue-notes/220.md の内容 ---
 
 ```markdown
-# issue ランダム音色機能のWASM版が、bluesky-text-to-audioリポジトリで、利用できない状態になってしまっている #212
-[issues #212](https://github.com/cat2151/ym2151-tone-editor/issues/212)
+# issue q と eのdecrement increment をやめて、qをquitにする #220
+[issues #220](https://github.com/cat2151/ym2151-tone-editor/issues/220)
 
-
+- なぜなら、ほかのTUIでqをquitにしており、操作が違う上にdecrementが発生してUXが悪いので
 
 ```
 
-## [Issue #177](../issue-notes/177.md): sixelを使って音色波形を描画できるか試し、UXを検証する。音色変更後5秒したらbackgroundでcat-play-mmlをwav生成モードで呼び出してwavを得て表示
+## [Issue #219](../issue-notes/219.md): helpから、hjklとwasdを外して、矢印キーを書く
+[issue-notes/219.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/219.md)
+
+...
+ラベル: 
+--- issue-notes/219.md の内容 ---
+
+```markdown
+# issue helpから、hjklとwasdを外して、矢印キーを書く #219
+[issues #219](https://github.com/cat2151/ym2151-tone-editor/issues/219)
+
+- なぜならhjklとwasdは現状廃止されているから
+- より具体的には：
+  - help画面の表示は、keybinds設定から生成すること
+  - 常時、画面左下に、?:help を表示すること
+
+```
+
+## [Issue #218](../issue-notes/218.md): envelope折れ線グラフを改善する
+[issue-notes/218.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/218.md)
+
+...
+ラベル: 
+--- issue-notes/218.md の内容 ---
+
+```markdown
+# issue envelope折れ線グラフを改善する #218
+[issues #218](https://github.com/cat2151/ym2151-tone-editor/issues/218)
+
+- 課題、sixelで、と指示したのにsixelになってない。
+- 課題、OP1,OP2,OP3,OP4 それぞれ個別で表示してUX検証したい。
+- 課題、どれがキャリアか？どれがモジュレータか？がわからない。
+- 課題、どれも似たような見た目になってしまっている。slow attackや、long decayの区別がつかない。
+- 課題、envelopeの、どこまでがアタックで、どこからディケイで、どこからサステインで、どこからリリースか？区別がつかない。
+
+```
+
+## [Issue #217](../issue-notes/217.md): Add sixel waveform display with 5-second idle detection (Windows)
+- [x] レビュー内容を分析し対応計画を立案
+- [x] 🔴 競合状態修正: `AtomicU32` 生成カウンタ (`waveform_generation`) を追加。`on_tone_changed()` でインクリメントし、スレッドは書き込み前に世代が一致するか確認する
+- [x] 🟡 マジックナンバー修正: `LAYOUT_CH_ROW_Y = 7` を `ui/mod.rs` に `pub const` として公開し、`compute_envelope_area_y()` から `super::LAYOUT_CH_ROW_Y` で参照する
+- [x] 🟡 自動再描画修正: ...
+ラベル: 
+--- issue-notes/217.md の内容 ---
+
+```markdown
+
+```
+
+## [Issue #177](../issue-notes/177.md): sixelを使って音色波形を描画できるか試し、UXを検証する
 [issue-notes/177.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/177.md)
 
 ...
@@ -342,21 +392,11 @@ Last updated: 2026-03-16
 # issue sixelを使って音色波形を描画できるか試し、UXを検証する。音色変更後5秒したらbackgroundでcat-play-mmlをwav生成モードで呼び出してwavを得て表示 #177
 [issues #177](https://github.com/cat2151/ym2151-tone-editor/issues/177)
 
-
-
-```
-
-## [Issue #176](../issue-notes/176.md): sixelを使って各OPごとのエンベロープを描画できるか試し、UXを検証する
-[issue-notes/176.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/176.md)
-
-...
-ラベル: 
---- issue-notes/176.md の内容 ---
-
-```markdown
-# issue sixelを使って各OPごとのエンベロープを描画できるか試し、UXを検証する #176
-[issues #176](https://github.com/cat2151/ym2151-tone-editor/issues/176)
-
+# 具体的には
+- 音色変更後5秒なにも音色変更がないときに限り、要はidle状態に限り、
+- backgroundでcat-play-mmlをwav生成モードで呼び出して、
+- wavを得て、
+- それをsixelで表示する
 
 
 ```
@@ -450,301 +490,249 @@ Last updated: 2026-03-16
 ```
 
 ## ドキュメントで言及されているファイルの内容
-### .github/actions-tmp/issue-notes/12.md
+### .github/actions-tmp/issue-notes/17.md
 ```md
 {% raw %}
-# issue project-summary を他projectから使いやすくする #12
-[issues #12](https://github.com/cat2151/github-actions/issues/12)
+# issue development-status が生成したmdに誤りがある。issue-note へのlinkがURL誤りで、404となってしまう #17
+[issues #17](https://github.com/cat2151/github-actions/issues/17)
 
-# 保留、別projectでの検証待ちのもの
-- promptsをcall側ymlで指定可能にする
-  - 保留の理由
-    - YAGNI原則
-      - 現状の共通workflow側のpromptsで問題ないうちは、保留とする
-        - そのままで使える可能性が高い見込み
-      - 検証が必要
-      - 別promptsを実際に書く必要が出たときに、追加実装をする
-# 課題、 docs/ をメンテする
-- 対象は、 daily-summary-setup.md
-- call-daily-project-summary.yml の導入手順を書く
-- どうする？
-  - 次の日次バッチでagent用promptを生成させる
-- 結果
-  - 生成させた
-  - 導入手順をメンテさせた
-  - 人力でさらにメンテした
-  - これでOKと判断する。
-  - あとは必要に応じてissue起票すればよい、今すぐのissue起票は不要（YAGNI原則）、と判断する
+# 事例
+- 生成したmdのURL：
+    - https://github.com/cat2151/github-actions/blob/main/generated-docs/development-status.md
+- そのmdをGitHub上でdecodeして閲覧したときのURL、404である：
+    - https://github.com/cat2151/github-actions/blob/main/generated-docs/issue-notes/16.md
+- そのmdに実際に含まれるURL：
+    - issue-notes/16.md
+- あるべきURL：
+    - https://github.com/cat2151/github-actions/blob/main/issue-notes/16.md
+- あるべきURLがmdにどう含まれているべきか：
+    - ../issue-notes/16.md
 
-# closeとする
-
-{% endraw %}
-```
-
-### .github/actions-tmp/issue-notes/13.md
-```md
-{% raw %}
-# issue issue-note を他projectから使いやすくする #13
-[issues #13](https://github.com/cat2151/github-actions/issues/13)
-
-- docs
-    - call導入手順を書く
-
-{% endraw %}
-```
-
-### .github/actions-tmp/issue-notes/2.md
-```md
-{% raw %}
-# issue GitHub Actions「関数コールグラフhtmlビジュアライズ生成」を共通ワークフロー化する #2
-[issues #2](https://github.com/cat2151/github-actions/issues/2)
-
-
-# prompt
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-このymlファイルを、以下の2つのファイルに分割してください。
-1. 共通ワークフロー       cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
-2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-callgraph_enhanced.yml
-まずplanしてください
-```
+# どうする？
+- 案
+    - promptを修正する
+    - promptの場所は：
+        - .github_automation/project_summary/scripts/development/DevelopmentStatusGenerator.cjs
+    - 備考、cjs内にpromptがハードコーディングされており、promptをメンテしづらいので別途対処する : [issues #18](https://github.com/cat2151/github-actions/issues/18)
 
 # 結果
-- indent
-    - linter？がindentのエラーを出しているがyml内容は見た感じOK
-    - テキストエディタとagentの相性問題と判断する
-    - 別のテキストエディタでsaveしなおし、テキストエディタをreload
-    - indentのエラーは解消した
-- LLMレビュー
-    - agent以外の複数のLLMにレビューさせる
-    - prompt
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューしてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
+- agentにpromptを投げた
+    - ※promptは、development-statusで生成したもの
+- レビューした
+    - agentがフルパスで実装した、ことがわかった
+- userが分析し、 ../ のほうが適切と判断した
+    - ※「事例」コーナーを、あわせて修正した
+- そのように指示してagentに修正させた
+- testする
 
---- 共通ワークフロー
-
-# GitHub Actions Reusable Workflow for Call Graph Generation
-name: Generate Call Graph
-
-# TODO Windowsネイティブでのtestをしていた名残が残っているので、今後整理していく。今はWSL act でtestしており、Windowsネイティブ環境依存問題が解決した
-#  ChatGPTにレビューさせるとそこそこ有用そうな提案が得られたので、今後それをやる予定
-#  agentに自己チェックさせる手も、セカンドオピニオンとして選択肢に入れておく
-
-on:
-  workflow_call:
-
-jobs:
-  check-commits:
-    runs-on: ubuntu-latest
-    outputs:
-      should-run: ${{ steps.check.outputs.should-run }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 50 # 過去のコミットを取得
-
-      - name: Check for user commits in last 24 hours
-        id: check
-        run: |
-          node .github/scripts/callgraph_enhanced/check-commits.cjs
-
-  generate-callgraph:
-    needs: check-commits
-    if: needs.check-commits.outputs.should-run == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      security-events: write
-      actions: read
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set Git identity
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Remove old CodeQL packages cache
-        run: rm -rf ~/.codeql/packages
-
-      - name: Check Node.js version
-        run: |
-          node .github/scripts/callgraph_enhanced/check-node-version.cjs
-
-      - name: Install CodeQL CLI
-        run: |
-          wget https://github.com/github/codeql-cli-binaries/releases/download/v2.22.1/codeql-linux64.zip
-          unzip codeql-linux64.zip
-          sudo mv codeql /opt/codeql
-          echo "/opt/codeql" >> $GITHUB_PATH
-
-      - name: Install CodeQL query packs
-        run: |
-          /opt/codeql/codeql pack install .github/codeql-queries
-
-      - name: Check CodeQL exists
-        run: |
-          node .github/scripts/callgraph_enhanced/check-codeql-exists.cjs
-
-      - name: Verify CodeQL Configuration
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs verify-config
-
-      - name: Remove existing CodeQL DB (if any)
-        run: |
-          rm -rf codeql-db
-
-      - name: Perform CodeQL Analysis
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs analyze
-
-      - name: Check CodeQL Analysis Results
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs check-results
-
-      - name: Debug CodeQL execution
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs debug
-
-      - name: Wait for CodeQL results
-        run: |
-          node -e "setTimeout(()=>{}, 10000)"
-
-      - name: Find and process CodeQL results
-        run: |
-          node .github/scripts/callgraph_enhanced/find-process-results.cjs
-
-      - name: Generate HTML graph
-        run: |
-          node .github/scripts/callgraph_enhanced/generate-html-graph.cjs
-
-      - name: Copy files to generated-docs and commit results
-        run: |
-          node .github/scripts/callgraph_enhanced/copy-commit-results.cjs
-
---- 呼び出し元
-# 呼び出し元ワークフロー: call-callgraph_enhanced.yml
-name: Call Call Graph Enhanced
-
-on:
-  schedule:
-    # 毎日午前5時(JST) = UTC 20:00前日
-    - cron: '0 20 * * *'
-  workflow_dispatch:
-
-jobs:
-  call-callgraph-enhanced:
-    # uses: cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
-    uses: ./.github/workflows/callgraph_enhanced.yml # ローカルでのテスト用
-```
-
-# レビュー結果OKと判断する
-- レビュー結果を人力でレビューした形になった
-
-# test
-- #4 同様にローカル WSL + act でtestする
-- エラー。userのtest設計ミス。
-  - scriptの挙動 : src/ がある前提
-  - 今回の共通ワークフローのリポジトリ : src/ がない
-  - 今回testで実現したいこと
-    - 仮のソースでよいので、関数コールグラフを生成させる
-  - 対策
-    - src/ にダミーを配置する
+# 結果
 - test green
-  - ただしcommit pushはしてないので、html内容が0件NG、といったケースの検知はできない
-  - もしそうなったら別issueとしよう
-
-# test green
-
-# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
-
-# closeとする
-- もしhtml内容が0件NG、などになったら、別issueとするつもり
+- closeする
 
 {% endraw %}
 ```
 
-### .github/actions-tmp/issue-notes/3.md
+### .github/actions-tmp/issue-notes/18.md
 ```md
 {% raw %}
-# issue GitHub Actions「issue note生成」を共通ワークフロー化する #3
-[issues #3](https://github.com/cat2151/github-actions/issues/3)
+# issue DevelopmentStatusGenerator.cjs 内に、Geminiに与えるpromptがハードコーディングされてしまっている #18
+[issues #18](https://github.com/cat2151/github-actions/issues/18)
 
-- 前提
-  - userは、translateのworkflowを共通ワークフロー化し、動くようにしたので、共通ワークフロー化の知識がある
-  - よって、今回は、promptでplanさせ、そのplanをuserがレビューし、planの改善を指示できるので、ハルシネーションのリスクを下げることができる
+# 何が困るの？
+- project把握しづらい。どこにpromptが書いてあるのか、把握しづらい。
+- prompts/ にほかのpromptがあるため、方針がブレていると、読みづらい。
+- 備忘、いくらテンプレートリテラルとプレースホルダーで密結合しているからとはいえ、ハードコーディングはNG。
+    - それらはreplaceを使う等で楽に切り出しできるので。
 
-- prompt
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-このymlはまだ共通ワークフロー化されず、
-呼び出し元からコピーされたままの状態です。
-このymlファイル名のまま、
-中身を共通ワークフロー化してください。
-呼び出し元ymlは別途書きますので気にしないでください。
-まずplanしてください
-```
+# 問題のcjsの場所は？
+- ファイルパス : .github_automation/project_summary/scripts/development/DevelopmentStatusGenerator.cjs
+- 関数 : generateDevelopmentStatus
 
-- plan 生成結果
-```
-共通ワークフロー化のためのplanは以下の通りです。
+# 結果
+- Geminiに生成させたpromptを、agentに投げて、リファクタリングさせてみた
+- ハルシネーションした。使い物にならなかった
+- 人力でやる
 
-1. 目的
-現在の issue-note.yml を「共通ワークフロー」として再設計し、他リポジトリや他ワークフローから workflow_call で呼び出せるようにする。
-2. 主な変更点
-on: トリガーを workflow_call に変更（直接イベントで起動しない）。
-必要な入力（inputs）やシークレット（secrets）を workflow_call セクションで定義。
-github.event.issue などのイベント依存部分を、inputs経由で受け取る形に修正。
-既存の処理（issueノート生成、コミット、issue body更新）はそのまま活かすが、パラメータ化する。
-3. 具体的な修正内容
-on: issues: → on: workflow_call: に変更。
-inputs で必要な値（例: issue_title, issue_number, issue_body, issue_url など）を受け取る。
-スクリプト内の ${{ github.event.issue.xxx }} を ${{ inputs.xxx }} に置換。
-github-script ステップも同様にinputsを参照。
-必要に応じて secrets も workflow_call で受け取れるようにする。
-4. ファイル名・配置
-ファイル名はそのまま issue-note.yml。
-配置場所は workflows でOK（共通ワークフローとしてもこの場所で良い）。
-5. 呼び出し元への影響
-呼び出し元ワークフローで uses: <repo>/.github/workflows/issue-note.yml@main のように参照し、inputsを渡す形になる。
-このplanで進めます。次に、実際の共通ワークフロー化のためのyml修正案を作成しますか？
-```
-
-- userがplanレビューし、OKを出した
-- agentに生成結果ymlをレビューさせた、OKとなった
-  - userはこのレビューは認知負荷が高いのでskipとする（単純な細かい間違い探し作業になるので、それはagentに任せた）
--  エラー。呼び出し元ymlのエラーがあり修正。共通ワークフローのエラー指摘があり、共通ワークフロー側の修正が必要となった
-```
-原因の分析：
-
-呼び出し元（tonejs-mml-to-jsonのissue-note.yml）は、reusable workflow（cat2151/github-actions/.github/workflows/issue-note.yml@main）をusesで呼び出し、inputsをwithで渡しています。
-共通ワークフロー（reusable workflow）は inputs を workflow_call で受け取り、各ステップで ${{ inputs.xxx }} で参照しています。
-しかし、エラーが発生したのは actions/github-script@v7 の script 内です。
-エラーの本質的な原因：
-
-actions/github-script の script: で ${{ inputs.issue_number }} のような式を直接 JavaScript テンプレートリテラル内で使っていますが、これはサポートされていません。
-script: の中は JavaScript であり、YAMLの ${{ ... }} は展開されません（または意図通りに展開されません）。
-そのため、inputs 変数は script 内の JavaScript で未定義となり、ReferenceError になります。
-正しい書き方：
-
-actions/github-script の script: でワークフローの inputs を使いたい場合は、with: で input を environment 変数や script の引数として渡し、JavaScript で process.env から取得するか、github-script の input 機能を使う必要があります。
-例（修正版）：
-
-このように、inputs の値を env で渡し、script 内では process.env で参照してください。
-
-まとめ：
-
-actions/github-script の script 内で ${{ inputs.xxx }} を直接使うと ReferenceError になる
-env: で値を渡し、process.env で参照するのが正しい
-修正が必要です。修正版のワークフローが必要な場合はお知らせください。
-```
-
+# 結果
 - test green
-- closeとする
+
+# closeとする
+
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/19.md
+```md
+{% raw %}
+# issue project-summary の development-status 生成時、issue-notes/ 配下のmdファイルの内容を参照させる #19
+[issues #19](https://github.com/cat2151/github-actions/issues/19)
+
+# 何が困るの？
+- issue解決に向けての次の一手の内容が実態に即していないことが多い。
+
+# 対策案
+- issue-notes/ 配下のmdファイルの内容を参照させる
+
+# 備考
+- さらにmd内に書かれているfileも、project内をcjsに検索させて添付させると、よりGeminiの生成品質が向上する可能性がある。
+    - [issues #20](https://github.com/cat2151/github-actions/issues/20)
+- さらにproject overviewでGeminiがまとめたmdも、Geminiに与えると、よりGeminiの生成品質が向上する可能性がある。
+    - [issues #21](https://github.com/cat2151/github-actions/issues/21)
+- さらに、Geminiに与えたpromptをfileにしてcommit pushしておくと、デバッグに役立つ可能性がある。
+    - [issues #22](https://github.com/cat2151/github-actions/issues/22)
+
+# close条件
+- issues #22 がcloseされること。
+- commitされたpromptを確認し、issue-notes/ 配下のmdファイルがpromptに添付されていること、が確認できること。
+
+# 状況
+- 課題、実装したがtestができていない
+- 対策、issues #22 が実装されれば、testができる
+- 対策、issues #22 のcloseを待つ
+
+# 状況
+- issues #22 がcloseされた
+- testできるようになった
+- commitされたpromptを確認した。issue-notes/ 配下のmdファイルがpromptに添付されていること、が確認できた
+
+# closeする
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/20.md
+```md
+{% raw %}
+# issue project-summary の development-status 生成時、issue-notes/ 配下のmdにファイル名が書いてあれば、そのファイル内容もpromptに添付、を試す #20
+[issues #20](https://github.com/cat2151/github-actions/issues/20)
+
+# 何が困るの？
+- Geminiに次の一手を生成させるとき、cjsの内容も添付したほうが、生成品質が改善できる可能性がある。
+
+# 案
+## outputのimage
+- promptが言及するfilename、について、そのfileの内容もすべてpromptに含める。
+    - 軸は、projectのfilename一覧である。
+        - 一覧それぞれのfilenameについて、promptで言及されているものをfile内容埋め込み、とする。
+- 方向性
+    - シンプルで明確なルール、曖昧さのないルールで、メンテを楽にすることを優先する
+    - 余分なファイルが出てしまうが割り切ってOKとし、欠落リスクを減らせることを優先する
+- 備考
+    - 曖昧でメンテが必要な「documentからのfilename抽出」をやめ、
+        - かわりに、逆に、「今のprojectにあるfileすべてのうち、promptで言及されているもの」を軸とする
+## 実現方法の案
+- project全体について、filenameと、filepath配列（複数ありうる）、のmapを取得する。そういう関数Aをまず実装する。
+    - filepathは、agentが扱えるよう、github上のworkの絶対pathではなく、projectRootからの相対パス表記とする。
+- そして、そのfilenameにmatchするfilepath配列について、filepathとファイル内容を記したmarkdown文字列を返却、という関数Bを実装する。
+- さらに、Geminiにわたすpromptについて、前述の関数Aのfilenameそれぞれについて、prompt内を検索し、filenameが存在する場合は、そのfilenameについて、関数Bを用いてmarkdown文字列を取得する。そうして得られたmarkdown文字列群を返却する、という関数Cを実装する。
+- さらに、promptの末尾に書いてあるプレースホルダー「`${file_contents}`」を、関数Cの結果で置き換える、という関数Dを実装する。
+- 実際には、Geminiにわたすpromptのプレースホルダー展開は、2回にわたる必要がある。1回目でissues-note内容をpromptに埋め込む。2回目でそのpromptに対して関数Dを適用する。
+## 備忘
+- 上記は、agentにplanさせてレビューし、context不足と感じたら上記をメンテ、というサイクルで書いた。
+
+# どうする？
+- 上記をagentに投げる。documentやtestについてのplanもしてくるかもしれないがそこは時間の都合で省略して実施させるつもり。
+- 投げた、実装させた、レビューして人力リファクタリングした
+- testする
+
+# 結果
+- バグ
+    - この20.mdにあるプレースホルダーが置換されてしまっている
+    - issue-notesで言及されていないfileまで添付されてしまっている
+- 分析
+    - この20.mdにあるプレースホルダーが置換されてしまっている
+        - 原因
+            - 20.mdにあるプレースホルダーまで置換対象としてしまっていたため。
+            - prompt全体のプレースホルダーを置換対象としてしまっていたため。
+            - issue-notesを埋め込んだあとでの、プレースホルダー処理だったので、
+                - 20.md が置換対象となってしまったため。
+        - 対策案
+            - プレースホルダーはすべて、「行頭と行末で囲まれている」ときだけ置換対象とする。
+                - つまり文中やcode中のプレースホルダーは置換対象外とする。
+            - さらに、2つ以上プレースホルダーが出たら想定外なので早期エラー終了させ、検知させる。
+    - issue-notesで言及されていないfileまで添付されてしまっている
+        - 原因
+            - promptに、既にprojectの全file listが書き込まれたあとなので、
+                - issue-noteで言及されていなくても、
+                - promptの全file listを対象に検索してしまっている
+        - 対策案の候補
+            - プレースホルダー置換の順番を変更し、全file listは最後に置換する
+            - file添付の対象を変更し、promptでなく、issue-notesとする
+                - これが範囲が絞られているので安全である、と考える
+        - 備忘
+            - 全fileの対象は、リモートリポジトリ側のfileなので、secretsの心配はないし、実際に検索して確認済み
+
+# どうする？
+- agent半分、人力が半分（agentがハルシネーションでソース破壊したので、関数切り分けしたり、リファクタリングしたり）。
+- で実装した。
+- testする
+
+# 結果
+- test green
+
+# closeとする
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/21.md
+```md
+{% raw %}
+# issue project-summary の development-status 生成時、project-overviewが生成済みのproject-overview.mdもpromptに添付、を試す #21
+[issues #21](https://github.com/cat2151/github-actions/issues/21)
+
+# 何が困るの？
+- project-overview.mdがpromptに添付されていたほうが、Geminiの生成品質が改善できる可能性がある。
+    - メリットは、ファイル一覧、関数一覧、をGeminiにわたせること
+
+# 検討事項
+- 課題、その一覧に付記されている「ファイルや関数の要約」は、Geminiが「ファイル名や関数名を元に生成しただけ」で、「ファイル内容や関数内容を参照せずに生成した」可能性が高い
+    - 対策、project-overview.mdに依存しない。
+        - 方法、新規関数をagentに実装させる
+            - 新規関数で、ファイル一覧と関数一覧を生成する
+        - 根拠、そのほうが、シンプルに目的を達成できる可能性が高そう。
+        - 根拠、project-overview.mdだと、不具合として.github 配下のymlがlistに含まれておらず、ymlに関するissue、に関する生成、をするとき不具合の可能性がありそう。そういった、別機能の不具合に影響されがち。
+- 課題、早期に実施したほうが毎日好影響が出る可能性がある
+    - 対策、上記検討事項の対処は後回しにして、先に実装してみる
+    - agentに投げる
+- 課題、ProjectSummaryCoordinator をみたところ、並列処理されている
+    - なので、project-overview.mdを参照したいときに、まだ生成されていない、という可能性が高い
+    - 対策、前述の、新規関数で、ファイル一覧と関数一覧を生成させる
+
+# agentに投げるための整理
+- 編集対象ファイル
+    - prompt
+        - .github_automation/project_summary/prompts/development-status-prompt.md
+        - 編集内容
+            - projectのファイル一覧を埋め込む用の、プレースホルダーを追加する
+    - source
+        - .github_automation/project_summary/scripts/development/DevelopmentStatusGenerator.cjs
+        - 編集内容
+            - projectのファイル一覧を生成する関数、を実装し、
+            - それを前述のプレースホルダーに埋め込む
+
+# agentに投げて実装させた
+
+# test結果
+- 以下が不要
+    - .git/
+    - node_modules/
+
+# どうする？
+- agentに上記を変更させた
+- testする
+
+# 結果
+- test greenとなった
+
+# まとめ
+- issueのtitleからは仕様変更した。
+    - projectのfile一覧をpromptに含める、とした。
+    - そのほうがpromptとして、よい生成結果が期待できる、と判断した。
+- test greenとなった
+
+# closeとする
 
 {% endraw %}
 ```
@@ -907,705 +895,99 @@ jobs:
 {% endraw %}
 ```
 
-### core/src/lib.rs
-```rs
+### .github/actions-tmp/issue-notes/8.md
+```md
 {% raw %}
-//! Platform-independent YM2151 FM tone parameter model and register encoding.
-//!
-//! This crate is the **Single Source of Truth** for the parameter-level YM2151
-//! logic shared between the native TUI application (`ym2151-tone-editor`) and the
-//! WASM bindings (`ym2151-wasm`).  It covers FM tone data structures, constants,
-//! random tone generation, MIDI pitch conversion, and register hex encoding.
-//!
-//! It has **no external dependencies** and compiles for any target including
-//! `wasm32-unknown-unknown`.
-
-use core::fmt::Write as _;
-
-// ---------------------------------------------------------------------------
-// Grid dimensions
-// ---------------------------------------------------------------------------
-
-/// Number of parameter columns in the tone grid (one per operator parameter).
-pub const GRID_WIDTH: usize = 12;
-
-/// Number of rows in the tone grid (four operators + one channel row).
-pub const GRID_HEIGHT: usize = 5;
-
-// ---------------------------------------------------------------------------
-// Operator parameter column indices
-// (order: SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS)
-// ---------------------------------------------------------------------------
-
-pub const PARAM_SM: usize = 0;
-pub const PARAM_TL: usize = 1;
-pub const PARAM_MUL: usize = 2;
-pub const PARAM_AR: usize = 3;
-pub const PARAM_D1R: usize = 4;
-pub const PARAM_D1L: usize = 5;
-pub const PARAM_D2R: usize = 6;
-pub const PARAM_RR: usize = 7;
-pub const PARAM_DT: usize = 8;
-pub const PARAM_DT2: usize = 9;
-pub const PARAM_KS: usize = 10;
-pub const PARAM_AMS: usize = 11;
-
-// ---------------------------------------------------------------------------
-// Channel-row parameter column indices
-// ---------------------------------------------------------------------------
-
-pub const CH_PARAM_ALG: usize = 0;
-pub const CH_PARAM_FB: usize = 1;
-pub const CH_PARAM_NOTE: usize = 2;
-
-/// Row index for the channel settings row (below the four operator rows).
-pub const ROW_CH: usize = 4;
-
-// ---------------------------------------------------------------------------
-// Parameter maximum values (respecting YM2151 bit-field widths)
-// (order: SM, TL, MUL, AR, D1R, D1L, D2R, RR, DT, DT2, KS, AMS)
-// ---------------------------------------------------------------------------
-
-pub const PARAM_MAX: [u8; GRID_WIDTH] = [
-    1,  // SM (SlotMask): 0 or 1
-    99, // TL: 7 bits (0-127, displayed limit 99)
-    15, // MUL: 4 bits (0-15)
-    31, // AR: 5 bits (0-31)
-    31, // D1R: 5 bits (0-31)
-    15, // D1L: 4 bits (0-15)
-    15, // D2R: 4 bits (0-15)
-    15, // RR: 4 bits (0-15)
-    7,  // DT: 3 bits (0-7)
-    3,  // DT2: 2 bits (0-3)
-    3,  // KS: 2 bits (0-3)
-    3,  // AMS: 2 bits (0-3)
-];
-
-// ---------------------------------------------------------------------------
-// Tone data type
-// ---------------------------------------------------------------------------
-
-/// A 5×12 grid of `u8` values representing all tone parameters.
-///
-/// Rows 0-3 hold operator parameters; row 4 (`ROW_CH`) holds channel settings.
-pub type ToneData = [[u8; GRID_WIDTH]; GRID_HEIGHT];
-
-// ---------------------------------------------------------------------------
-// Hardware register layout constants
-// ---------------------------------------------------------------------------
-
-/// Maps the user-facing operator index (O1-O4) to the YM2151 hardware register
-/// slot index.  The hardware order is O1, O3, O2, O4.
-pub const REG_FROM_O1_O4: [usize; 4] = [0, 2, 1, 3];
-
-// ---------------------------------------------------------------------------
-// Random tone configuration (based on web-ym2151 `getDefaultConfig`)
-// ---------------------------------------------------------------------------
-
-/// Which operators are carriers for each ALG value (0-7).
-pub const CARRIERS_PER_ALG: [[bool; 4]; 8] = [
-    [false, false, false, true], // ALG=0: OP4 only
-    [false, false, false, true], // ALG=1: OP4 only
-    [false, false, false, true], // ALG=2: OP4 only
-    [false, false, false, true], // ALG=3: OP4 only
-    [false, false, true, true],  // ALG=4: OP3, OP4
-    [false, true, true, true],   // ALG=5: OP2, OP3, OP4
-    [false, true, true, true],   // ALG=6: OP2, OP3, OP4
-    [true, true, true, true],    // ALG=7: all OPs
-];
-
-/// Modulator TL value per ALG value (`stage_count × 0x08`).
-pub const MODULATOR_TL_PER_ALG: [u8; 8] = [
-    0x20, // ALG=0: 4 stages
-    0x20, // ALG=1: 4 stages
-    0x20, // ALG=2: 4 stages
-    0x20, // ALG=3: 4 stages
-    0x18, // ALG=4: 3 stages
-    0x10, // ALG=5: 2 stages
-    0x10, // ALG=6: 2 stages
-    0x00, // ALG=7: no external modulators
-];
-
-// ---------------------------------------------------------------------------
-// Seed-based LCG pseudo-random number generator
-// ---------------------------------------------------------------------------
-
-/// A simple Linear Congruential Generator seeded by the caller.
-///
-/// This design avoids any dependency on `std::time::SystemTime` (unavailable
-/// in bare WASM) while still being reproducible for testing.
-pub struct SimpleRng {
-    state: u64,
-}
-
-impl SimpleRng {
-    /// Create a new RNG from an externally supplied seed.
-    ///
-    /// In a browser context, pass `Date.now()` to get a different tone on each
-    /// call.  In the native app, pass a value derived from `SystemTime`.
-    pub fn from_seed(seed: u64) -> Self {
-        // Mix the seed to avoid trivial fixed-points for seed=0 or seed=1.
-        let state = seed
-            .wrapping_mul(6364136223846793005)
-            .wrapping_add(1442695040888963407);
-        SimpleRng { state }
-    }
-
-    pub fn next_u64(&mut self) -> u64 {
-        self.state = self
-            .state
-            .wrapping_mul(6364136223846793005)
-            .wrapping_add(1442695040888963407);
-        self.state
-    }
-
-    pub fn range(&mut self, min: u8, max: u8) -> u8 {
-        if min >= max {
-            return min;
-        }
-        let span = (max - min) as u64 + 1;
-        min + (self.next_u64() % span) as u8
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Random tone generation
-// ---------------------------------------------------------------------------
-
-/// Generate a random YM2151 tone from a caller-supplied seed.
-///
-/// The parameter ranges are fixed to the defaults from `web-ym2151`
-/// `getDefaultConfig()`:
-///
-/// | Param | Range |
-/// |-------|-------|
-/// | ALG   | 0–7   |
-/// | FB    | 0–7   |
-/// | AR    | 5–31  |
-/// | D1R   | 0–9   |
-/// | MUL   | 0–15  |
-/// | DT    | 0–7   |
-/// | KS    | 0–3   |
-///
-/// All other parameters are set to fixed values (D1L=15, D2R=0, RR=0, DT2=0,
-/// AMS=0, SM=1).  Carrier TL is always 0; modulator TL is determined by ALG.
-///
-/// # Parameters
-/// - `seed`: An externally supplied 64-bit seed.  Different seeds produce
-///   different tones; the same seed always produces the same tone.
-/// - `current_note`: MIDI note number (0–127) stored in the channel row.
-pub fn generate_random_tone_with_seed(seed: u64, current_note: u8) -> ToneData {
-    let mut rng = SimpleRng::from_seed(seed);
-    let mut values = [[0u8; GRID_WIDTH]; GRID_HEIGHT];
-
-    let alg = rng.range(0, 7);
-    let modulator_tl = MODULATOR_TL_PER_ALG[alg as usize];
-
-    for (op, row) in values.iter_mut().take(4).enumerate() {
-        let is_carrier = CARRIERS_PER_ALG[alg as usize][op];
-
-        row[PARAM_SM] = 1;
-        row[PARAM_TL] = if is_carrier {
-            0
-        } else {
-            modulator_tl.min(PARAM_MAX[PARAM_TL])
-        };
-        row[PARAM_MUL] = rng.range(0, 15);
-        row[PARAM_AR] = rng.range(5, 31);
-        row[PARAM_D1R] = rng.range(0, 9);
-        row[PARAM_D1L] = 15;
-        row[PARAM_D2R] = 0;
-        row[PARAM_RR] = 0;
-        row[PARAM_DT] = rng.range(0, 7);
-        row[PARAM_DT2] = 0;
-        row[PARAM_KS] = rng.range(0, 3);
-        row[PARAM_AMS] = 0;
-    }
-
-    values[ROW_CH][CH_PARAM_ALG] = alg;
-    values[ROW_CH][CH_PARAM_FB] = rng.range(0, 7);
-    values[ROW_CH][CH_PARAM_NOTE] = current_note;
-
-    values
-}
-
-// ---------------------------------------------------------------------------
-// MIDI → YM2151 pitch conversion
-// ---------------------------------------------------------------------------
-
-/// Convert a MIDI note number (0–127) to a YM2151 `(KC, KF)` pair.
-///
-/// The conversion mirrors `smf_to_ym2151log::midi::midi_to_kc_kf`, including
-/// the octave offset and the 14-value YM2151 note encoding.  `KF` is always 0
-/// (no fine tuning), matching the native app behaviour.
-pub fn midi_to_kc_kf(midi_note: u8) -> (u8, u8) {
-    // YM2151 encodes 12 semitones as 14 values (0–14, skipping 3, 7, 11).
-    const NOTE_MAP: [u8; 12] = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14];
-
-    // Subtract 1 to align MIDI octave numbering with YM2151 octave numbering.
-    let adjusted = if midi_note > 0 { midi_note - 1 } else { 0 };
-    let note_in_octave = (adjusted % 12) as usize;
-    let ym_octave = ((adjusted / 12) as i8 - 2).clamp(0, 7) as u8;
-    let kc_note = NOTE_MAP[note_in_octave];
-
-    ((ym_octave << 4) | kc_note, 0)
-}
-
-// ---------------------------------------------------------------------------
-// Register hex encoding
-// ---------------------------------------------------------------------------
-
-/// Encode a tone grid as a register hex string.
-///
-/// The output is a sequence of `AADD` pairs (2-digit uppercase hex address
-/// followed by 2-digit uppercase hex data) that can be sent directly to the
-/// YM2151 chip or consumed by `web-ym2151`.  This is the same format produced
-/// by `editor_rows_to_registers` in the native app.
-pub fn editor_rows_to_registers(values: &ToneData) -> String {
-    // Pre-allocate: 6 operator regs × 4 ops + RL/FB/CON + KC + KF + KEY_ON = 28 pairs × 4 chars
-    let mut result = String::with_capacity(28 * 4);
-
-    let channel: usize = 0;
-
-    for row_id in 0..4 {
-        let op_offset = REG_FROM_O1_O4[row_id] * 8 + channel;
-
-        // DT1 (bits 6-4) and MUL (bits 3-0) – Register $40-$5F
-        let dt_mul = ((values[row_id][PARAM_DT] & 0x07) << 4) | (values[row_id][PARAM_MUL] & 0x0F);
-        push_reg_pair(&mut result, (0x40 + op_offset) as u8, dt_mul);
-
-        // TL – Register $60-$7F
-        push_reg_pair(
-            &mut result,
-            (0x60 + op_offset) as u8,
-            values[row_id][PARAM_TL] & 0x7F,
-        );
-
-        // KS (bits 7-6) and AR (bits 4-0) – Register $80-$9F
-        let ks_ar = ((values[row_id][PARAM_KS] & 0x03) << 6) | (values[row_id][PARAM_AR] & 0x1F);
-        push_reg_pair(&mut result, (0x80 + op_offset) as u8, ks_ar);
-
-        // AMS (bits 7-6) and D1R (bits 4-0) – Register $A0-$BF
-        let ams_d1r =
-            ((values[row_id][PARAM_AMS] & 0x03) << 6) | (values[row_id][PARAM_D1R] & 0x1F);
-        push_reg_pair(&mut result, (0xA0 + op_offset) as u8, ams_d1r);
-
-        // DT2 (bits 7-6) and D2R (bits 3-0) – Register $C0-$DF
-        let dt2_d2r =
-            ((values[row_id][PARAM_DT2] & 0x03) << 6) | (values[row_id][PARAM_D2R] & 0x0F);
-        push_reg_pair(&mut result, (0xC0 + op_offset) as u8, dt2_d2r);
-
-        // D1L (bits 7-4) and RR (bits 3-0) – Register $E0-$FF
-        let d1l_rr = ((values[row_id][PARAM_D1L] & 0x0F) << 4) | (values[row_id][PARAM_RR] & 0x0F);
-        push_reg_pair(&mut result, (0xE0 + op_offset) as u8, d1l_rr);
-    }
-
-    // RL/FB/CON – Register $20-$27
-    let alg = values[ROW_CH][CH_PARAM_ALG];
-    let fb = values[ROW_CH][CH_PARAM_FB];
-    let rl_fb_con = 0xC0u8 | ((fb & 0x07) << 3) | (alg & 0x07);
-    push_reg_pair(&mut result, (0x20 + channel) as u8, rl_fb_con);
-
-    // KC (Key Code) and KF (Key Fraction) – Registers $28-$2F and $30-$37
-    let midi_note = values[ROW_CH][CH_PARAM_NOTE];
-    let (kc, kf) = midi_to_kc_kf(midi_note);
-    push_reg_pair(&mut result, (0x28 + channel) as u8, kc);
-    push_reg_pair(&mut result, (0x30 + channel) as u8, kf);
-
-    // Key On – Register $08
-    let slot_mask = if values[0][PARAM_SM] != 0 { 0x08u8 } else { 0 }
-        | if values[1][PARAM_SM] != 0 { 0x10 } else { 0 }
-        | if values[2][PARAM_SM] != 0 { 0x20 } else { 0 }
-        | if values[3][PARAM_SM] != 0 { 0x40 } else { 0 };
-    push_reg_pair(&mut result, 0x08, slot_mask | channel as u8);
-
-    result
-}
-
-#[inline]
-fn push_reg_pair(out: &mut String, addr: u8, data: u8) {
-    write!(out, "{:02X}{:02X}", addr, data).unwrap();
-}
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // ------------------------------------------------------------------
-    // SimpleRng
-    // ------------------------------------------------------------------
-
-    #[test]
-    fn test_simple_rng_deterministic() {
-        let mut a = SimpleRng::from_seed(42);
-        let mut b = SimpleRng::from_seed(42);
-        assert_eq!(a.next_u64(), b.next_u64());
-        assert_eq!(a.next_u64(), b.next_u64());
-    }
-
-    #[test]
-    fn test_simple_rng_range_in_bounds() {
-        let mut rng = SimpleRng::from_seed(999);
-        for _ in 0..100 {
-            let v = rng.range(5, 31);
-            assert!((5..=31).contains(&v));
-        }
-    }
-
-    #[test]
-    fn test_simple_rng_range_equal_min_max() {
-        let mut rng = SimpleRng::from_seed(1);
-        assert_eq!(rng.range(7, 7), 7);
-    }
-
-    // ------------------------------------------------------------------
-    // midi_to_kc_kf
-    // ------------------------------------------------------------------
-
-    #[test]
-    fn test_midi_to_kc_kf_kf_always_zero() {
-        for note in 0u8..=127 {
-            let (_, kf) = midi_to_kc_kf(note);
-            assert_eq!(kf, 0, "KF must always be 0 for MIDI note {}", note);
-        }
-    }
-
-    #[test]
-    fn test_midi_to_kc_kf_middle_c() {
-        let (kc, _) = midi_to_kc_kf(60);
-        // Middle C (MIDI 60) → adjusted=59 → octave=4, note=11 → YM2151 octave=(4-2)=2, kc_note=NOTE_MAP[11]=14
-        assert_eq!(
-            kc,
-            (2 << 4) | 14,
-            "Unexpected KC for middle C: 0x{:02X}",
-            kc
-        );
-    }
-
-    #[test]
-    fn test_midi_to_kc_kf_a4() {
-        let (kc, _) = midi_to_kc_kf(69);
-        // A4 (MIDI 69) → adjusted=68 → octave=5, note=8 → YM2151 octave=(5-2)=3, kc_note=NOTE_MAP[8]=10
-        assert_eq!(kc, (3 << 4) | 10, "Unexpected KC for A4: 0x{:02X}", kc);
-    }
-
-    #[test]
-    fn test_midi_to_kc_kf_kc_within_valid_range() {
-        for note in 0u8..=127 {
-            let (kc, _) = midi_to_kc_kf(note);
-            // YM2151 KC max: octave=7 (bits 6-4), note=14 (bits 3-0) → 0x7E
-            assert!(
-                kc <= 0x7E,
-                "KC out of valid YM2151 range for MIDI {}: 0x{:02X}",
-                note,
-                kc
-            );
-        }
-    }
-
-    // ------------------------------------------------------------------
-    // generate_random_tone_with_seed
-    // ------------------------------------------------------------------
-
-    #[test]
-    fn test_generate_random_tone_with_seed_deterministic() {
-        let a = generate_random_tone_with_seed(42, 69);
-        let b = generate_random_tone_with_seed(42, 69);
-        assert_eq!(a, b);
-    }
-
-    #[test]
-    fn test_generate_random_tone_with_seed_different_seeds() {
-        let a = generate_random_tone_with_seed(1, 69);
-        let b = generate_random_tone_with_seed(2, 69);
-        assert_ne!(a, b);
-    }
-
-    #[test]
-    fn test_generate_random_tone_with_seed_note_preserved() {
-        let tone = generate_random_tone_with_seed(0, 60);
-        assert_eq!(tone[ROW_CH][CH_PARAM_NOTE], 60);
-    }
-
-    #[test]
-    fn test_generate_random_tone_with_seed_alg_in_range() {
-        let tone = generate_random_tone_with_seed(12345, 69);
-        assert!(tone[ROW_CH][CH_PARAM_ALG] <= 7);
-        assert!(tone[ROW_CH][CH_PARAM_FB] <= 7);
-    }
-
-    #[test]
-    fn test_generate_random_tone_with_seed_carrier_tl_zero() {
-        let tone = generate_random_tone_with_seed(7777, 69);
-        let alg = tone[ROW_CH][CH_PARAM_ALG] as usize;
-        for (op, row) in tone.iter().take(4).enumerate() {
-            if CARRIERS_PER_ALG[alg][op] {
-                assert_eq!(
-                    row[PARAM_TL],
-                    0,
-                    "Carrier OP{} TL must be 0 for ALG={}",
-                    op + 1,
-                    alg
-                );
-            } else {
-                let expected = MODULATOR_TL_PER_ALG[alg];
-                assert_eq!(
-                    row[PARAM_TL],
-                    expected,
-                    "Modulator OP{} TL mismatch for ALG={}",
-                    op + 1,
-                    alg
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn test_generate_random_tone_with_seed_ar_in_range() {
-        let tone = generate_random_tone_with_seed(42, 60);
-        for (op, row) in tone.iter().take(4).enumerate() {
-            assert!(
-                (5..=31).contains(&row[PARAM_AR]),
-                "AR out of range for OP{}: {}",
-                op + 1,
-                row[PARAM_AR]
-            );
-        }
-    }
-
-    // ------------------------------------------------------------------
-    // editor_rows_to_registers
-    // ------------------------------------------------------------------
-
-    #[test]
-    fn test_editor_rows_to_registers_hex_format() {
-        let tone = generate_random_tone_with_seed(12345, 69);
-        let regs = editor_rows_to_registers(&tone);
-        assert!(!regs.is_empty());
-        assert_eq!(
-            regs.len() % 4,
-            0,
-            "Register string must be multiple of 4 chars"
-        );
-        assert!(
-            regs.chars().all(|c| c.is_ascii_hexdigit()),
-            "All chars must be hex digits: {}",
-            regs
-        );
-    }
-
-    #[test]
-    fn test_editor_rows_to_registers_includes_kc_and_kf() {
-        let tone = generate_random_tone_with_seed(1234, 69);
-        let regs = editor_rows_to_registers(&tone);
-        let chars: Vec<char> = regs.chars().collect();
-        let mut found_kc = false;
-        let mut found_kf = false;
-        for chunk in chars.chunks(4) {
-            let addr = u8::from_str_radix(&chunk[0..2].iter().collect::<String>(), 16).unwrap();
-            let data = u8::from_str_radix(&chunk[2..4].iter().collect::<String>(), 16).unwrap();
-            if (0x28..=0x2F).contains(&addr) {
-                found_kc = true;
-                assert!(data <= 0x7E, "KC out of range: 0x{:02X}", data);
-            }
-            if (0x30..=0x37).contains(&addr) {
-                found_kf = true;
-                assert_eq!(data, 0, "KF must be 0, got 0x{:02X}", data);
-            }
-        }
-        assert!(found_kc, "KC register (0x28) missing from output");
-        assert!(found_kf, "KF register (0x30) missing from output");
-    }
-
-    #[test]
-    fn test_editor_rows_to_registers_deterministic() {
-        let tone = generate_random_tone_with_seed(999, 60);
-        let r1 = editor_rows_to_registers(&tone);
-        let r2 = editor_rows_to_registers(&tone);
-        assert_eq!(r1, r2);
-    }
-}
+# issue 関数コールグラフhtmlビジュアライズ生成の対象ソースファイルを、呼び出し元ymlで指定できるようにする #8
+[issues #8](https://github.com/cat2151/github-actions/issues/8)
+
+# これまでの課題
+- 以下が決め打ちになっていた
+```
+  const allowedFiles = [
+    'src/main.js',
+    'src/mml2json.js',
+    'src/play.js'
+  ];
+```
+
+# 対策
+- 呼び出し元ymlで指定できるようにする
+
+# agent
+- agentにやらせることができれば楽なので、初手agentを試した
+- 失敗
+    - ハルシネーションしてscriptを大量破壊した
+- 分析
+    - 修正対象scriptはagentが生成したもの
+    - 低品質な生成結果でありソースが巨大
+    - ハルシネーションで破壊されやすいソース
+    - AIの生成したソースは、必ずしもAIフレンドリーではない
+
+# 人力リファクタリング
+- 低品質コードを、最低限agentが扱えて、ハルシネーションによる大量破壊を防止できる内容、にする
+- 手短にやる
+    - そもそもビジュアライズは、agentに雑に指示してやらせたもので、
+    - 今後別のビジュアライザを選ぶ可能性も高い
+    - 今ここで手間をかけすぎてコンコルド効果（サンクコストバイアス）を増やすのは、project群をトータルで俯瞰して見たとき、損
+- 対象
+    - allowedFiles のあるソース
+        - callgraph-utils.cjs
+            - たかだか300行未満のソースである
+            - この程度でハルシネーションされるのは予想外
+            - やむなし、リファクタリングでソース分割を進める
+
+# agentに修正させる
+## prompt
+```
+allowedFilesを引数で受け取るようにしたいです。
+ないならエラー。
+最終的に呼び出し元すべてに波及して修正したいです。
+
+呼び出し元をたどってエントリポイントも見つけて、
+エントリポイントにおいては、
+引数で受け取ったjsonファイル名 allowedFiles.js から
+jsonファイル allowedFiles.jsonの内容をreadして
+変数 allowedFilesに格納、
+後続処理に引き渡す、としたいです。
+
+まずplanしてください。
+planにおいては、修正対象のソースファイル名と関数名を、呼び出し元を遡ってすべて特定し、listしてください。
+```
+
+# 修正が順調にできた
+- コマンドライン引数から受け取る作りになっていなかったので、そこだけ指示して修正させた
+- yml側は人力で修正した
+
+# 他のリポジトリから呼び出した場合にバグらないよう修正する
+- 気付いた
+    - 共通ワークフローとして他のリポジトリから使った場合はバグるはず。
+        - ymlから、共通ワークフロー側リポジトリのcheckoutが漏れているので。
+- 他のyml同様に修正する
+- あわせて全体にymlをリファクタリングし、修正しやすくし、今後のyml読み書きの学びにしやすくする
+
+# local WSL + act : test green
+
+# closeとする
+- もし生成されたhtmlがNGの場合は、別issueとするつもり
 
 {% endraw %}
 ```
 
-### wasm/src/lib.rs
-```rs
+### .github/actions-tmp/issue-notes/9.md
+```md
 {% raw %}
-//! WASM bindings for YM2151 tone generation.
-//!
-//! This crate is a thin `wasm-bindgen` wrapper around [`ym2151-tone-params`].  All
-//! logic (random tone generation, register encoding, MIDI pitch conversion)
-//! lives in `ym2151-tone-params` as the Single Source of Truth shared with the native
-//! TUI application.
-//!
-//! # Usage from TypeScript
-//! ```typescript
-//! import init, { generate_random_tone_registers } from './ym2151_wasm.js';
-//! await init();
-//! const seed = Date.now();
-//! const registers = generate_random_tone_registers(seed, 69); // 69 = A4, MIDI note 0–127
-//! // registers: hex string e.g. "4000600080001F..."
-//! ```
+# issue 関数コールグラフhtmlビジュアライズが0件なので、原因を可視化する #9
+[issues #9](https://github.com/cat2151/github-actions/issues/9)
 
-use wasm_bindgen::prelude::*;
+# agentに修正させたり、人力で修正したりした
+- agentがハルシネーションし、いろいろ根の深いバグにつながる、エラー隠蔽などを仕込んでいたため、検知が遅れた
+- 詳しくはcommit logを参照のこと
+- WSL + actの環境を少し変更、act起動時のコマンドライン引数を変更し、generated-docsをmountする（ほかはデフォルト挙動であるcpだけにする）ことで、デバッグ情報をコンテナ外に出力できるようにし、デバッグを効率化した
 
-/// Generate a random YM2151 tone and return it as a register hex string.
-///
-/// # Parameters
-/// - `seed`: A numeric seed for the random number generator.  Pass `Date.now()`
-///   from TypeScript to get a different tone on each call.
-/// - `current_note`: MIDI note number (0–127) to embed in the tone data.
-///   Pass 69 for A4 (concert pitch) if unsure.
-///
-/// # Returns
-/// A hex string of register address/data pairs (4 chars each, e.g. `"4000..."`).
-/// This is the same format used by `editor_rows_to_registers` in the native app.
-#[wasm_bindgen]
-pub fn generate_random_tone_registers(seed: f64, current_note: u8) -> String {
-    let seed_u64 = seed.abs() as u64;
-    let tone = ym2151_tone_params::generate_random_tone_with_seed(seed_u64, current_note);
-    ym2151_tone_params::editor_rows_to_registers(&tone)
-}
+# test green
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// Decode a register hex string back into (alg, fb, ar[4], tl[4]).
-    fn decode_registers(regs: &str) -> (u8, u8, [u8; 4], [u8; 4]) {
-        let chars: Vec<char> = regs.chars().collect();
-        assert!(chars.len().is_multiple_of(4));
-        let mut alg = 0u8;
-        let mut fb = 0u8;
-        let mut ar = [0u8; 4];
-        let mut tl = [0u8; 4];
-        for chunk in chars.chunks(4) {
-            let addr = u8::from_str_radix(&chunk[0..2].iter().collect::<String>(), 16).unwrap();
-            let data = u8::from_str_radix(&chunk[2..4].iter().collect::<String>(), 16).unwrap();
-            match addr {
-                0x20..=0x27 => {
-                    alg = data & 0x07;
-                    fb = (data >> 3) & 0x07;
-                }
-                0x60..=0x7F => {
-                    let reg = ((addr - 0x60) / 8) as usize;
-                    if reg < 4 {
-                        let op = [0usize, 2, 1, 3][reg];
-                        tl[op] = data & 0x7F;
-                    }
-                }
-                0x80..=0x9F => {
-                    let reg = ((addr - 0x80) / 8) as usize;
-                    if reg < 4 {
-                        let op = [0usize, 2, 1, 3][reg];
-                        ar[op] = data & 0x1F;
-                    }
-                }
-                _ => {}
-            }
-        }
-        (alg, fb, ar, tl)
-    }
-
-    #[test]
-    fn test_generate_random_tone_registers_returns_hex_string() {
-        let result = generate_random_tone_registers(12345.0, 69);
-        assert!(!result.is_empty());
-        assert!(result.chars().all(|c| c.is_ascii_hexdigit()));
-        assert_eq!(result.len() % 4, 0);
-    }
-
-    #[test]
-    fn test_generate_random_tone_registers_alg_in_range() {
-        let result = generate_random_tone_registers(99999.0, 69);
-        let (alg, fb, _, _) = decode_registers(&result);
-        assert!(alg <= 7);
-        assert!(fb <= 7);
-    }
-
-    #[test]
-    fn test_generate_random_tone_registers_ar_in_range() {
-        let result = generate_random_tone_registers(42.0, 60);
-        let (_, _, ar, _) = decode_registers(&result);
-        for (op, &v) in ar.iter().enumerate() {
-            assert!(
-                (5..=31).contains(&v),
-                "AR for op {} out of range: {}",
-                op,
-                v
-            );
-        }
-    }
-
-    #[test]
-    fn test_generate_random_tone_registers_carrier_tl_zero() {
-        use ym2151_tone_params::{CARRIERS_PER_ALG, MODULATOR_TL_PER_ALG};
-        let result = generate_random_tone_registers(7777.0, 69);
-        let (alg, _, _, tl) = decode_registers(&result);
-        for (op, &v) in tl.iter().enumerate() {
-            if CARRIERS_PER_ALG[alg as usize][op] {
-                assert_eq!(v, 0);
-            } else {
-                assert_eq!(v, MODULATOR_TL_PER_ALG[alg as usize]);
-            }
-        }
-    }
-
-    #[test]
-    fn test_different_seeds_produce_different_results() {
-        let r1 = generate_random_tone_registers(1.0, 69);
-        let r2 = generate_random_tone_registers(2.0, 69);
-        assert_ne!(r1, r2);
-    }
-
-    #[test]
-    fn test_same_seed_produces_same_result() {
-        let r1 = generate_random_tone_registers(100.0, 69);
-        let r2 = generate_random_tone_registers(100.0, 69);
-        assert_eq!(r1, r2);
-    }
-
-    #[test]
-    fn test_note_is_embedded_in_kc_and_kf_registers() {
-        let result = generate_random_tone_registers(1234.0, 69);
-        let chars: Vec<char> = result.chars().collect();
-        let mut found_kc = false;
-        let mut found_kf = false;
-        for chunk in chars.chunks(4) {
-            let addr = u8::from_str_radix(&chunk[0..2].iter().collect::<String>(), 16).unwrap();
-            let data = u8::from_str_radix(&chunk[2..4].iter().collect::<String>(), 16).unwrap();
-            if (0x28..=0x2F).contains(&addr) {
-                found_kc = true;
-                assert!(
-                    data <= 0x7E,
-                    "KC should be in valid YM2151 range (max 0x7E), got 0x{:02X}",
-                    data
-                );
-            }
-            if (0x30..=0x37).contains(&addr) {
-                found_kf = true;
-                assert_eq!(data, 0);
-            }
-        }
-        assert!(found_kc, "KC register (0x28) not found");
-        assert!(found_kf, "KF register (0x30) not found");
-    }
-
-    #[test]
-    fn test_seed_zero_does_not_panic() {
-        let result = generate_random_tone_registers(0.0, 60);
-        assert!(!result.is_empty());
-    }
-}
+# closeとする
 
 {% endraw %}
 ```
@@ -1686,61 +1068,1151 @@ mod tests {
 {% endraw %}
 ```
 
-### issue-notes/176.md
-```md
-{% raw %}
-# issue sixelを使って各OPごとのエンベロープを描画できるか試し、UXを検証する #176
-[issues #176](https://github.com/cat2151/ym2151-tone-editor/issues/176)
-
-
-
-{% endraw %}
-```
-
 ### issue-notes/177.md
 ```md
 {% raw %}
 # issue sixelを使って音色波形を描画できるか試し、UXを検証する。音色変更後5秒したらbackgroundでcat-play-mmlをwav生成モードで呼び出してwavを得て表示 #177
 [issues #177](https://github.com/cat2151/ym2151-tone-editor/issues/177)
 
+# 具体的には
+- 音色変更後5秒なにも音色変更がないときに限り、要はidle状態に限り、
+- backgroundでcat-play-mmlをwav生成モードで呼び出して、
+- wavを得て、
+- それをsixelで表示する
 
 
 {% endraw %}
 ```
 
-### issue-notes/212.md
+### issue-notes/218.md
 ```md
 {% raw %}
-# issue ランダム音色機能のWASM版が、bluesky-text-to-audioリポジトリで、利用できない状態になってしまっている #212
-[issues #212](https://github.com/cat2151/ym2151-tone-editor/issues/212)
+# issue envelope折れ線グラフを改善する #218
+[issues #218](https://github.com/cat2151/ym2151-tone-editor/issues/218)
 
+- 課題、sixelで、と指示したのにsixelになってない。
+- 課題、OP1,OP2,OP3,OP4 それぞれ個別で表示してUX検証したい。
+- 課題、どれがキャリアか？どれがモジュレータか？がわからない。
+- 課題、どれも似たような見た目になってしまっている。slow attackや、long decayの区別がつかない。
+- 課題、envelopeの、どこまでがアタックで、どこからディケイで、どこからサステインで、どこからリリースか？区別がつかない。
 
+{% endraw %}
+```
+
+### issue-notes/219.md
+```md
+{% raw %}
+# issue helpから、hjklとwasdを外して、矢印キーを書く #219
+[issues #219](https://github.com/cat2151/ym2151-tone-editor/issues/219)
+
+- なぜならhjklとwasdは現状廃止されているから
+- より具体的には：
+  - help画面の表示は、keybinds設定から生成すること
+  - 常時、画面左下に、?:help を表示すること
+
+{% endraw %}
+```
+
+### issue-notes/220.md
+```md
+{% raw %}
+# issue q と eのdecrement increment をやめて、qをquitにする #220
+[issues #220](https://github.com/cat2151/ym2151-tone-editor/issues/220)
+
+- なぜなら、ほかのTUIでqをquitにしており、操作が違う上にdecrementが発生してUXが悪いので
+
+{% endraw %}
+```
+
+### src/app/mod.rs
+```rs
+{% raw %}
+mod shortcuts;
+
+#[cfg(windows)]
+use crate::audio;
+use crate::file_ops;
+use crate::models::*;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
+
+pub struct App {
+    pub values: ToneData,
+    pub cursor_x: usize,
+    pub cursor_y: usize,
+    pub value_by_mouse_move: bool,
+    #[cfg(windows)]
+    pub use_interactive_mode: bool,
+    /// ペンタトニック鍵盤のマウスホバー座標(Noneなら未ホバー)
+    pub hovered_penta_x: Option<usize>,
+    /// Envelope delay in seconds before tone parameters are set (default: 0.005)
+    #[allow(dead_code)] // Used on Windows builds for audio playback
+    pub envelope_delay_seconds: f64,
+    /// Last operator row (0-3) the cursor was on before moving to CH row
+    /// Used for displaying operation guides when cursor is on CH row
+    pub last_operator_row: usize,
+    /// Whether the keybind help overlay is shown
+    pub show_help: bool,
+    /// バックグラウンドのアップデートチェックがtrueにセットしたらアップデートを実行
+    pub update_available: Arc<AtomicBool>,
+}
+
+impl App {
+    /// 仮想ペンタトニック鍵盤上のマウス座標からホバーx座標を更新
+    /// ALG図直下の描画位置に合わせて判定
+    pub fn update_hovered_penta_x(
+        &mut self,
+        mouse_x: u16,
+        mouse_y: u16,
+        inner: ratatui::layout::Rect,
+        penta_keyboard_y: u16,
+    ) {
+        if mouse_y != penta_keyboard_y {
+            self.hovered_penta_x = None;
+            return;
+        }
+        if mouse_x >= inner.x && mouse_x < inner.x + inner.width {
+            let rel_x = mouse_x - inner.x;
+            self.hovered_penta_x = Some(rel_x as usize);
+        } else {
+            self.hovered_penta_x = None;
+        }
+    }
+    pub fn new(
+        #[allow(unused_variables)] use_interactive_mode: bool,
+        value_by_mouse_move: bool,
+        envelope_delay_seconds: f64,
+    ) -> App {
+        let mut app = crate::app_init::init_app(
+            use_interactive_mode,
+            value_by_mouse_move,
+            envelope_delay_seconds,
+        );
+        app.hovered_penta_x = None;
+        app
+    }
+
+    pub fn move_cursor_left(&mut self) {
+        if self.cursor_x > 0 {
+            self.cursor_x -= 1;
+        }
+    }
+
+    pub fn move_cursor_right(&mut self) {
+        let max_x = if self.cursor_y == ROW_CH {
+            CH_PARAM_COUNT - 1
+        } else {
+            GRID_WIDTH - 1
+        };
+
+        if self.cursor_x < max_x {
+            self.cursor_x += 1;
+        }
+    }
+
+    pub fn move_cursor_up(&mut self) {
+        if self.cursor_y > 0 {
+            self.cursor_y -= 1;
+
+            // Track the new position if it's an operator row
+            if self.cursor_y < ROW_CH {
+                self.last_operator_row = self.cursor_y;
+            }
+
+            // Clamp cursor_x if moving from CH row to operator row or vice versa
+            let max_x = if self.cursor_y == ROW_CH {
+                CH_PARAM_COUNT - 1
+            } else {
+                GRID_WIDTH - 1
+            };
+
+            if self.cursor_x > max_x {
+                self.cursor_x = max_x;
+            }
+        }
+    }
+
+    pub fn move_cursor_down(&mut self) {
+        if self.cursor_y < GRID_HEIGHT - 1 {
+            // Track current position if it's an operator row (before moving)
+            if self.cursor_y < ROW_CH {
+                self.last_operator_row = self.cursor_y;
+            }
+
+            self.cursor_y += 1;
+
+            // Clamp cursor_x if moving from operator row to CH row or vice versa
+            let max_x = if self.cursor_y == ROW_CH {
+                CH_PARAM_COUNT - 1
+            } else {
+                GRID_WIDTH - 1
+            };
+
+            if self.cursor_x > max_x {
+                self.cursor_x = max_x;
+            }
+        }
+    }
+
+    /// Play audio feedback for the current tone.
+    /// History saving runs on all platforms; audio playback is Windows-only.
+    fn play_audio(&self) {
+        let _ = crate::history::save_to_history(&self.values);
+        #[cfg(windows)]
+        audio::play_tone(
+            &self.values,
+            self.use_interactive_mode,
+            self.cursor_x,
+            self.cursor_y,
+            self.envelope_delay_seconds,
+        );
+    }
+
+    /// Get the maximum allowed value for the current cursor position
+    fn get_current_max(&self) -> u8 {
+        if self.cursor_y == ROW_CH && self.cursor_x < CH_PARAM_COUNT {
+            CH_PARAM_MAX[self.cursor_x]
+        } else {
+            PARAM_MAX[self.cursor_x]
+        }
+    }
+
+    /// Set cursor_x to the given parameter column and increase or decrease its value.
+    /// Only applies when the cursor is on an operator row (not CH row).
+    fn jump_to_op_param(&mut self, param_x: usize, increase: bool) {
+        self.cursor_x = param_x;
+        if self.cursor_y < ROW_CH {
+            if increase {
+                self.increase_value();
+            } else {
+                self.decrease_value();
+            }
+        }
+    }
+
+    /// Jump to a CH row parameter and increase or decrease its value
+    fn jump_to_ch_param(&mut self, ch_param: usize, increase: bool) {
+        self.cursor_y = ROW_CH;
+        self.cursor_x = ch_param;
+        if increase {
+            self.increase_value();
+        } else {
+            self.decrease_value();
+        }
+    }
+
+    pub fn increase_value(&mut self) {
+        let data_row = self.cursor_y;
+        let current = self.values[data_row][self.cursor_x];
+        let max = self.get_current_max();
+        if current < max {
+            self.values[data_row][self.cursor_x] = current + 1;
+            self.play_audio();
+        }
+    }
+
+    pub fn decrease_value(&mut self) {
+        let data_row = self.cursor_y;
+        let current = self.values[data_row][self.cursor_x];
+        if current > 0 {
+            self.values[data_row][self.cursor_x] = current - 1;
+            self.play_audio();
+        }
+    }
+
+    /// Increase the current parameter value by a specified amount
+    /// Used for number key shortcuts (1-9 for +1 to +9, 0 for +10)
+    pub fn increase_value_by(&mut self, amount: u8) {
+        let data_row = self.cursor_y;
+        let current = self.values[data_row][self.cursor_x];
+        let max = self.get_current_max();
+        let new_value = current.saturating_add(amount).min(max);
+        if new_value != current {
+            self.values[data_row][self.cursor_x] = new_value;
+            self.play_audio();
+        }
+    }
+
+    /// Decrease the current parameter value by a specified amount
+    /// Used for SHIFT + number key shortcuts (SHIFT+1-9 for -1 to -9, SHIFT+0 for -10)
+    pub fn decrease_value_by(&mut self, amount: u8) {
+        let data_row = self.cursor_y;
+        let current = self.values[data_row][self.cursor_x];
+        let new_value = current.saturating_sub(amount);
+        if new_value != current {
+            self.values[data_row][self.cursor_x] = new_value;
+            self.play_audio();
+        }
+    }
+
+    pub fn set_value_to_max(&mut self) {
+        let max = self.get_current_max();
+        self.values[self.cursor_y][self.cursor_x] = max;
+        self.play_audio();
+    }
+
+    pub fn set_value_to_min(&mut self) {
+        self.values[self.cursor_y][self.cursor_x] = 0;
+        self.play_audio();
+    }
+
+    pub fn set_value_to_random(&mut self) {
+        use std::collections::hash_map::RandomState;
+        use std::hash::{BuildHasher, Hash, Hasher};
+
+        let max = self.get_current_max();
+        let random_state = RandomState::new();
+        let mut hasher = random_state.build_hasher();
+        std::time::SystemTime::now().hash(&mut hasher);
+        self.cursor_x.hash(&mut hasher);
+        self.cursor_y.hash(&mut hasher);
+        let hash = hasher.finish();
+        let random_value = (hash % (max as u64 + 1)) as u8;
+        self.values[self.cursor_y][self.cursor_x] = random_value;
+        self.play_audio();
+    }
+
+    /// Randomize all tone parameters using web-ym2151 random-tone logic.
+    /// Triggered by F5 key.
+    pub fn randomize_tone(&mut self) {
+        use crate::random_tone::generate_random_tone;
+        let current_note = self.values[ROW_CH][CH_PARAM_NOTE];
+        self.values = generate_random_tone(current_note);
+        self.play_audio();
+    }
+
+    /// Move cursor to a specific mouse position
+    /// Maps mouse x,y coordinates to cursor position in the grid
+    /// Based on the UI layout from ui.rs
+    pub fn move_cursor_to_mouse_position(&mut self, mouse_x: u16, mouse_y: u16) {
+        // UI layout constants (from ui.rs)
+        const ROW_LABEL_WIDTH: u16 = 4;
+        const CELL_WIDTH: u16 = 4;
+        const LABEL_OFFSET: u16 = 1;
+        const INNER_X: u16 = 1; // Border takes 1 character
+        const INNER_Y: u16 = 1; // Border takes 1 character
+
+        // Check if mouse is within the grid area (after row labels)
+        if mouse_x < INNER_X + ROW_LABEL_WIDTH {
+            return; // Mouse is in row label area
+        }
+
+        // Calculate column from mouse X position
+        let relative_x = mouse_x - INNER_X - ROW_LABEL_WIDTH;
+        let col = (relative_x / CELL_WIDTH) as usize;
+
+        // Calculate row from mouse Y position
+        // Operator rows: y = INNER_Y + LABEL_OFFSET + row (1-4)
+        // CH row header: y = INNER_Y + LABEL_OFFSET + 4 (5)
+        // CH row values: y = INNER_Y + LABEL_OFFSET + 5 (6)
+        if mouse_y < INNER_Y + LABEL_OFFSET {
+            return; // Mouse is in header area
+        }
+
+        let relative_y = mouse_y - INNER_Y - LABEL_OFFSET;
+
+        // Determine which row the mouse is on
+        let new_cursor_y = match relative_y {
+            0..=3 => relative_y as usize, // Operator rows
+            5 => ROW_CH,                  // CH row (skip row 4 which is CH header)
+            _ => return,                  // Outside valid rows
+        };
+
+        // Validate column bounds
+        let max_x = if new_cursor_y == ROW_CH {
+            CH_PARAM_COUNT - 1
+        } else {
+            GRID_WIDTH - 1
+        };
+
+        if col > max_x {
+            return; // Column out of bounds
+        }
+
+        // Update cursor position
+        self.cursor_x = col;
+        self.cursor_y = new_cursor_y;
+    }
+
+    /// Update the parameter value based on mouse X position
+    /// Maps mouse X position to parameter value range (0 to PARAM_MAX)
+    /// Uses the middle third of the terminal width for full range
+    /// Left of middle third sets to min (0), right of middle third sets to max
+    pub fn update_value_from_mouse_x(&mut self, mouse_x: u16, terminal_width: u16) {
+        if terminal_width == 0 {
+            return; // Avoid division by zero
+        }
+
+        // Calculate middle third boundaries
+        let third_width = terminal_width / 3;
+        let left_boundary = third_width;
+        let right_boundary = third_width * 2;
+
+        let max_value = self.get_current_max();
+
+        let new_value = if mouse_x < left_boundary {
+            // Mouse is left of middle third -> set to minimum (0)
+            0
+        } else if mouse_x > right_boundary {
+            // Mouse is right of middle third -> set to maximum
+            max_value
+        } else {
+            // Mouse is within middle third -> map proportionally
+            // left_boundary -> 0, right_boundary -> max value
+            let middle_width = right_boundary - left_boundary;
+            let relative_x = mouse_x - left_boundary;
+            let normalized = if middle_width == 0 {
+                0.0
+            } else {
+                relative_x as f32 / middle_width as f32
+            };
+            (normalized * max_value as f32).round() as u8
+        };
+
+        // Only update and play sound if the value actually changed
+        let data_row = self.cursor_y;
+        if self.values[data_row][self.cursor_x] != new_value {
+            self.values[data_row][self.cursor_x] = new_value;
+            self.play_audio();
+        }
+    }
+
+    /// Save tone data to JSON file
+    pub fn save_to_json(&self) -> std::io::Result<()> {
+        const GM_FILE_PATH: &str = "tones/general_midi/000_AcousticGrand.json";
+
+        // Save to GM format
+        file_ops::save_to_gm_file(GM_FILE_PATH, &self.values, "Edited Tone")?;
+
+        // Also save to legacy format for backward compatibility
+        file_ops::save_to_json(&self.values)?;
+
+        Ok(())
+    }
+
+    /// Append current tone data as a new variation to GM file
+    /// This is triggered by CTRL+S
+    pub fn save_to_gm_variations(&self) -> std::io::Result<()> {
+        const GM_FILE_PATH: &str = "tones/general_midi/000_AcousticGrand.json";
+
+        // Append to GM format variations array
+        file_ops::append_to_gm_file(GM_FILE_PATH, &self.values, "Edited Tone")?;
+
+        Ok(())
+    }
+
+    /// Play the current tone without modifying any parameters
+    /// This is triggered by 'P' or 'SPACE' key
+    pub fn play_current_tone(&self) {
+        self.play_audio();
+    }
+
+    /// Toggle the keybind help overlay
+    /// This is triggered by '?' (SHIFT+/) key
+    pub fn toggle_help(&mut self) {
+        self.show_help = !self.show_help;
+    }
+
+    /// Move cursor to FB parameter and increase its value
+    /// This is triggered by 'F' key
+    pub fn increase_fb(&mut self) {
+        self.jump_to_ch_param(CH_PARAM_FB, true);
+    }
+
+    /// Move cursor to FB parameter and decrease its value
+    /// This is triggered by 'Shift+F' key
+    pub fn decrease_fb(&mut self) {
+        self.jump_to_ch_param(CH_PARAM_FB, false);
+    }
+
+    /// Move cursor to ALG parameter and increase its value
+    /// This is triggered by 'g' key
+    pub fn increase_alg(&mut self) {
+        self.jump_to_ch_param(CH_PARAM_ALG, true);
+    }
+
+    /// Move cursor to ALG parameter and decrease its value
+    /// This is triggered by 'G' key (Shift+g)
+    pub fn decrease_alg(&mut self) {
+        self.jump_to_ch_param(CH_PARAM_ALG, false);
+    }
+
+    /// Jump to operator row and increase value at current column
+    pub fn jump_to_operator_and_increase(&mut self, operator_row: usize) {
+        if operator_row >= 4 {
+            return; // Invalid operator row
+        }
+        self.cursor_y = operator_row;
+        self.last_operator_row = operator_row;
+        if self.cursor_x > GRID_WIDTH - 1 {
+            self.cursor_x = GRID_WIDTH - 1;
+        }
+        self.increase_value();
+    }
+
+    /// Jump to operator row and decrease value at current column
+    pub fn jump_to_operator_and_decrease(&mut self, operator_row: usize) {
+        if operator_row >= 4 {
+            return; // Invalid operator row
+        }
+        self.cursor_y = operator_row;
+        self.last_operator_row = operator_row;
+        if self.cursor_x > GRID_WIDTH - 1 {
+            self.cursor_x = GRID_WIDTH - 1;
+        }
+        self.decrease_value();
+    }
+
+    /// Jump to Note Number parameter and increase its value
+    /// This is triggered by 'j' key
+    pub fn jump_to_note_and_increase(&mut self) {
+        self.jump_to_ch_param(CH_PARAM_NOTE, true);
+    }
+
+    /// Jump to Note Number parameter and decrease its value
+    /// This is triggered by 'J' key (Shift+j)
+    pub fn jump_to_note_and_decrease(&mut self) {
+        self.jump_to_ch_param(CH_PARAM_NOTE, false);
+    }
+
+    /// Cleanup - stop interactive mode if active
+    #[cfg(windows)]
+    pub fn cleanup(&self) {
+        if self.use_interactive_mode {
+            audio::cleanup_interactive_mode();
+        }
+    }
+
+    /// アップデートが利用可能かどうかを返す
+    pub fn is_update_available(&self) -> bool {
+        self.update_available.load(Ordering::Relaxed)
+    }
+}
+
+{% endraw %}
+```
+
+### src/tests/mod.rs
+```rs
+{% raw %}
+//! Unit tests separated from main source files
+//!
+//! This module structure allows tests to access private functions
+//! while keeping them separate to prevent hallucination issues.
+
+#[cfg(test)]
+mod app_tests;
+
+#[cfg(test)]
+mod app_ch_param_tests;
+
+#[cfg(test)]
+mod app_value_by_tests;
+
+#[cfg(test)]
+mod app_adsr_mul_sm_tests;
+
+#[cfg(test)]
+mod app_tl_d1l_dt_dt2_tests;
+
+#[cfg(test)]
+mod app_ks_ams_tests;
+
+#[cfg(test)]
+mod file_ops_tests;
+
+#[cfg(test)]
+mod midi_conversion_tests;
+
+#[cfg(test)]
+mod register_tests;
+
+#[cfg(test)]
+mod register_roundtrip_tests;
+
+#[cfg(test)]
+mod ui_tests;
+
+#[cfg(test)]
+mod variation_selector_tests;
+
+#[cfg(test)]
+mod verbose_logging_tests;
+
+#[cfg(test)]
+mod random_tone_tests;
+
+#[cfg(test)]
+mod history_tests;
+
+#[cfg(test)]
+mod favorites_tests;
+
+{% endraw %}
+```
+
+### src/ui/mod.rs
+```rs
+{% raw %}
+mod helpers;
+pub use helpers::*;
+
+use crate::{app::App, models::*};
+use ratatui::{
+    layout::{Alignment, Rect},
+    style::{Color, Modifier, Style},
+    symbols::Marker,
+    text::{Line, Span, Text},
+    widgets::{
+        canvas::{Canvas, Line as CanvasLine},
+        Block, Borders, Clear, Paragraph,
+    },
+    Frame,
+};
+
+/// Background color for shortcut key guides
+const KEY_GUIDE_BG_COLOR: Color = Color::Rgb(40, 40, 40);
+
+/// Height (in character rows) of the operator envelope canvas.
+/// Each row in Braille mode provides 4 pixels of vertical resolution.
+const ENVELOPE_CANVAS_HEIGHT: u16 = 6;
+
+/// Colors used to draw the four operator envelopes (O1–O4).
+const OP_ENVELOPE_COLORS: [Color; 4] = [Color::Cyan, Color::Green, Color::Yellow, Color::Magenta];
+
+pub fn ui(f: &mut Frame, app: &App) {
+    let size = f.area();
+
+    let block = Block::default()
+        .title("YM2151 Tone Editor")
+        .borders(Borders::ALL);
+    let inner = block.inner(size);
+    f.render_widget(block, size);
+
+    // Calculate cell dimensions
+    let cell_width = 4; // 2 digits + spacing
+    let cell_height = 1;
+    let label_offset = 1; // Space for parameter name labels
+    let row_label_width = 4; // Width for row labels (e.g., "OP1 ")
+
+    // Draw parameter names (column headers) for operator rows
+    for (col, param_name) in PARAM_NAMES.iter().enumerate().take(GRID_WIDTH) {
+        let x = inner.x + row_label_width + (col as u16 * cell_width);
+        let y = inner.y;
+
+        let area = Rect {
+            x,
+            y,
+            width: cell_width,
+            height: 1,
+        };
+
+        let color = get_param_color(col, false);
+        let paragraph = Paragraph::new(Span::styled(
+            *param_name,
+            Style::default().fg(color).add_modifier(Modifier::BOLD),
+        ));
+        f.render_widget(paragraph, area);
+    }
+
+    let alg_value = app.values[ROW_CH][CH_PARAM_ALG];
+    let operator_roles = get_operator_roles_for_alg(alg_value);
+    // Draw grid values with row labels for operators (rows 0-3)
+    for display_row in 0..4 {
+        let slot_mask_enabled = app.values[display_row][PARAM_SM] != 0;
+        // Draw row label (operator name)
+        let row_label_area = Rect {
+            x: inner.x,
+            y: inner.y + label_offset + display_row as u16,
+            width: row_label_width,
+            height: cell_height,
+        };
+        let row_name = ROW_NAMES[display_row];
+        let row_label_color = if slot_mask_enabled {
+            if operator_roles[display_row] {
+                Color::White
+            } else {
+                Color::Green
+            }
+        } else {
+            Color::DarkGray
+        };
+        let row_label =
+            Paragraph::new(Span::styled(row_name, Style::default().fg(row_label_color)));
+        f.render_widget(row_label, row_label_area);
+        // Draw values
+        for col in 0..GRID_WIDTH {
+            let value = app.values[display_row][col];
+            let x = inner.x + row_label_width + (col as u16 * cell_width);
+            let y = inner.y + label_offset + display_row as u16;
+            let area = Rect {
+                x,
+                y,
+                width: cell_width,
+                height: cell_height,
+            };
+            let value_style = if app.cursor_x == col && app.cursor_y == display_row {
+                Style::default()
+                    .fg(Color::Black)
+                    .bg(Color::White)
+                    .add_modifier(Modifier::BOLD)
+            } else {
+                let color = if slot_mask_enabled {
+                    if operator_roles[display_row] {
+                        Color::White
+                    } else {
+                        Color::Green
+                    }
+                } else {
+                    Color::DarkGray
+                };
+                Style::default().fg(color)
+            };
+
+            // Display guide to the left of the value
+            // Show operator number guide in current column, or parameter key guide on current row
+            // When cursor is on CH row, show guides on the last operator row the cursor was on
+            let is_current_row = app.cursor_y == display_row;
+            let is_current_col = app.cursor_x == col;
+            let show_guide_for_ch_row =
+                app.cursor_y == ROW_CH && display_row == app.last_operator_row;
+
+            let line = if is_current_col {
+                // In current column, show operator number guide
+                if let Some(op_guide) = get_operator_guide(display_row) {
+                    let op_guide_style =
+                        Style::default().fg(Color::DarkGray).bg(KEY_GUIDE_BG_COLOR);
+                    Line::from(vec![
+                        Span::styled(op_guide.to_string(), op_guide_style),
+                        Span::styled(format!("{:2}", value), value_style),
+                    ])
+                } else {
+                    // No guide for non-operator rows in current column
+                    Line::from(Span::styled(format!(" {:2}", value), value_style))
+                }
+            } else if let Some(key_guide) = get_key_guide(col) {
+                if is_current_row || show_guide_for_ch_row {
+                    // Show parameter key guide on current row (for non-current columns)
+                    // or on last operator row when cursor is on CH row
+                    let key_guide_style =
+                        Style::default().fg(Color::DarkGray).bg(KEY_GUIDE_BG_COLOR);
+                    Line::from(vec![
+                        Span::styled(key_guide.to_string(), key_guide_style),
+                        Span::styled(format!("{:2}", value), value_style),
+                    ])
+                } else {
+                    // No guide on non-current rows in non-current columns
+                    Line::from(Span::styled(format!(" {:2}", value), value_style))
+                }
+            } else {
+                Line::from(Span::styled(format!(" {:2}", value), value_style))
+            };
+            let paragraph = Paragraph::new(line);
+            f.render_widget(paragraph, area);
+        }
+    }
+
+    // Draw CH row header (parameter names for CH row)
+    let ch_header_y = inner.y + label_offset + 4;
+    for (col, ch_param_name) in CH_PARAM_NAMES.iter().enumerate().take(CH_PARAM_COUNT) {
+        let x = inner.x + row_label_width + (col as u16 * cell_width);
+
+        let area = Rect {
+            x,
+            y: ch_header_y,
+            width: cell_width,
+            height: 1,
+        };
+
+        let color = get_param_color(col, true);
+        let paragraph = Paragraph::new(Span::styled(
+            *ch_param_name,
+            Style::default().fg(color).add_modifier(Modifier::BOLD),
+        ));
+        f.render_widget(paragraph, area);
+    }
+
+    // Draw CH row (row 4) with ALG, FB, and MIDI note number
+    let ch_row_y = inner.y + label_offset + 5;
+
+    // Draw row label (CH)
+    let row_label_area = Rect {
+        x: inner.x,
+        y: ch_row_y,
+        width: row_label_width,
+        height: cell_height,
+    };
+    let row_label = Paragraph::new(Span::styled(
+        ROW_NAMES[ROW_CH],
+        Style::default().fg(Color::Yellow),
+    ));
+    f.render_widget(row_label, row_label_area);
+
+    // Draw all CH row values (ALG, FB, and MIDI note number)
+    for col in 0..CH_PARAM_COUNT {
+        let value = app.values[ROW_CH][col];
+        let x = inner.x + row_label_width + (col as u16 * cell_width);
+
+        let area = Rect {
+            x,
+            y: ch_row_y,
+            width: cell_width,
+            height: cell_height,
+        };
+
+        let value_style = if app.cursor_x == col && app.cursor_y == ROW_CH {
+            Style::default()
+                .fg(Color::Black)
+                .bg(Color::White)
+                .add_modifier(Modifier::BOLD)
+        } else {
+            let color = get_param_color(col, true);
+            Style::default().fg(color)
+        };
+
+        // Display guide to the left of the value on the CH row
+        // ALG and FB guides are always shown because 'g'/'G' and 'f'/'F' can jump to them from anywhere
+        let line = if let Some(key_guide) = get_ch_key_guide(col) {
+            let key_guide_style = Style::default().fg(Color::DarkGray).bg(KEY_GUIDE_BG_COLOR);
+            Line::from(vec![
+                Span::styled(key_guide.to_string(), key_guide_style),
+                Span::styled(format!("{:2}", value), value_style),
+            ])
+        } else {
+            // No guide for parameters without keybindings
+            Line::from(Span::styled(format!(" {:2}", value), value_style))
+        };
+
+        let paragraph = Paragraph::new(line);
+        f.render_widget(paragraph, area);
+    }
+
+    // Draw algorithm diagram below the CH row
+    let alg_value = app.values[ROW_CH][CH_PARAM_ALG];
+    let diagram = get_algorithm_diagram(alg_value);
+    let diagram_start_y = ch_row_y + 2; // Leave one line of space
+
+    for (i, line) in diagram.iter().enumerate() {
+        let y = diagram_start_y + i as u16;
+        if y < size.height - 1 {
+            // Make sure we don't draw outside the terminal
+            let area = Rect {
+                x: inner.x,
+                y,
+                width: inner.width,
+                height: 1,
+            };
+            let paragraph = Paragraph::new(Span::styled(*line, Style::default().fg(Color::Green)));
+            f.render_widget(paragraph, area);
+        }
+    }
+
+    let penta_keyboard_y = diagram_start_y + diagram.len() as u16 + 1;
+    // Only draw keyboard if it fits within terminal bounds
+    if penta_keyboard_y < size.height - 1 {
+        draw_virtual_pentatonic_keyboard_at_y(f, app, inner, penta_keyboard_y);
+    }
+
+    // Draw envelope canvas below keyboard if there is enough vertical space.
+    // The canvas needs ENVELOPE_CANVAS_HEIGHT character rows + 1 gap row.
+    let envelope_y = penta_keyboard_y + 1;
+    // Reserve 1 row at the bottom for keybind hints and 1 row for border.
+    let available_for_envelope = size.height.saturating_sub(2).saturating_sub(envelope_y);
+    if available_for_envelope >= ENVELOPE_CANVAS_HEIGHT {
+        let envelope_area = Rect {
+            x: inner.x,
+            y: envelope_y,
+            width: inner.width,
+            height: ENVELOPE_CANVAS_HEIGHT,
+        };
+        draw_envelope_canvas(f, app, envelope_area);
+    }
+
+    // Draw keybind hints at the bottom of the screen (left-aligned)
+    draw_keybind_hints(f, app, inner);
+}
+
+/// Draw operator envelope shapes for all 4 OPs into `area` using ratatui's Braille Canvas.
+///
+/// Each operator's ADSR-like envelope is rendered as a line-chart using a distinct colour:
+/// - O1: Cyan, O2: Green, O3: Yellow, O4: Magenta.
+///
+/// Operators whose slot-mask (SM) is 0 are drawn in dark-gray to indicate they are muted.
+///
+/// The x-axis represents normalised time (note-on → note-off → release).
+/// The y-axis represents normalised amplitude (0 = silent, 1 = max).
+fn draw_envelope_canvas(f: &mut Frame, app: &App, area: Rect) {
+    // Build all envelope point-sets before the closure (avoids capturing `app` by ref inside FnMut).
+    let envelope_points: Vec<Vec<(f64, f64)>> = (0..4)
+        .map(|op| compute_op_envelope_points(&app.values[op]))
+        .collect();
+    let ops_enabled: [bool; 4] = std::array::from_fn(|op| app.values[op][PARAM_SM] != 0);
+
+    let canvas = Canvas::default()
+        .block(
+            Block::default()
+                .title("Envelope (O1=Cyan O2=Green O3=Yellow O4=Magenta)")
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::DarkGray)),
+        )
+        .marker(Marker::Braille)
+        .x_bounds([0.0, 1.0])
+        .y_bounds([0.0, 1.0])
+        .paint(move |ctx| {
+            for (op, points) in envelope_points.iter().enumerate() {
+                let color = if ops_enabled[op] {
+                    OP_ENVELOPE_COLORS[op]
+                } else {
+                    Color::DarkGray
+                };
+                for segment in points.windows(2) {
+                    let (x1, y1) = segment[0];
+                    let (x2, y2) = segment[1];
+                    ctx.draw(&CanvasLine {
+                        x1,
+                        y1,
+                        x2,
+                        y2,
+                        color,
+                    });
+                }
+            }
+        });
+
+    f.render_widget(canvas, area);
+}
+
+fn draw_virtual_pentatonic_keyboard_at_y(f: &mut Frame, app: &App, inner: Rect, keyboard_y: u16) {
+    let center_note = 60;
+    let width = inner.width as i16;
+    const PENTA_INTERVALS: [i16; 5] = [0, 2, 4, 7, 9];
+    const PENTA_LABELS: [&str; 5] = ["C", "D", "E", "G", "A"];
+
+    let center_x = width / 2;
+    #[cfg(windows)]
+    let mut hovered_note: Option<u8> = None;
+    for x in 0..width {
+        let rel = x - center_x;
+        let octave = rel.div_euclid(5);
+        let penta_idx = rel.rem_euclid(5);
+        let note = center_note as i16 + octave * 12 + PENTA_INTERVALS[penta_idx as usize];
+        if !(0..=127).contains(&note) {
+            continue;
+        }
+        let label = PENTA_LABELS[penta_idx as usize];
+        let area = Rect {
+            x: inner.x + x as u16,
+            y: keyboard_y,
+            width: 1,
+            height: 1,
+        };
+        let is_hovered = match app.hovered_penta_x {
+            Some(hx) => hx == x as usize,
+            None => false,
+        };
+        #[cfg(windows)]
+        if is_hovered {
+            hovered_note = Some(note as u8);
+        }
+        let style = if is_hovered {
+            Style::default()
+                .fg(Color::Magenta)
+                .add_modifier(Modifier::BOLD)
+        } else {
+            Style::default().fg(Color::Cyan)
+        };
+        let paragraph = Paragraph::new(Span::styled(label, style));
+        f.render_widget(paragraph, area);
+    }
+
+    #[cfg(windows)]
+    if let Some(note_num) = hovered_note {
+        use crate::audio;
+        let mut preview_values = app.values;
+        preview_values[ROW_CH][CH_PARAM_NOTE] = note_num;
+        audio::play_tone(
+            &preview_values,
+            app.use_interactive_mode,
+            CH_PARAM_NOTE,
+            ROW_CH,
+            app.envelope_delay_seconds,
+        );
+    }
+}
+
+fn draw_keybind_hints(f: &mut Frame, app: &App, inner: Rect) {
+    // Bottom line inside the inner area (inside the block border)
+    let inner_bottom = inner.y + inner.height.saturating_sub(1);
+    if inner.height == 0 {
+        return;
+    }
+
+    if app.show_help {
+        draw_help_dialog(f, inner);
+    } else {
+        // Brief hint on the last line of the inner area
+        let area = Rect {
+            x: inner.x,
+            y: inner_bottom,
+            width: inner.width,
+            height: 1,
+        };
+        let paragraph = Paragraph::new(Span::styled(
+            "?:help | hjkl/wasd:move  q/e:dec/inc  H:history  ESC:quit",
+            Style::default().fg(Color::DarkGray),
+        ));
+        f.render_widget(paragraph, area);
+    }
+}
+
+/// Render a centered help dialog with key bindings grouped by category.
+fn draw_help_dialog(f: &mut Frame, inner: Rect) {
+    // Group definitions: (header, lines...)
+    let groups: &[(&str, &[&str])] = &[
+        (
+            " Navigation ",
+            &[
+                "hjkl / wasd  : Move cursor",
+                "1 - 4        : Jump to OP row",
+            ],
+        ),
+        (
+            " Value Edit ",
+            &[
+                "q / e        : Decrease / Increase",
+                ". / ,        : +1 / -1",
+                "> / <        : +10 / -10",
+                "Home / End   : Max / Min",
+            ],
+        ),
+        (
+            " Operator Parameters ",
+            &[
+                "a/A : AR    d/D : D1R   s/S : D2R   r/R : RR",
+                "t/T : TL    m/M : MUL   l/L : D1L",
+                "u/U : DT    n/N : DT2   k/K : KS",
+                "i/I : AMS   o/O : SM",
+            ],
+        ),
+        (
+            " Channel Parameters ",
+            &["f/F : FB    g/G : ALG   j/J : Note"],
+        ),
+        (
+            " App ",
+            &[
+                "Space / p    : Play",
+                "F5           : Random tone",
+                "Ctrl+s       : Save",
+                "Ctrl+o       : Open / Select file",
+                "H            : History",
+                "?            : Close this help",
+                "ESC          : Quit",
+            ],
+        ),
+    ];
+
+    // Build content lines: group header + key lines, separated by blank lines between groups.
+    // A footer note clarifies that these are the default keybinds (may differ if TOML overrides exist).
+    let mut content_lines: Vec<Line> = Vec::new();
+    let header_style = Style::default()
+        .fg(Color::Yellow)
+        .add_modifier(Modifier::BOLD);
+    let key_style = Style::default().fg(Color::Cyan);
+    let note_style = Style::default().fg(Color::DarkGray);
+
+    for (i, (group_header, lines)) in groups.iter().enumerate() {
+        if i > 0 {
+            content_lines.push(Line::from(""));
+        }
+        content_lines.push(Line::from(Span::styled(*group_header, header_style)));
+        for line in *lines {
+            content_lines.push(Line::from(Span::styled(*line, key_style)));
+        }
+    }
+    content_lines.push(Line::from(""));
+    content_lines.push(Line::from(Span::styled(
+        "(default keybinds — may differ if ym2151-tone-editor.toml overrides exist)",
+        note_style,
+    )));
+
+    // Compute dialog width from the longest content line + 2 for left/right borders
+    let max_content_width = content_lines.iter().map(|l| l.width()).max().unwrap_or(0) as u16;
+    let dialog_width: u16 = max_content_width + 2;
+    // +2 for top and bottom border lines
+    let dialog_height: u16 = content_lines.len() as u16 + 2;
+
+    // Center the dialog within the inner area
+    let x = inner
+        .x
+        .saturating_add(inner.width.saturating_sub(dialog_width) / 2);
+    let y = inner
+        .y
+        .saturating_add(inner.height.saturating_sub(dialog_height) / 2);
+    let width = dialog_width.min(inner.width);
+    let height = dialog_height.min(inner.height);
+
+    let dialog_area = Rect {
+        x,
+        y,
+        width,
+        height,
+    };
+
+    // Clear the background behind the dialog
+    f.render_widget(Clear, dialog_area);
+
+    let block = Block::default()
+        .title(Span::styled(
+            " Help ",
+            Style::default()
+                .fg(Color::White)
+                .add_modifier(Modifier::BOLD),
+        ))
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::White))
+        .style(Style::default().bg(Color::Rgb(20, 20, 40)));
+
+    let paragraph = Paragraph::new(Text::from(content_lines))
+        .block(block)
+        .alignment(Alignment::Left);
+
+    f.render_widget(paragraph, dialog_area);
+}
 
 {% endraw %}
 ```
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-4a3478e Merge pull request #211 from cat2151/copilot/help-dialog-grouping-display
-9515ddd fix: dynamic dialog width, default-keybinds note, fix stale comment
-3122b5a Add issue note for #212 [auto]
-0766675 feat: replace help text with centered grouped dialog overlay
-4cd8d21 Add issue note for #210 [auto]
-bf4cb57 Initial plan
-39649cc Auto-translate README.ja.md to README.md [auto]
-0294e88 Add usage section for random tone color library
-51a965b Merge pull request #209 from cat2151/copilot/fix-deploy-to-github-pages
-a239a81 Fix: use chown instead of chmod to transfer _site ownership to runner user
+19e55bd Merge branch 'main' of github.com:cat2151/ym2151-tone-editor into main
+f17e9c2 ignore tones 試し
+cd6c5eb Change 'q' to 'quit' for improved user experience
+9be0283 Add issue note for #220 [auto]
+b04c533 Revise help display instructions in issue #219
+34eb0cc Update issue help for key bindings
+e71a991 Add issue note for #219 [auto]
+d2e1d2a Update issue notes for envelope graph improvements
+9a62e7f Add issue note for #218 [auto]
+c6ad8d3 Enhance issue notes for #177 with detailed task description
 
 ### 変更されたファイル:
-.github/workflows/deploy-demo-library.yml
-README.ja.md
-README.md
-issue-notes/206.md
+.gitignore
+core/src/lib.rs
+core/src/tests.rs
+issue-notes/176.md
+issue-notes/177.md
 issue-notes/210.md
 issue-notes/212.md
+issue-notes/218.md
+issue-notes/219.md
+issue-notes/220.md
+src/tests/ui_tests.rs
+src/ui/helpers.rs
 src/ui/mod.rs
 
 
 ---
-Generated at: 2026-03-16 07:11:17 JST
+Generated at: 2026-03-17 07:16:16 JST

@@ -1,4 +1,4 @@
-Last updated: 2026-03-16
+Last updated: 2026-03-17
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -389,6 +389,7 @@ cargo run
   📄 Cargo.toml
   📁 src/
     📄 lib.rs
+    📄 tests.rs
 📁 demo-library/
   🌐 index.html
 📁 docs/
@@ -407,10 +408,10 @@ cargo run
   📖 164.md
   📖 167.md
   📖 174.md
-  📖 176.md
   📖 177.md
-  📖 210.md
-  📖 212.md
+  📖 218.md
+  📖 219.md
+  📖 220.md
   📖 95.md
   📖 96.md
 📁 src/
@@ -467,7 +468,7 @@ cargo run
 📄 ym2151-tone-editor.toml.example
 
 ## ファイル詳細分析
-**demo-library/index.html** (145行, 4131バイト)
+**demo-library/index.html** (161行, 4730バイト)
   - 関数: なし
   - インポート: なし
 
@@ -495,10 +496,10 @@ issue-notes/156.md
 issue-notes/164.md
 issue-notes/167.md
 issue-notes/174.md
-issue-notes/176.md
 issue-notes/177.md
-issue-notes/210.md
-issue-notes/212.md
+issue-notes/218.md
+issue-notes/219.md
+issue-notes/220.md
 issue-notes/95.md
 issue-notes/96.md
 tones/general_midi/000_AcousticGrand.json
@@ -514,4 +515,4 @@ tones/general_midi/tone_names.json
 
 
 ---
-Generated at: 2026-03-16 07:11:17 JST
+Generated at: 2026-03-17 07:16:15 JST
