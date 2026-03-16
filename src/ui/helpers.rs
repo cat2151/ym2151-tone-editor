@@ -164,7 +164,20 @@ pub(crate) fn compute_op_envelope_points(row: &[u8; GRID_WIDTH]) -> Vec<(f64, f6
     ]
 }
 
-/// Get ASCII art diagram for YM2151 algorithm (0-7)
+/// Compute the terminal row at which the envelope display area starts.
+///
+/// This mirrors the layout logic in [`ui`] so that callers (e.g. the event
+/// loop) can position sixel graphics at exactly the same location without
+/// duplicating the layout constants.
+#[cfg_attr(not(windows), allow(dead_code))]
+pub fn compute_envelope_area_y(alg_value: u8) -> u16 {
+    // inner.y(1) + label_offset(1) + 5 operator/CH rows
+    let ch_row_y: u16 = 7;
+    let diagram_start_y = ch_row_y + 2;
+    let diagram_len = get_algorithm_diagram(alg_value).len() as u16;
+    let penta_keyboard_y = diagram_start_y + diagram_len + 1;
+    penta_keyboard_y + 1 // envelope_y
+}
 /// Returns a vector of strings, one per line of the diagram
 /// Uses O1, O2, O3, O4 notation
 pub fn get_algorithm_diagram(alg: u8) -> Vec<&'static str> {

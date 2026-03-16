@@ -164,6 +164,8 @@ pub(crate) fn run_app<B: Backend>(
     terminal.draw(|f| {
         crate::ui::ui(f, app);
     })?;
+    #[cfg(windows)]
+    print_sixel_waveform(app)?;
 
     loop {
         // アップデートが利用可能になったら保存・後始末してループを抜ける
@@ -174,10 +176,49 @@ pub(crate) fn run_app<B: Backend>(
             return Ok(());
         }
 
+        // アイドル検出: 5秒間音色変更がなければsixel波形を生成する
+        #[cfg(windows)]
+        {
+            if app.use_interactive_mode
+                && !app.waveform_generating
+                && app
+                    .sixel_waveform
+                    .lock()
+                    .ok()
+                    .map(|g| g.is_none())
+                    .unwrap_or(false)
+                && app.last_tone_change.elapsed() >= std::time::Duration::from_secs(5)
+            {
+                app.waveform_generating = true;
+                let sixel_arc = std::sync::Arc::clone(&app.sixel_waveform);
+                crate::waveform::spawn_waveform_generation(app.values, sixel_arc);
+            }
+        }
+
         // イベントをポーリング（タイムアウト付き）。イベントがなければ再描画せずに次ループへ
         if !event::poll(std::time::Duration::from_millis(50))? {
+            // sixel生成が完了していたら再描画して表示を更新する
+            #[cfg(windows)]
+            {
+                let sixel_ready = app
+                    .sixel_waveform
+                    .lock()
+                    .ok()
+                    .map(|g| g.is_some())
+                    .unwrap_or(false);
+                if app.waveform_generating && sixel_ready {
+                    terminal.draw(|f| {
+                        crate::ui::ui(f, app);
+                    })?;
+                    print_sixel_waveform(app)?;
+                }
+            }
             continue;
         }
+
+        // イベント処理前の音色データを記録（変更検出用）
+        #[cfg(windows)]
+        let values_before = app.values;
 
         match event::read()? {
             Event::Key(key) => {
@@ -353,11 +394,52 @@ pub(crate) fn run_app<B: Backend>(
             _ => {}
         }
 
+        // 音色データが変更されたらアイドルタイマーをリセットする
+        #[cfg(windows)]
+        if app.values != values_before {
+            app.on_tone_changed();
+        }
+
         // イベント処理後に再描画
         terminal.draw(|f| {
             crate::ui::ui(f, app);
         })?;
+        // sixel波形が生成済みなら再描画後に端末へ書き出す
+        #[cfg(windows)]
+        print_sixel_waveform(app)?;
     }
+}
+
+/// sixel波形データが利用可能な場合、端末のエンベロープ表示エリアに書き出す。
+///
+/// ratatuiの描画後に呼び出すことで、同じ領域のブライユキャンバスをsixelで置き換える。
+/// sixelをサポートしていない端末では、エスケープシーケンスがそのまま表示される可能性があるが、
+/// これは「試し、UXを検証する」フェーズの実験的機能として許容する。
+#[cfg(windows)]
+fn print_sixel_waveform(app: &App) -> io::Result<()> {
+    use std::io::Write;
+
+    let sixel = {
+        match app.sixel_waveform.lock() {
+            Ok(guard) => guard.clone(),
+            Err(_) => return Ok(()),
+        }
+    };
+
+    let Some(sixel_str) = sixel else {
+        return Ok(());
+    };
+
+    let alg_value = app.values[ROW_CH][CH_PARAM_ALG];
+    let envelope_y = crate::ui::compute_envelope_area_y(alg_value);
+
+    let mut stdout = io::stdout();
+    // カーソルをエンベロープ表示エリアの先頭に移動してsixelを書き出す
+    execute!(stdout, crossterm::cursor::MoveTo(0, envelope_y))?;
+    stdout.write_all(sixel_str.as_bytes())?;
+    stdout.flush()?;
+
+    Ok(())
 }
 
 #[cfg(test)]

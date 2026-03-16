@@ -27,6 +27,12 @@ pub fn init_app(
         last_operator_row: 0, // Initialize to O1 (row 0)
         show_help: false,
         update_available: Arc::new(AtomicBool::new(false)),
+        #[cfg(windows)]
+        last_tone_change: std::time::Instant::now(),
+        #[cfg(windows)]
+        sixel_waveform: std::sync::Arc::new(std::sync::Mutex::new(None)),
+        #[cfg(windows)]
+        waveform_generating: false,
     };
     const GM_FILE_PATH: &str = "tones/general_midi/000_AcousticGrand.json";
     #[cfg(windows)]
