@@ -97,18 +97,25 @@ pub(crate) fn get_param_color(col: usize, is_ch_row: bool) -> Color {
 /// - `PARAM_D2R` (0–15): decay-2 rate – continued fall during sustain phase.
 /// - `PARAM_RR`  (0–15): release rate – higher = faster fall after note-off.
 /// - `PARAM_TL`  (0–99): total level – 0 = loudest, 99 = near silent.
-pub fn compute_op_envelope_points(row: &[u8; GRID_WIDTH]) -> Vec<(f64, f64)> {
-    let ar = row[PARAM_AR] as f64; // 0–31
-    let d1r = row[PARAM_D1R] as f64; // 0–31
-    let d1l = row[PARAM_D1L] as f64; // 0–15
-    let d2r = row[PARAM_D2R] as f64; // 0–15
-    let rr = row[PARAM_RR] as f64; // 0–15
-    let tl = row[PARAM_TL] as f64; // 0–99
+pub(crate) fn compute_op_envelope_points(row: &[u8; GRID_WIDTH]) -> Vec<(f64, f64)> {
+    let ar = row[PARAM_AR] as f64; // 0–PARAM_MAX[PARAM_AR]
+    let d1r = row[PARAM_D1R] as f64; // 0–PARAM_MAX[PARAM_D1R]
+    let d1l = row[PARAM_D1L] as f64; // 0–PARAM_MAX[PARAM_D1L]
+    let d2r = row[PARAM_D2R] as f64; // 0–PARAM_MAX[PARAM_D2R]
+    let rr = row[PARAM_RR] as f64; // 0–PARAM_MAX[PARAM_RR]
+    let tl = row[PARAM_TL] as f64; // 0–PARAM_MAX[PARAM_TL]
+
+    let ar_max = PARAM_MAX[PARAM_AR] as f64;
+    let d1r_max = PARAM_MAX[PARAM_D1R] as f64;
+    let d1l_max = PARAM_MAX[PARAM_D1L] as f64;
+    let d2r_max = PARAM_MAX[PARAM_D2R] as f64;
+    let rr_max = PARAM_MAX[PARAM_RR] as f64;
+    let tl_max = PARAM_MAX[PARAM_TL] as f64;
 
     // Overall amplitude based on TL.
     // In YM2151, TL=0 means maximum output (no attenuation), TL=127 (99 in this editor's scale)
     // means near-silent (maximum attenuation).  The formula maps: TL=0 → 1.0 (full), TL=99 → ~0.0.
-    let amplitude = (1.0 - tl / 99.0).clamp(0.0, 1.0);
+    let amplitude = (1.0 - tl / tl_max).clamp(0.0, 1.0);
 
     // Fixed time divisions (x axis):
     //   [0.00, 0.15]  Attack phase
@@ -120,31 +127,32 @@ pub fn compute_op_envelope_points(row: &[u8; GRID_WIDTH]) -> Vec<(f64, f64)> {
     let t_noteoff = 0.70_f64;
     let t_end = 1.00_f64;
 
-    // Level at end of attack: AR=31 → reaches full amplitude; AR=0 → stays at 0.
-    let attack_peak = amplitude * (ar / 31.0);
+    // Level at end of attack: AR=ar_max → reaches full amplitude; AR=0 → stays at 0.
+    let attack_peak = amplitude * (ar / ar_max);
 
-    // Target sustain level after Decay-1: D1L=0 → sustain at full; D1L=15 → silence.
-    let sustain_target = amplitude * (1.0 - d1l / 15.0).max(0.0);
+    // Target sustain level after Decay-1: D1L=0 → sustain at full; D1L=d1l_max → silence.
+    let sustain_target = amplitude * (1.0 - d1l / d1l_max).max(0.0);
 
-    // Level at end of Decay-1: D1R=31 → fully reaches sustain_target; D1R=0 → stays at peak.
-    let level_end_d1 = (attack_peak - (attack_peak - sustain_target) * (d1r / 31.0)).clamp(
+    // Level at end of Decay-1: D1R=d1r_max → fully reaches sustain_target; D1R=0 → stays at peak.
+    let level_end_d1 = (attack_peak - (attack_peak - sustain_target) * (d1r / d1r_max)).clamp(
         sustain_target.min(attack_peak),
         attack_peak.max(sustain_target),
     );
 
     // Level at note-off (after Decay-2 during sustain):
-    // D2R=0 → no change; D2R=15 → drops by up to ~50% of the current level.
-    // The 0.5 cap keeps the visualisation readable: a full D2R=15 halves the level
+    // D2R=0 → no change; D2R=d2r_max → drops by up to ~50% of the current level.
+    // The 0.5 cap keeps the visualisation readable: a full D2R=d2r_max halves the level
     // over the fixed sustain window rather than driving it to zero (which would make
     // D2R and D1L visually indistinguishable for the viewer).
-    let level_at_noteoff = (level_end_d1 * (1.0 - d2r / 15.0 * 0.5)).max(0.0);
+    let level_at_noteoff = (level_end_d1 * (1.0 - d2r / d2r_max * 0.5)).max(0.0);
 
     // Release: always ends at 0.0.  The line slope from (t_noteoff, level_at_noteoff)
-    // to (t_end, 0.0) implicitly reflects the rate; RR=15 makes it steep.
+    // to (t_end, 0.0) implicitly reflects the rate; RR=rr_max makes it steep.
     // Add a midpoint to show the RR effect: high RR → mostly gone by midpoint.
     let t_release_mid = (t_noteoff + t_end) * 0.5;
-    // RR=0 → halfway through release level is still ~100%; RR=15 → ~0%.
-    let level_release_mid = level_at_noteoff * (1.0 - rr / 15.0) * 0.5;
+    // RR=0 → halfway through release, level is still ~100% of level_at_noteoff;
+    // RR=rr_max → level is ~0% at the midpoint.
+    let level_release_mid = level_at_noteoff * (1.0 - rr / rr_max);
 
     vec![
         (0.0, 0.0),

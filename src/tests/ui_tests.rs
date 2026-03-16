@@ -245,3 +245,32 @@ fn test_envelope_time_points_are_ascending() {
         );
     }
 }
+
+#[test]
+fn test_envelope_release_midpoint_rr0_stays_high() {
+    // RR=0: at the release midpoint (pts[4]) the level should equal level_at_noteoff (pts[3]).
+    // The corrected formula: level_release_mid = level_at_noteoff * (1.0 - rr / rr_max)
+    // → with RR=0: 1.0 * (1.0 - 0.0) = level_at_noteoff.
+    let row = make_op_row(31, 0, 0, 0, 0, 0); // AR=31, D1L=0, RR=0, TL=0
+    let pts = compute_op_envelope_points(&row);
+    let (_, level_at_noteoff) = pts[3];
+    let (_, level_mid) = pts[4];
+    assert!(
+        (level_mid - level_at_noteoff).abs() < 1e-9,
+        "RR=0 midpoint should equal level_at_noteoff ({level_at_noteoff}), got {level_mid}"
+    );
+}
+
+#[test]
+fn test_envelope_release_midpoint_rr_max_near_zero() {
+    // RR=max: at the release midpoint (pts[4]) the level should be 0.
+    // The corrected formula: level_release_mid = level_at_noteoff * (1.0 - rr_max / rr_max) = 0.
+    let rr_max = PARAM_MAX[PARAM_RR];
+    let row = make_op_row(31, 0, 0, 0, rr_max, 0); // AR=31, D1L=0, RR=max, TL=0
+    let pts = compute_op_envelope_points(&row);
+    let (_, level_mid) = pts[4];
+    assert!(
+        level_mid < 1e-9,
+        "RR=max midpoint should be near 0.0, got {level_mid}"
+    );
+}
