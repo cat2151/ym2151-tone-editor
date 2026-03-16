@@ -5,13 +5,24 @@ use crate::{app::App, models::*};
 use ratatui::{
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
+    symbols::Marker,
     text::{Line, Span, Text},
-    widgets::{Block, Borders, Clear, Paragraph},
+    widgets::{
+        canvas::{Canvas, Line as CanvasLine},
+        Block, Borders, Clear, Paragraph,
+    },
     Frame,
 };
 
 /// Background color for shortcut key guides
 const KEY_GUIDE_BG_COLOR: Color = Color::Rgb(40, 40, 40);
+
+/// Height (in character rows) of the operator envelope canvas.
+/// Each row in Braille mode provides 4 pixels of vertical resolution.
+const ENVELOPE_CANVAS_HEIGHT: u16 = 6;
+
+/// Colors used to draw the four operator envelopes (O1–O4).
+const OP_ENVELOPE_COLORS: [Color; 4] = [Color::Cyan, Color::Green, Color::Yellow, Color::Magenta];
 
 pub fn ui(f: &mut Frame, app: &App) {
     let size = f.area();
@@ -246,8 +257,73 @@ pub fn ui(f: &mut Frame, app: &App) {
         draw_virtual_pentatonic_keyboard_at_y(f, app, inner, penta_keyboard_y);
     }
 
+    // Draw envelope canvas below keyboard if there is enough vertical space.
+    // The canvas needs ENVELOPE_CANVAS_HEIGHT character rows + 1 gap row.
+    let envelope_y = penta_keyboard_y + 1;
+    // Reserve 1 row at the bottom for keybind hints and 1 row for border.
+    let available_for_envelope = size.height.saturating_sub(2).saturating_sub(envelope_y);
+    if available_for_envelope >= ENVELOPE_CANVAS_HEIGHT {
+        let envelope_area = Rect {
+            x: inner.x,
+            y: envelope_y,
+            width: inner.width,
+            height: ENVELOPE_CANVAS_HEIGHT,
+        };
+        draw_envelope_canvas(f, app, envelope_area);
+    }
+
     // Draw keybind hints at the bottom of the screen (left-aligned)
     draw_keybind_hints(f, app, inner);
+}
+
+/// Draw operator envelope shapes for all 4 OPs into `area` using ratatui's Braille Canvas.
+///
+/// Each operator's ADSR-like envelope is rendered as a line-chart using a distinct colour:
+/// - O1: Cyan, O2: Green, O3: Yellow, O4: Magenta.
+///
+/// Operators whose slot-mask (SM) is 0 are drawn in dark-gray to indicate they are muted.
+///
+/// The x-axis represents normalised time (note-on → note-off → release).
+/// The y-axis represents normalised amplitude (0 = silent, 1 = max).
+fn draw_envelope_canvas(f: &mut Frame, app: &App, area: Rect) {
+    // Build all envelope point-sets before the closure (avoids capturing `app` by ref inside FnMut).
+    let envelope_points: Vec<Vec<(f64, f64)>> = (0..4)
+        .map(|op| compute_op_envelope_points(&app.values[op]))
+        .collect();
+    let ops_enabled: [bool; 4] = std::array::from_fn(|op| app.values[op][PARAM_SM] != 0);
+
+    let canvas = Canvas::default()
+        .block(
+            Block::default()
+                .title("Envelope (O1=Cyan O2=Green O3=Yellow O4=Magenta)")
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::DarkGray)),
+        )
+        .marker(Marker::Braille)
+        .x_bounds([0.0, 1.0])
+        .y_bounds([0.0, 1.0])
+        .paint(move |ctx| {
+            for (op, points) in envelope_points.iter().enumerate() {
+                let color = if ops_enabled[op] {
+                    OP_ENVELOPE_COLORS[op]
+                } else {
+                    Color::DarkGray
+                };
+                for segment in points.windows(2) {
+                    let (x1, y1) = segment[0];
+                    let (x2, y2) = segment[1];
+                    ctx.draw(&CanvasLine {
+                        x1,
+                        y1,
+                        x2,
+                        y2,
+                        color,
+                    });
+                }
+            }
+        });
+
+    f.render_widget(canvas, area);
 }
 
 fn draw_virtual_pentatonic_keyboard_at_y(f: &mut Frame, app: &App, inner: Rect, keyboard_y: u16) {

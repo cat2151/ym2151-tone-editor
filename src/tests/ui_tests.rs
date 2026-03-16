@@ -113,3 +113,164 @@ fn test_get_algorithm_diagram() {
     assert_eq!(invalid.len(), 1);
     assert_eq!(invalid[0], "Invalid ALG");
 }
+
+// ---------------------------------------------------------------------------
+// compute_op_envelope_points tests
+// ---------------------------------------------------------------------------
+
+/// Build a zeroed `[u8; GRID_WIDTH]` row, then override specific indices.
+fn make_op_row(ar: u8, d1r: u8, d1l: u8, d2r: u8, rr: u8, tl: u8) -> [u8; GRID_WIDTH] {
+    let mut row = [0u8; GRID_WIDTH];
+    row[PARAM_AR] = ar;
+    row[PARAM_D1R] = d1r;
+    row[PARAM_D1L] = d1l;
+    row[PARAM_D2R] = d2r;
+    row[PARAM_RR] = rr;
+    row[PARAM_TL] = tl;
+    row
+}
+
+#[test]
+fn test_envelope_points_length() {
+    // compute_op_envelope_points always returns exactly 6 points
+    let row = make_op_row(31, 0, 0, 0, 0, 0);
+    let pts = compute_op_envelope_points(&row);
+    assert_eq!(pts.len(), 6, "expected 6 envelope points");
+}
+
+#[test]
+fn test_envelope_starts_and_ends_at_zero() {
+    // First point is (0.0, 0.0) and last is (1.0, 0.0) for any parameters
+    let row = make_op_row(20, 10, 5, 3, 8, 30);
+    let pts = compute_op_envelope_points(&row);
+    let (t0, l0) = pts[0];
+    let (t_end, l_end) = *pts.last().unwrap();
+    assert_eq!(t0, 0.0, "first time should be 0.0");
+    assert_eq!(l0, 0.0, "first level should be 0.0");
+    assert_eq!(t_end, 1.0, "last time should be 1.0");
+    assert_eq!(l_end, 0.0, "last level should be 0.0");
+}
+
+#[test]
+fn test_envelope_all_levels_in_range() {
+    // All level values must be in [0.0, 1.0]
+    for ar in [0u8, 15, 31] {
+        for d1l in [0u8, 7, 15] {
+            for tl in [0u8, 50, 99] {
+                let row = make_op_row(ar, 10, d1l, 5, 5, tl);
+                let pts = compute_op_envelope_points(&row);
+                for (_, level) in &pts {
+                    assert!(
+                        *level >= 0.0 && *level <= 1.0,
+                        "level {level} out of [0,1] for ar={ar} d1l={d1l} tl={tl}"
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn test_envelope_tl99_near_silent() {
+    // With TL=99 (near silent) the peak should be near 0
+    let row = make_op_row(31, 31, 0, 0, 15, 99);
+    let pts = compute_op_envelope_points(&row);
+    // The second point is the attack peak
+    let (_, peak) = pts[1];
+    assert!(
+        peak < 0.02,
+        "TL=99 should produce a near-silent envelope, got peak={peak}"
+    );
+}
+
+#[test]
+fn test_envelope_ar0_gives_zero_peak() {
+    // AR=0 means no attack; the peak (second point) should be 0.0
+    let row = make_op_row(0, 0, 0, 0, 0, 0);
+    let pts = compute_op_envelope_points(&row);
+    let (_, peak) = pts[1];
+    assert_eq!(peak, 0.0, "AR=0 should give zero attack peak");
+}
+
+#[test]
+fn test_envelope_ar31_gives_full_peak_at_tl0() {
+    // AR=31, TL=0 → peak should equal amplitude (≈ 1.0)
+    let row = make_op_row(31, 0, 0, 0, 0, 0);
+    let pts = compute_op_envelope_points(&row);
+    let (_, peak) = pts[1];
+    assert!(
+        (peak - 1.0_f64).abs() < 1e-9,
+        "AR=31 TL=0 should give peak ≈ 1.0, got {peak}"
+    );
+}
+
+#[test]
+fn test_envelope_d1l15_sustain_at_zero() {
+    // D1L=15 means Decay1 targets silence; with D1R=31 (instant) the sustain level should be 0
+    let row = make_op_row(31, 31, 15, 0, 0, 0);
+    let pts = compute_op_envelope_points(&row);
+    // pts[2] = end of Decay1
+    let (_, level_after_d1) = pts[2];
+    assert!(
+        level_after_d1 < 1e-9,
+        "D1L=15 D1R=31 should decay to silence after Decay1, got {level_after_d1}"
+    );
+}
+
+#[test]
+fn test_envelope_d1l0_no_decay() {
+    // D1L=0 means no decay (sustain at full amplitude);
+    // with AR=31 and any D1R, the level after Decay1 should equal the attack peak
+    let row = make_op_row(31, 31, 0, 0, 0, 0);
+    let pts = compute_op_envelope_points(&row);
+    let (_, peak) = pts[1];
+    let (_, level_after_d1) = pts[2];
+    assert!(
+        (level_after_d1 - peak).abs() < 1e-9,
+        "D1L=0 should keep level at peak after Decay1: peak={peak} level_after_d1={level_after_d1}"
+    );
+}
+
+#[test]
+fn test_envelope_time_points_are_ascending() {
+    // Time values must be non-decreasing
+    let row = make_op_row(20, 15, 8, 5, 10, 20);
+    let pts = compute_op_envelope_points(&row);
+    for w in pts.windows(2) {
+        let (t1, _) = w[0];
+        let (t2, _) = w[1];
+        assert!(
+            t2 >= t1,
+            "time points must be ascending: {t1} followed by {t2}"
+        );
+    }
+}
+
+#[test]
+fn test_envelope_release_midpoint_rr0_stays_high() {
+    // RR=0: at the release midpoint (pts[4]) the level should equal level_at_noteoff (pts[3]).
+    // The corrected formula: level_release_mid = level_at_noteoff * (1.0 - rr / rr_max)
+    // → with RR=0: 1.0 * (1.0 - 0.0) = level_at_noteoff.
+    let row = make_op_row(31, 0, 0, 0, 0, 0); // AR=31, D1L=0, RR=0, TL=0
+    let pts = compute_op_envelope_points(&row);
+    let (_, level_at_noteoff) = pts[3];
+    let (_, level_mid) = pts[4];
+    assert!(
+        (level_mid - level_at_noteoff).abs() < 1e-9,
+        "RR=0 midpoint should equal level_at_noteoff ({level_at_noteoff}), got {level_mid}"
+    );
+}
+
+#[test]
+fn test_envelope_release_midpoint_rr_max_near_zero() {
+    // RR=max: at the release midpoint (pts[4]) the level should be 0.
+    // The corrected formula: level_release_mid = level_at_noteoff * (1.0 - rr_max / rr_max) = 0.
+    let rr_max = PARAM_MAX[PARAM_RR];
+    let row = make_op_row(31, 0, 0, 0, rr_max, 0); // AR=31, D1L=0, RR=max, TL=0
+    let pts = compute_op_envelope_points(&row);
+    let (_, level_mid) = pts[4];
+    assert!(
+        level_mid < 1e-9,
+        "RR=max midpoint should be near 0.0, got {level_mid}"
+    );
+}
