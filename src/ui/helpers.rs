@@ -166,7 +166,7 @@ pub(crate) fn compute_op_envelope_points(row: &[u8; GRID_WIDTH]) -> Vec<(f64, f6
 
 /// Compute the terminal row at which the envelope display area starts.
 ///
-/// This mirrors the layout logic in [`ui`] so that callers (e.g. the event
+/// This mirrors the layout logic in [`crate::ui::ui`] so that callers (e.g. the event
 /// loop) can position sixel graphics at exactly the same location without
 /// duplicating the layout constants.
 #[cfg_attr(not(windows), allow(dead_code))]

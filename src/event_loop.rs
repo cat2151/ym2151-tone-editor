@@ -410,11 +410,17 @@ pub(crate) fn run_app<B: Backend>(
     }
 }
 
-/// sixel波形データが利用可能な場合、端末のエンベロープ表示エリアに書き出す。
+/// Print the sixel waveform to stdout at the envelope display area position.
 ///
-/// ratatuiの描画後に呼び出すことで、同じ領域のブライユキャンバスをsixelで置き換える。
-/// sixelをサポートしていない端末では、エスケープシーケンスがそのまま表示される可能性があるが、
-/// これは「試し、UXを検証する」フェーズの実験的機能として許容する。
+/// Called after each ratatui draw so that the sixel waveform replaces the
+/// braille envelope canvas when a waveform has been generated.
+///
+/// If `app.sixel_waveform` is `None` (generation not yet complete) or the
+/// mutex is poisoned the function returns early without printing anything.
+///
+/// # Terminal compatibility
+/// Terminals that do not support sixel will display the raw DCS escape
+/// sequence, which is an accepted limitation for this experimental feature.
 #[cfg(windows)]
 fn print_sixel_waveform(app: &App) -> io::Result<()> {
     use std::io::Write;

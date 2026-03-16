@@ -75,7 +75,7 @@ fn generate_waveform_sixel(
     Ok(samples_to_sixel(&samples, SIXEL_WIDTH, SIXEL_HEIGHT))
 }
 
-/// Read a 16-bit stereo WAV file and return mono samples in \[-1.0, 1.0\].
+/// Read a 16-bit stereo WAV file and return mono samples in [-1.0, 1.0].
 ///
 /// Channels are averaged together to produce mono.
 #[cfg(windows)]
