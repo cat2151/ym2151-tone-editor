@@ -32,3 +32,6 @@ ym2151-tone-editor.toml
 
 # wasm-pack build output (committed by CI; do not ignore)
 # wasm/pkg/
+
+# 一時的にignoreで開発体験を検証する用
+tones
