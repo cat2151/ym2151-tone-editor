@@ -226,6 +226,59 @@ fn test_load_favorites_at_path_returns_saved_entries() {
 }
 
 #[test]
+fn test_migrate_favorites_from_roaming_copies_when_new_missing() {
+    let legacy_path = temp_favorites_path();
+    let new_path = temp_favorites_path();
+
+    let mut values = [[0u8; GRID_WIDTH]; GRID_HEIGHT];
+    values[0][PARAM_MUL] = 5;
+    save_to_favorites_at_path(&legacy_path, &values).unwrap();
+
+    migrate_favorites_from_roaming_at_paths(&legacy_path, &new_path);
+
+    assert!(new_path.exists(), "migration should copy file to new path");
+    let favorites = load_favorites_at_path(&new_path).unwrap();
+    assert_eq!(favorites.len(), 1);
+    assert_eq!(favorites[0], register::editor_rows_to_registers(&values));
+
+    std::fs::remove_file(&legacy_path).ok();
+    std::fs::remove_file(&new_path).ok();
+}
+
+#[test]
+fn test_migrate_favorites_from_roaming_skips_when_new_exists() {
+    let legacy_path = temp_favorites_path();
+    let new_path = temp_favorites_path();
+
+    let mut legacy_values = [[0u8; GRID_WIDTH]; GRID_HEIGHT];
+    legacy_values[0][PARAM_MUL] = 3;
+    save_to_favorites_at_path(&legacy_path, &legacy_values).unwrap();
+
+    let mut new_values = [[0u8; GRID_WIDTH]; GRID_HEIGHT];
+    new_values[0][PARAM_MUL] = 7;
+    save_to_favorites_at_path(&new_path, &new_values).unwrap();
+
+    migrate_favorites_from_roaming_at_paths(&legacy_path, &new_path);
+
+    let favorites = load_favorites_at_path(&new_path).unwrap();
+    assert_eq!(favorites.len(), 1, "existing new file should not be overwritten");
+    assert_eq!(favorites[0], register::editor_rows_to_registers(&new_values));
+
+    std::fs::remove_file(&legacy_path).ok();
+    std::fs::remove_file(&new_path).ok();
+}
+
+#[test]
+fn test_migrate_favorites_from_roaming_noop_when_legacy_missing() {
+    let legacy_path = temp_favorites_path();
+    let new_path = temp_favorites_path();
+
+    migrate_favorites_from_roaming_at_paths(&legacy_path, &new_path);
+
+    assert!(!new_path.exists(), "new path should not be created when legacy is also missing");
+}
+
+#[test]
 fn test_load_favorites_at_path_corrupted_file_returns_error() {
     let path = temp_favorites_path();
     std::fs::write(&path, b"not valid json").unwrap();

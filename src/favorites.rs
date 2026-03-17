@@ -2,6 +2,7 @@ use crate::models::ToneData;
 use crate::register;
 use crate::register_list;
 use std::{
+    fs,
     io,
     path::{Path, PathBuf},
 };
@@ -20,6 +21,7 @@ pub fn load_favorites() -> io::Result<Vec<String>> {
     let path = favorites_file_path().ok_or_else(|| {
         io::Error::new(io::ErrorKind::NotFound, "Could not find config directory")
     })?;
+    migrate_favorites_from_roaming(&path);
     load_favorites_at_path(&path)
 }
 
@@ -29,6 +31,33 @@ const FAVORITES_MAX: usize = 20;
 /// Returns None if the config directory cannot be determined.
 pub fn favorites_file_path() -> Option<PathBuf> {
     dirs::config_local_dir().map(|dir| dir.join("ym2151-tone-editor").join("favorites.json"))
+}
+
+/// Get the legacy (Roaming) path for the favorites file used before the AppData\Local migration.
+/// Returns None if the config directory cannot be determined.
+fn favorites_file_path_legacy() -> Option<PathBuf> {
+    dirs::config_dir().map(|dir| dir.join("ym2151-tone-editor").join("favorites.json"))
+}
+
+/// If the new local path does not exist but the legacy Roaming path does, copy the file to the
+/// new location so existing favorites are preserved across the migration.
+pub fn migrate_favorites_from_roaming(new_path: &Path) {
+    if let Some(legacy) = favorites_file_path_legacy() {
+        migrate_favorites_from_roaming_at_paths(&legacy, new_path);
+    }
+}
+
+/// Inner migration helper that accepts explicit paths (also used by tests).
+pub fn migrate_favorites_from_roaming_at_paths(legacy_path: &Path, new_path: &Path) {
+    if new_path.exists() {
+        return;
+    }
+    if legacy_path.exists() {
+        if let Some(parent) = new_path.parent() {
+            let _ = fs::create_dir_all(parent);
+        }
+        let _ = fs::copy(legacy_path, new_path);
+    }
 }
 
 /// Save tone data to favorites at the given path.
