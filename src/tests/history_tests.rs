@@ -21,7 +21,7 @@ fn test_history_file_path_ends_with_history_tone_json() {
             path
         );
     }
-    // If config_dir() returns None (some CI environments), we just skip the assertion
+    // If config_local_dir() returns None (some CI environments), we just skip the assertion
 }
 
 #[test]

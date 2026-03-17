@@ -21,7 +21,7 @@ fn test_favorites_file_path_ends_with_favorites_json() {
             path
         );
     }
-    // If config_dir() returns None (some CI environments), we just skip the assertion
+    // If config_local_dir() returns None (some CI environments), we just skip the assertion
 }
 
 #[test]

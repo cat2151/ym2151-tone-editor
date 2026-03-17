@@ -28,7 +28,7 @@ const FAVORITES_MAX: usize = 20;
 /// Get the path to the favorites file in the local config directory.
 /// Returns None if the config directory cannot be determined.
 pub fn favorites_file_path() -> Option<PathBuf> {
-    dirs::config_dir().map(|dir| dir.join("ym2151-tone-editor").join("favorites.json"))
+    dirs::config_local_dir().map(|dir| dir.join("ym2151-tone-editor").join("favorites.json"))
 }
 
 /// Save tone data to favorites at the given path.
@@ -42,7 +42,7 @@ pub fn save_to_favorites_at_path(path: &Path, values: &ToneData) -> io::Result<(
 }
 
 /// Save tone data to favorites in the local config directory.
-/// Path: `{config_dir}/ym2151-tone-editor/favorites.json`
+/// Path: `{config_local_dir}/ym2151-tone-editor/favorites.json`
 /// Errors are intentionally ignored by the caller to avoid disrupting the main flow.
 pub fn save_to_favorites(values: &ToneData) -> io::Result<()> {
     let path = favorites_file_path().ok_or_else(|| {

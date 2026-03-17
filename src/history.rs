@@ -27,7 +27,7 @@ const HISTORY_MAX: usize = 26;
 /// Get the path to the history file in the local config directory.
 /// Returns None if the config directory cannot be determined.
 pub fn history_file_path() -> Option<PathBuf> {
-    dirs::config_dir().map(|dir| dir.join("ym2151-tone-editor").join("history_tone.json"))
+    dirs::config_local_dir().map(|dir| dir.join("ym2151-tone-editor").join("history_tone.json"))
 }
 
 /// Save tone data to history at the given path.
@@ -41,7 +41,7 @@ pub fn save_to_history_at_path(path: &Path, values: &ToneData) -> io::Result<()>
 }
 
 /// Save tone data to history in the local config directory.
-/// Path: `{config_dir}/ym2151-tone-editor/history_tone.json`
+/// Path: `{config_local_dir}/ym2151-tone-editor/history_tone.json`
 /// Errors are intentionally ignored by the caller to avoid disrupting the main flow.
 pub fn save_to_history(values: &ToneData) -> io::Result<()> {
     let path = history_file_path().ok_or_else(|| {
