@@ -123,9 +123,7 @@ impl Default for Config {
         let mut keybinds = HashMap::new();
 
         // Value modification keys
-        keybinds.insert("q".to_string(), Action::DecreaseValue);
         keybinds.insert("PageDown".to_string(), Action::DecreaseValue);
-        keybinds.insert("e".to_string(), Action::IncreaseValue);
         keybinds.insert("PageUp".to_string(), Action::IncreaseValue);
         keybinds.insert("Home".to_string(), Action::SetValueToMax);
         keybinds.insert("End".to_string(), Action::SetValueToMin);
@@ -259,6 +257,7 @@ impl Default for Config {
 
         // Exit
         keybinds.insert("Esc".to_string(), Action::Exit);
+        keybinds.insert("q".to_string(), Action::Exit);
 
         Config {
             keybinds,
@@ -317,8 +316,8 @@ mod tests {
         let config = KeybindsConfig::default();
 
         // Test a few key bindings
-        assert_eq!(config.get_action("q"), Some(&Action::DecreaseValue));
-        assert_eq!(config.get_action("e"), Some(&Action::IncreaseValue));
+        assert_eq!(config.get_action("q"), Some(&Action::Exit));
+        assert_eq!(config.get_action("e"), None);
         assert_eq!(config.get_action("Esc"), Some(&Action::Exit));
         assert_eq!(config.get_action("1"), Some(&Action::JumpToOp1AndIncrease));
         assert_eq!(config.get_action("h"), Some(&Action::MoveCursorLeft));
