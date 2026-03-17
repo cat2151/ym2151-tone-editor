@@ -1,4 +1,4 @@
-Last updated: 2026-03-17
+Last updated: 2026-03-18
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -244,6 +244,8 @@ Last updated: 2026-03-17
 - issue-notes/218.md
 - issue-notes/219.md
 - issue-notes/220.md
+- issue-notes/223.md
+- issue-notes/224.md
 - issue-notes/95.md
 - issue-notes/96.md
 - src/app/mod.rs
@@ -280,10 +282,12 @@ Last updated: 2026-03-17
 - src/tests/ui_tests.rs
 - src/tests/variation_selector_tests.rs
 - src/tests/verbose_logging_tests.rs
+- src/ui/help.rs
 - src/ui/helpers.rs
 - src/ui/mod.rs
 - src/updater.rs
 - src/variation_selector.rs
+- src/waveform.rs
 - tones/general_midi/000_AcousticGrand.json
 - tones/general_midi/tone_names.json
 - wasm/Cargo.lock
@@ -292,14 +296,14 @@ Last updated: 2026-03-17
 - ym2151-tone-editor.toml.example
 
 ## 現在のオープンIssues
-## [Issue #221](../issue-notes/221.md): 大きなファイルの検出: 1個のファイルが500行を超えています
+## [Issue #226](../issue-notes/226.md): 大きなファイルの検出: 1個のファイルが500行を超えています
 以下のファイルが500行を超えています。リファクタリングを検討してください。
 
 ## 検出されたファイル
 
 | ファイル | 行数 | 超過行数 |
 |---------|------|----------|
-| `src/ui/mod.rs` | 525 | +25 |
+| `src/event_loop.rs` | 511 | +11 |
 
 ## テスト実施のお願い
 
@@ -308,27 +312,44 @@ Last updated: 2026-03-17
 
 ## 推奨事項
 
-1. 単一責任の原則に従い、ファイルを分割する
-2. ...
+1. 単一責任の原則に従い、ファイルを分割する...
 ラベル: refactoring, code-quality, automated
---- issue-notes/221.md の内容 ---
+--- issue-notes/226.md の内容 ---
 
 ```markdown
 
 ```
 
-## [Issue #220](../issue-notes/220.md): q と eのdecrement increment をやめて、qをquitにする
-[issue-notes/220.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/220.md)
+## [Issue #224](../issue-notes/224.md): windows appdata roaming側にファイルができてしまっている
+[issue-notes/224.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/224.md)
 
 ...
 ラベル: 
---- issue-notes/220.md の内容 ---
+--- issue-notes/224.md の内容 ---
 
 ```markdown
-# issue q と eのdecrement increment をやめて、qをquitにする #220
-[issues #220](https://github.com/cat2151/ym2151-tone-editor/issues/220)
+# issue windows appdata roaming側にファイルができてしまっている #224
+[issues #224](https://github.com/cat2151/ym2151-tone-editor/issues/224)
 
-- なぜなら、ほかのTUIでqをquitにしており、操作が違う上にdecrementが発生してUXが悪いので
+- 現状 : `C:\Users\<your name>\AppData\Roaming\ym2151-tone-editor`
+- userがほしいのは
+    - `C:\Users\<your name>\AppData\Local\ym2151-tone-editor`
+    - にファイルができること
+
+```
+
+## [Issue #223](../issue-notes/223.md): 音色ファイルの読み書きの仕様変更。すべてwindows appdata local config dirs で読み書きとする。カレントディレクトリをやめる
+[issue-notes/223.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/223.md)
+
+...
+ラベル: 
+--- issue-notes/223.md の内容 ---
+
+```markdown
+# issue 音色ファイルの読み書きの仕様変更。すべてwindows appdata local config dirs で読み書きとする。カレントディレクトリをやめる #223
+[issues #223](https://github.com/cat2151/ym2151-tone-editor/issues/223)
+
+
 
 ```
 
@@ -366,38 +387,6 @@ Last updated: 2026-03-17
 - 課題、どれがキャリアか？どれがモジュレータか？がわからない。
 - 課題、どれも似たような見た目になってしまっている。slow attackや、long decayの区別がつかない。
 - 課題、envelopeの、どこまでがアタックで、どこからディケイで、どこからサステインで、どこからリリースか？区別がつかない。
-
-```
-
-## [Issue #217](../issue-notes/217.md): Add sixel waveform display with 5-second idle detection (Windows)
-- [x] レビュー内容を分析し対応計画を立案
-- [x] 🔴 競合状態修正: `AtomicU32` 生成カウンタ (`waveform_generation`) を追加。`on_tone_changed()` でインクリメントし、スレッドは書き込み前に世代が一致するか確認する
-- [x] 🟡 マジックナンバー修正: `LAYOUT_CH_ROW_Y = 7` を `ui/mod.rs` に `pub const` として公開し、`compute_envelope_area_y()` から `super::LAYOUT_CH_ROW_Y` で参照する
-- [x] 🟡 自動再描画修正: ...
-ラベル: 
---- issue-notes/217.md の内容 ---
-
-```markdown
-
-```
-
-## [Issue #177](../issue-notes/177.md): sixelを使って音色波形を描画できるか試し、UXを検証する
-[issue-notes/177.md](https://github.com/cat2151/ym2151-tone-editor/blob/main/issue-notes/177.md)
-
-...
-ラベル: 
---- issue-notes/177.md の内容 ---
-
-```markdown
-# issue sixelを使って音色波形を描画できるか試し、UXを検証する。音色変更後5秒したらbackgroundでcat-play-mmlをwav生成モードで呼び出してwavを得て表示 #177
-[issues #177](https://github.com/cat2151/ym2151-tone-editor/issues/177)
-
-# 具体的には
-- 音色変更後5秒なにも音色変更がないときに限り、要はidle状態に限り、
-- backgroundでcat-play-mmlをwav生成モードで呼び出して、
-- wavを得て、
-- それをsixelで表示する
-
 
 ```
 
@@ -490,48 +479,6 @@ Last updated: 2026-03-17
 ```
 
 ## ドキュメントで言及されているファイルの内容
-### .github/actions-tmp/issue-notes/17.md
-```md
-{% raw %}
-# issue development-status が生成したmdに誤りがある。issue-note へのlinkがURL誤りで、404となってしまう #17
-[issues #17](https://github.com/cat2151/github-actions/issues/17)
-
-# 事例
-- 生成したmdのURL：
-    - https://github.com/cat2151/github-actions/blob/main/generated-docs/development-status.md
-- そのmdをGitHub上でdecodeして閲覧したときのURL、404である：
-    - https://github.com/cat2151/github-actions/blob/main/generated-docs/issue-notes/16.md
-- そのmdに実際に含まれるURL：
-    - issue-notes/16.md
-- あるべきURL：
-    - https://github.com/cat2151/github-actions/blob/main/issue-notes/16.md
-- あるべきURLがmdにどう含まれているべきか：
-    - ../issue-notes/16.md
-
-# どうする？
-- 案
-    - promptを修正する
-    - promptの場所は：
-        - .github_automation/project_summary/scripts/development/DevelopmentStatusGenerator.cjs
-    - 備考、cjs内にpromptがハードコーディングされており、promptをメンテしづらいので別途対処する : [issues #18](https://github.com/cat2151/github-actions/issues/18)
-
-# 結果
-- agentにpromptを投げた
-    - ※promptは、development-statusで生成したもの
-- レビューした
-    - agentがフルパスで実装した、ことがわかった
-- userが分析し、 ../ のほうが適切と判断した
-    - ※「事例」コーナーを、あわせて修正した
-- そのように指示してagentに修正させた
-- testする
-
-# 結果
-- test green
-- closeする
-
-{% endraw %}
-```
-
 ### .github/actions-tmp/issue-notes/18.md
 ```md
 {% raw %}
@@ -601,72 +548,21 @@ Last updated: 2026-03-17
 {% endraw %}
 ```
 
-### .github/actions-tmp/issue-notes/20.md
+### .github/actions-tmp/issue-notes/23.md
 ```md
 {% raw %}
-# issue project-summary の development-status 生成時、issue-notes/ 配下のmdにファイル名が書いてあれば、そのファイル内容もpromptに添付、を試す #20
-[issues #20](https://github.com/cat2151/github-actions/issues/20)
+# issue issue 17が再発してしまっている #23
+[issues #23](https://github.com/cat2151/github-actions/issues/23)
 
-# 何が困るの？
-- Geminiに次の一手を生成させるとき、cjsの内容も添付したほうが、生成品質が改善できる可能性がある。
-
-# 案
-## outputのimage
-- promptが言及するfilename、について、そのfileの内容もすべてpromptに含める。
-    - 軸は、projectのfilename一覧である。
-        - 一覧それぞれのfilenameについて、promptで言及されているものをfile内容埋め込み、とする。
-- 方向性
-    - シンプルで明確なルール、曖昧さのないルールで、メンテを楽にすることを優先する
-    - 余分なファイルが出てしまうが割り切ってOKとし、欠落リスクを減らせることを優先する
-- 備考
-    - 曖昧でメンテが必要な「documentからのfilename抽出」をやめ、
-        - かわりに、逆に、「今のprojectにあるfileすべてのうち、promptで言及されているもの」を軸とする
-## 実現方法の案
-- project全体について、filenameと、filepath配列（複数ありうる）、のmapを取得する。そういう関数Aをまず実装する。
-    - filepathは、agentが扱えるよう、github上のworkの絶対pathではなく、projectRootからの相対パス表記とする。
-- そして、そのfilenameにmatchするfilepath配列について、filepathとファイル内容を記したmarkdown文字列を返却、という関数Bを実装する。
-- さらに、Geminiにわたすpromptについて、前述の関数Aのfilenameそれぞれについて、prompt内を検索し、filenameが存在する場合は、そのfilenameについて、関数Bを用いてmarkdown文字列を取得する。そうして得られたmarkdown文字列群を返却する、という関数Cを実装する。
-- さらに、promptの末尾に書いてあるプレースホルダー「`${file_contents}`」を、関数Cの結果で置き換える、という関数Dを実装する。
-- 実際には、Geminiにわたすpromptのプレースホルダー展開は、2回にわたる必要がある。1回目でissues-note内容をpromptに埋め込む。2回目でそのpromptに対して関数Dを適用する。
-## 備忘
-- 上記は、agentにplanさせてレビューし、context不足と感じたら上記をメンテ、というサイクルで書いた。
+# 症状は？
+- issue 17と同じ
 
 # どうする？
-- 上記をagentに投げる。documentやtestについてのplanもしてくるかもしれないがそこは時間の都合で省略して実施させるつもり。
-- 投げた、実装させた、レビューして人力リファクタリングした
-- testする
-
-# 結果
-- バグ
-    - この20.mdにあるプレースホルダーが置換されてしまっている
-    - issue-notesで言及されていないfileまで添付されてしまっている
-- 分析
-    - この20.mdにあるプレースホルダーが置換されてしまっている
-        - 原因
-            - 20.mdにあるプレースホルダーまで置換対象としてしまっていたため。
-            - prompt全体のプレースホルダーを置換対象としてしまっていたため。
-            - issue-notesを埋め込んだあとでの、プレースホルダー処理だったので、
-                - 20.md が置換対象となってしまったため。
-        - 対策案
-            - プレースホルダーはすべて、「行頭と行末で囲まれている」ときだけ置換対象とする。
-                - つまり文中やcode中のプレースホルダーは置換対象外とする。
-            - さらに、2つ以上プレースホルダーが出たら想定外なので早期エラー終了させ、検知させる。
-    - issue-notesで言及されていないfileまで添付されてしまっている
-        - 原因
-            - promptに、既にprojectの全file listが書き込まれたあとなので、
-                - issue-noteで言及されていなくても、
-                - promptの全file listを対象に検索してしまっている
-        - 対策案の候補
-            - プレースホルダー置換の順番を変更し、全file listは最後に置換する
-            - file添付の対象を変更し、promptでなく、issue-notesとする
-                - これが範囲が絞られているので安全である、と考える
-        - 備忘
-            - 全fileの対象は、リモートリポジトリ側のfileなので、secretsの心配はないし、実際に検索して確認済み
-
-# どうする？
-- agent半分、人力が半分（agentがハルシネーションでソース破壊したので、関数切り分けしたり、リファクタリングしたり）。
-- で実装した。
-- testする
+- development-status-generated-prompt.md を確認する
+- 結果
+    - >Issue番号を記載する際は、必ず [Issue #番号](issue-notes/番号.md) の形式でMarkdownリンクとして記載してください。
+    - 仮説、これが残っており、ほかの ../ 指定と競合し、どちらかがランダムで選ばれていた
+    - 対策、ここを ../ 指定にする
 
 # 結果
 - test green
@@ -676,63 +572,181 @@ Last updated: 2026-03-17
 {% endraw %}
 ```
 
-### .github/actions-tmp/issue-notes/21.md
+### .github/actions-tmp/issue-notes/24.md
 ```md
 {% raw %}
-# issue project-summary の development-status 生成時、project-overviewが生成済みのproject-overview.mdもpromptに添付、を試す #21
-[issues #21](https://github.com/cat2151/github-actions/issues/21)
+# issue Geminiが503で落ちたのでretryを実装する #24
+[issues #24](https://github.com/cat2151/github-actions/issues/24)
 
 # 何が困るの？
-- project-overview.mdがpromptに添付されていたほうが、Geminiの生成品質が改善できる可能性がある。
-    - メリットは、ファイル一覧、関数一覧、をGeminiにわたせること
+- 朝起きて、development statusがgenerateされてないのは困る
+    - それをタスク実施のヒントにしているので
+    - 毎朝generatedな状態を維持したい
 
-# 検討事項
-- 課題、その一覧に付記されている「ファイルや関数の要約」は、Geminiが「ファイル名や関数名を元に生成しただけ」で、「ファイル内容や関数内容を参照せずに生成した」可能性が高い
-    - 対策、project-overview.mdに依存しない。
-        - 方法、新規関数をagentに実装させる
-            - 新規関数で、ファイル一覧と関数一覧を生成する
-        - 根拠、そのほうが、シンプルに目的を達成できる可能性が高そう。
-        - 根拠、project-overview.mdだと、不具合として.github 配下のymlがlistに含まれておらず、ymlに関するissue、に関する生成、をするとき不具合の可能性がありそう。そういった、別機能の不具合に影響されがち。
-- 課題、早期に実施したほうが毎日好影響が出る可能性がある
-    - 対策、上記検討事項の対処は後回しにして、先に実装してみる
-    - agentに投げる
-- 課題、ProjectSummaryCoordinator をみたところ、並列処理されている
-    - なので、project-overview.mdを参照したいときに、まだ生成されていない、という可能性が高い
-    - 対策、前述の、新規関数で、ファイル一覧と関数一覧を生成させる
-
-# agentに投げるための整理
-- 編集対象ファイル
-    - prompt
-        - .github_automation/project_summary/prompts/development-status-prompt.md
-        - 編集内容
-            - projectのファイル一覧を埋め込む用の、プレースホルダーを追加する
-    - source
-        - .github_automation/project_summary/scripts/development/DevelopmentStatusGenerator.cjs
-        - 編集内容
-            - projectのファイル一覧を生成する関数、を実装し、
-            - それを前述のプレースホルダーに埋め込む
-
-# agentに投げて実装させた
-
-# test結果
-- 以下が不要
-    - .git/
-    - node_modules/
-
-# どうする？
-- agentに上記を変更させた
-- testする
+# 方法
+- retryを実装する
+    - 現在は `this.model.generateContent(developmentPrompt);`
+    - 実装後は `this.generateContent(developmentPrompt);`
+    - BaseGenerator 側に、
+        - generateContent関数を実装する
+            - そこで、
+                - `this.model.generateContent(developmentPrompt);` する
+                - 503のとき、
+                    - retryあり
+                    - Exponential Backoff
 
 # 結果
-- test greenとなった
+- 直近の実行結果をlog確認した
+    - 本番で503が発生しなかったことをlog確認した
+- 本番の503 testは、今回発生しなかったので、できず
+- ここ1週間で2回発生しているので、次の1週間で1回発生する想定
+- ソース机上確認した
 
-# まとめ
-- issueのtitleからは仕様変更した。
-    - projectのfile一覧をpromptに含める、とした。
-    - そのほうがpromptとして、よい生成結果が期待できる、と判断した。
-- test greenとなった
+# どうする？
+- このissueはcloseしたほうがわかりやすい、と判断する
+- 1週間503を毎日チェック、は省略とする
+- もし今後503が発生したら別issueとする
+- 2日チェックして503なし
 
 # closeとする
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/26.md
+```md
+{% raw %}
+# issue userによるcommitがなくなって24時間超経過しているのに、毎日ムダにproject summaryとcallgraphの自動生成が行われてしまっている #26
+[issues #26](https://github.com/cat2151/github-actions/issues/26)
+
+# どうする？
+- logを確認する。24時間チェックがバグっている想定。
+- もしlogから判別できない場合は、logを改善する。
+
+# log確認結果
+- botによるcommitなのに、user commitとして誤判別されている
+```
+Checking for user commits in the last 24 hours...
+User commits found: true
+Recent user commits:
+7654bf7 Update callgraph.html [auto]
+abd2f2d Update project summaries (overview & development status)
+```
+
+# ざっくり調査結果
+- #27 が判明した
+
+# どうする？
+- [x] #27 を修正する。これで自動的に #26 も修正される想定。
+    - 当該処理を修正する。
+    - もしデータ不足なら、より詳細なlog生成を実装する。
+- 別件として、このチェックはむしろworkflow ymlの先頭で行うのが適切と考える。なぜなら、以降のムダな処理をカットできるのでエコ。
+    - [x] #28 を起票したので、そちらで実施する。
+
+# close条件は？
+- 前提
+    - [x] 先行タスクである #27 と #28 が完了済みであること
+- 誤爆がなくなること。
+    - つまり、userによるcommitがなくなって24時間超経過後の日次バッチにて、
+        - ムダなdevelopment status生成、等がないこと
+        - jobのlogに「commitがないので処理しません」的なmessageが出ること
+- どうする？
+    - 日次バッチを本番を流して本番testする
+
+# 結果
+- github-actions logより：
+    - 直近24hのcommitはbotによる1件のみであった
+    - よって後続jobはskipとなった
+    - ことを確認した
+- close条件を満たした、と判断する
+```
+Run node .github_automation/check_recent_human_commit/scripts/check-recent-human-commit.cjs
+BOT: Commit 5897f0c6df6bc2489f9ce3579b4f351754ee0551 | Author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> | Message: Update project summaries (overview & development status) [auto]
+has_recent_human_commit=false
+```
+
+# closeとする
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/3.md
+```md
+{% raw %}
+# issue GitHub Actions「issue note生成」を共通ワークフロー化する #3
+[issues #3](https://github.com/cat2151/github-actions/issues/3)
+
+- 前提
+  - userは、translateのworkflowを共通ワークフロー化し、動くようにしたので、共通ワークフロー化の知識がある
+  - よって、今回は、promptでplanさせ、そのplanをuserがレビューし、planの改善を指示できるので、ハルシネーションのリスクを下げることができる
+
+- prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+このymlはまだ共通ワークフロー化されず、
+呼び出し元からコピーされたままの状態です。
+このymlファイル名のまま、
+中身を共通ワークフロー化してください。
+呼び出し元ymlは別途書きますので気にしないでください。
+まずplanしてください
+```
+
+- plan 生成結果
+```
+共通ワークフロー化のためのplanは以下の通りです。
+
+1. 目的
+現在の issue-note.yml を「共通ワークフロー」として再設計し、他リポジトリや他ワークフローから workflow_call で呼び出せるようにする。
+2. 主な変更点
+on: トリガーを workflow_call に変更（直接イベントで起動しない）。
+必要な入力（inputs）やシークレット（secrets）を workflow_call セクションで定義。
+github.event.issue などのイベント依存部分を、inputs経由で受け取る形に修正。
+既存の処理（issueノート生成、コミット、issue body更新）はそのまま活かすが、パラメータ化する。
+3. 具体的な修正内容
+on: issues: → on: workflow_call: に変更。
+inputs で必要な値（例: issue_title, issue_number, issue_body, issue_url など）を受け取る。
+スクリプト内の ${{ github.event.issue.xxx }} を ${{ inputs.xxx }} に置換。
+github-script ステップも同様にinputsを参照。
+必要に応じて secrets も workflow_call で受け取れるようにする。
+4. ファイル名・配置
+ファイル名はそのまま issue-note.yml。
+配置場所は workflows でOK（共通ワークフローとしてもこの場所で良い）。
+5. 呼び出し元への影響
+呼び出し元ワークフローで uses: <repo>/.github/workflows/issue-note.yml@main のように参照し、inputsを渡す形になる。
+このplanで進めます。次に、実際の共通ワークフロー化のためのyml修正案を作成しますか？
+```
+
+- userがplanレビューし、OKを出した
+- agentに生成結果ymlをレビューさせた、OKとなった
+  - userはこのレビューは認知負荷が高いのでskipとする（単純な細かい間違い探し作業になるので、それはagentに任せた）
+-  エラー。呼び出し元ymlのエラーがあり修正。共通ワークフローのエラー指摘があり、共通ワークフロー側の修正が必要となった
+```
+原因の分析：
+
+呼び出し元（tonejs-mml-to-jsonのissue-note.yml）は、reusable workflow（cat2151/github-actions/.github/workflows/issue-note.yml@main）をusesで呼び出し、inputsをwithで渡しています。
+共通ワークフロー（reusable workflow）は inputs を workflow_call で受け取り、各ステップで ${{ inputs.xxx }} で参照しています。
+しかし、エラーが発生したのは actions/github-script@v7 の script 内です。
+エラーの本質的な原因：
+
+actions/github-script の script: で ${{ inputs.issue_number }} のような式を直接 JavaScript テンプレートリテラル内で使っていますが、これはサポートされていません。
+script: の中は JavaScript であり、YAMLの ${{ ... }} は展開されません（または意図通りに展開されません）。
+そのため、inputs 変数は script 内の JavaScript で未定義となり、ReferenceError になります。
+正しい書き方：
+
+actions/github-script の script: でワークフローの inputs を使いたい場合は、with: で input を environment 変数や script の引数として渡し、JavaScript で process.env から取得するか、github-script の input 機能を使う必要があります。
+例（修正版）：
+
+このように、inputs の値を env で渡し、script 内では process.env で参照してください。
+
+まとめ：
+
+actions/github-script の script 内で ${{ inputs.xxx }} を直接使うと ReferenceError になる
+env: で値を渡し、process.env で参照するのが正しい
+修正が必要です。修正版のワークフローが必要な場合はお知らせください。
+```
+
+- test green
+- closeとする
 
 {% endraw %}
 ```
@@ -1068,22 +1082,6 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 {% endraw %}
 ```
 
-### issue-notes/177.md
-```md
-{% raw %}
-# issue sixelを使って音色波形を描画できるか試し、UXを検証する。音色変更後5秒したらbackgroundでcat-play-mmlをwav生成モードで呼び出してwavを得て表示 #177
-[issues #177](https://github.com/cat2151/ym2151-tone-editor/issues/177)
-
-# 具体的には
-- 音色変更後5秒なにも音色変更がないときに限り、要はidle状態に限り、
-- backgroundでcat-play-mmlをwav生成モードで呼び出して、
-- wavを得て、
-- それをsixelで表示する
-
-
-{% endraw %}
-```
-
 ### issue-notes/218.md
 ```md
 {% raw %}
@@ -1113,1073 +1111,544 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 {% endraw %}
 ```
 
-### issue-notes/220.md
+### issue-notes/223.md
 ```md
 {% raw %}
-# issue q と eのdecrement increment をやめて、qをquitにする #220
-[issues #220](https://github.com/cat2151/ym2151-tone-editor/issues/220)
+# issue 音色ファイルの読み書きの仕様変更。すべてwindows appdata local config dirs で読み書きとする。カレントディレクトリをやめる #223
+[issues #223](https://github.com/cat2151/ym2151-tone-editor/issues/223)
 
-- なぜなら、ほかのTUIでqをquitにしており、操作が違う上にdecrementが発生してUXが悪いので
+
 
 {% endraw %}
 ```
 
-### src/app/mod.rs
+### issue-notes/224.md
+```md
+{% raw %}
+# issue windows appdata roaming側にファイルができてしまっている #224
+[issues #224](https://github.com/cat2151/ym2151-tone-editor/issues/224)
+
+- 現状 : `C:\Users\<your name>\AppData\Roaming\ym2151-tone-editor`
+- userがほしいのは
+    - `C:\Users\<your name>\AppData\Local\ym2151-tone-editor`
+    - にファイルができること
+
+{% endraw %}
+```
+
+### src/event_loop.rs
 ```rs
 {% raw %}
-mod shortcuts;
-
+use crate::app::App;
 #[cfg(windows)]
 use crate::audio;
-use crate::file_ops;
-use crate::models::*;
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc,
-};
-
-pub struct App {
-    pub values: ToneData,
-    pub cursor_x: usize,
-    pub cursor_y: usize,
-    pub value_by_mouse_move: bool,
-    #[cfg(windows)]
-    pub use_interactive_mode: bool,
-    /// ペンタトニック鍵盤のマウスホバー座標(Noneなら未ホバー)
-    pub hovered_penta_x: Option<usize>,
-    /// Envelope delay in seconds before tone parameters are set (default: 0.005)
-    #[allow(dead_code)] // Used on Windows builds for audio playback
-    pub envelope_delay_seconds: f64,
-    /// Last operator row (0-3) the cursor was on before moving to CH row
-    /// Used for displaying operation guides when cursor is on CH row
-    pub last_operator_row: usize,
-    /// Whether the keybind help overlay is shown
-    pub show_help: bool,
-    /// バックグラウンドのアップデートチェックがtrueにセットしたらアップデートを実行
-    pub update_available: Arc<AtomicBool>,
-}
-
-impl App {
-    /// 仮想ペンタトニック鍵盤上のマウス座標からホバーx座標を更新
-    /// ALG図直下の描画位置に合わせて判定
-    pub fn update_hovered_penta_x(
-        &mut self,
-        mouse_x: u16,
-        mouse_y: u16,
-        inner: ratatui::layout::Rect,
-        penta_keyboard_y: u16,
-    ) {
-        if mouse_y != penta_keyboard_y {
-            self.hovered_penta_x = None;
-            return;
-        }
-        if mouse_x >= inner.x && mouse_x < inner.x + inner.width {
-            let rel_x = mouse_x - inner.x;
-            self.hovered_penta_x = Some(rel_x as usize);
-        } else {
-            self.hovered_penta_x = None;
-        }
-    }
-    pub fn new(
-        #[allow(unused_variables)] use_interactive_mode: bool,
-        value_by_mouse_move: bool,
-        envelope_delay_seconds: f64,
-    ) -> App {
-        let mut app = crate::app_init::init_app(
-            use_interactive_mode,
-            value_by_mouse_move,
-            envelope_delay_seconds,
-        );
-        app.hovered_penta_x = None;
-        app
-    }
-
-    pub fn move_cursor_left(&mut self) {
-        if self.cursor_x > 0 {
-            self.cursor_x -= 1;
-        }
-    }
-
-    pub fn move_cursor_right(&mut self) {
-        let max_x = if self.cursor_y == ROW_CH {
-            CH_PARAM_COUNT - 1
-        } else {
-            GRID_WIDTH - 1
-        };
-
-        if self.cursor_x < max_x {
-            self.cursor_x += 1;
-        }
-    }
-
-    pub fn move_cursor_up(&mut self) {
-        if self.cursor_y > 0 {
-            self.cursor_y -= 1;
-
-            // Track the new position if it's an operator row
-            if self.cursor_y < ROW_CH {
-                self.last_operator_row = self.cursor_y;
-            }
-
-            // Clamp cursor_x if moving from CH row to operator row or vice versa
-            let max_x = if self.cursor_y == ROW_CH {
-                CH_PARAM_COUNT - 1
-            } else {
-                GRID_WIDTH - 1
-            };
-
-            if self.cursor_x > max_x {
-                self.cursor_x = max_x;
-            }
-        }
-    }
-
-    pub fn move_cursor_down(&mut self) {
-        if self.cursor_y < GRID_HEIGHT - 1 {
-            // Track current position if it's an operator row (before moving)
-            if self.cursor_y < ROW_CH {
-                self.last_operator_row = self.cursor_y;
-            }
-
-            self.cursor_y += 1;
-
-            // Clamp cursor_x if moving from operator row to CH row or vice versa
-            let max_x = if self.cursor_y == ROW_CH {
-                CH_PARAM_COUNT - 1
-            } else {
-                GRID_WIDTH - 1
-            };
-
-            if self.cursor_x > max_x {
-                self.cursor_x = max_x;
-            }
-        }
-    }
-
-    /// Play audio feedback for the current tone.
-    /// History saving runs on all platforms; audio playback is Windows-only.
-    fn play_audio(&self) {
-        let _ = crate::history::save_to_history(&self.values);
-        #[cfg(windows)]
-        audio::play_tone(
-            &self.values,
-            self.use_interactive_mode,
-            self.cursor_x,
-            self.cursor_y,
-            self.envelope_delay_seconds,
-        );
-    }
-
-    /// Get the maximum allowed value for the current cursor position
-    fn get_current_max(&self) -> u8 {
-        if self.cursor_y == ROW_CH && self.cursor_x < CH_PARAM_COUNT {
-            CH_PARAM_MAX[self.cursor_x]
-        } else {
-            PARAM_MAX[self.cursor_x]
-        }
-    }
-
-    /// Set cursor_x to the given parameter column and increase or decrease its value.
-    /// Only applies when the cursor is on an operator row (not CH row).
-    fn jump_to_op_param(&mut self, param_x: usize, increase: bool) {
-        self.cursor_x = param_x;
-        if self.cursor_y < ROW_CH {
-            if increase {
-                self.increase_value();
-            } else {
-                self.decrease_value();
-            }
-        }
-    }
-
-    /// Jump to a CH row parameter and increase or decrease its value
-    fn jump_to_ch_param(&mut self, ch_param: usize, increase: bool) {
-        self.cursor_y = ROW_CH;
-        self.cursor_x = ch_param;
-        if increase {
-            self.increase_value();
-        } else {
-            self.decrease_value();
-        }
-    }
-
-    pub fn increase_value(&mut self) {
-        let data_row = self.cursor_y;
-        let current = self.values[data_row][self.cursor_x];
-        let max = self.get_current_max();
-        if current < max {
-            self.values[data_row][self.cursor_x] = current + 1;
-            self.play_audio();
-        }
-    }
-
-    pub fn decrease_value(&mut self) {
-        let data_row = self.cursor_y;
-        let current = self.values[data_row][self.cursor_x];
-        if current > 0 {
-            self.values[data_row][self.cursor_x] = current - 1;
-            self.play_audio();
-        }
-    }
-
-    /// Increase the current parameter value by a specified amount
-    /// Used for number key shortcuts (1-9 for +1 to +9, 0 for +10)
-    pub fn increase_value_by(&mut self, amount: u8) {
-        let data_row = self.cursor_y;
-        let current = self.values[data_row][self.cursor_x];
-        let max = self.get_current_max();
-        let new_value = current.saturating_add(amount).min(max);
-        if new_value != current {
-            self.values[data_row][self.cursor_x] = new_value;
-            self.play_audio();
-        }
-    }
-
-    /// Decrease the current parameter value by a specified amount
-    /// Used for SHIFT + number key shortcuts (SHIFT+1-9 for -1 to -9, SHIFT+0 for -10)
-    pub fn decrease_value_by(&mut self, amount: u8) {
-        let data_row = self.cursor_y;
-        let current = self.values[data_row][self.cursor_x];
-        let new_value = current.saturating_sub(amount);
-        if new_value != current {
-            self.values[data_row][self.cursor_x] = new_value;
-            self.play_audio();
-        }
-    }
-
-    pub fn set_value_to_max(&mut self) {
-        let max = self.get_current_max();
-        self.values[self.cursor_y][self.cursor_x] = max;
-        self.play_audio();
-    }
-
-    pub fn set_value_to_min(&mut self) {
-        self.values[self.cursor_y][self.cursor_x] = 0;
-        self.play_audio();
-    }
-
-    pub fn set_value_to_random(&mut self) {
-        use std::collections::hash_map::RandomState;
-        use std::hash::{BuildHasher, Hash, Hasher};
-
-        let max = self.get_current_max();
-        let random_state = RandomState::new();
-        let mut hasher = random_state.build_hasher();
-        std::time::SystemTime::now().hash(&mut hasher);
-        self.cursor_x.hash(&mut hasher);
-        self.cursor_y.hash(&mut hasher);
-        let hash = hasher.finish();
-        let random_value = (hash % (max as u64 + 1)) as u8;
-        self.values[self.cursor_y][self.cursor_x] = random_value;
-        self.play_audio();
-    }
-
-    /// Randomize all tone parameters using web-ym2151 random-tone logic.
-    /// Triggered by F5 key.
-    pub fn randomize_tone(&mut self) {
-        use crate::random_tone::generate_random_tone;
-        let current_note = self.values[ROW_CH][CH_PARAM_NOTE];
-        self.values = generate_random_tone(current_note);
-        self.play_audio();
-    }
-
-    /// Move cursor to a specific mouse position
-    /// Maps mouse x,y coordinates to cursor position in the grid
-    /// Based on the UI layout from ui.rs
-    pub fn move_cursor_to_mouse_position(&mut self, mouse_x: u16, mouse_y: u16) {
-        // UI layout constants (from ui.rs)
-        const ROW_LABEL_WIDTH: u16 = 4;
-        const CELL_WIDTH: u16 = 4;
-        const LABEL_OFFSET: u16 = 1;
-        const INNER_X: u16 = 1; // Border takes 1 character
-        const INNER_Y: u16 = 1; // Border takes 1 character
-
-        // Check if mouse is within the grid area (after row labels)
-        if mouse_x < INNER_X + ROW_LABEL_WIDTH {
-            return; // Mouse is in row label area
-        }
-
-        // Calculate column from mouse X position
-        let relative_x = mouse_x - INNER_X - ROW_LABEL_WIDTH;
-        let col = (relative_x / CELL_WIDTH) as usize;
-
-        // Calculate row from mouse Y position
-        // Operator rows: y = INNER_Y + LABEL_OFFSET + row (1-4)
-        // CH row header: y = INNER_Y + LABEL_OFFSET + 4 (5)
-        // CH row values: y = INNER_Y + LABEL_OFFSET + 5 (6)
-        if mouse_y < INNER_Y + LABEL_OFFSET {
-            return; // Mouse is in header area
-        }
-
-        let relative_y = mouse_y - INNER_Y - LABEL_OFFSET;
-
-        // Determine which row the mouse is on
-        let new_cursor_y = match relative_y {
-            0..=3 => relative_y as usize, // Operator rows
-            5 => ROW_CH,                  // CH row (skip row 4 which is CH header)
-            _ => return,                  // Outside valid rows
-        };
-
-        // Validate column bounds
-        let max_x = if new_cursor_y == ROW_CH {
-            CH_PARAM_COUNT - 1
-        } else {
-            GRID_WIDTH - 1
-        };
-
-        if col > max_x {
-            return; // Column out of bounds
-        }
-
-        // Update cursor position
-        self.cursor_x = col;
-        self.cursor_y = new_cursor_y;
-    }
-
-    /// Update the parameter value based on mouse X position
-    /// Maps mouse X position to parameter value range (0 to PARAM_MAX)
-    /// Uses the middle third of the terminal width for full range
-    /// Left of middle third sets to min (0), right of middle third sets to max
-    pub fn update_value_from_mouse_x(&mut self, mouse_x: u16, terminal_width: u16) {
-        if terminal_width == 0 {
-            return; // Avoid division by zero
-        }
-
-        // Calculate middle third boundaries
-        let third_width = terminal_width / 3;
-        let left_boundary = third_width;
-        let right_boundary = third_width * 2;
-
-        let max_value = self.get_current_max();
-
-        let new_value = if mouse_x < left_boundary {
-            // Mouse is left of middle third -> set to minimum (0)
-            0
-        } else if mouse_x > right_boundary {
-            // Mouse is right of middle third -> set to maximum
-            max_value
-        } else {
-            // Mouse is within middle third -> map proportionally
-            // left_boundary -> 0, right_boundary -> max value
-            let middle_width = right_boundary - left_boundary;
-            let relative_x = mouse_x - left_boundary;
-            let normalized = if middle_width == 0 {
-                0.0
-            } else {
-                relative_x as f32 / middle_width as f32
-            };
-            (normalized * max_value as f32).round() as u8
-        };
-
-        // Only update and play sound if the value actually changed
-        let data_row = self.cursor_y;
-        if self.values[data_row][self.cursor_x] != new_value {
-            self.values[data_row][self.cursor_x] = new_value;
-            self.play_audio();
-        }
-    }
-
-    /// Save tone data to JSON file
-    pub fn save_to_json(&self) -> std::io::Result<()> {
-        const GM_FILE_PATH: &str = "tones/general_midi/000_AcousticGrand.json";
-
-        // Save to GM format
-        file_ops::save_to_gm_file(GM_FILE_PATH, &self.values, "Edited Tone")?;
-
-        // Also save to legacy format for backward compatibility
-        file_ops::save_to_json(&self.values)?;
-
-        Ok(())
-    }
-
-    /// Append current tone data as a new variation to GM file
-    /// This is triggered by CTRL+S
-    pub fn save_to_gm_variations(&self) -> std::io::Result<()> {
-        const GM_FILE_PATH: &str = "tones/general_midi/000_AcousticGrand.json";
-
-        // Append to GM format variations array
-        file_ops::append_to_gm_file(GM_FILE_PATH, &self.values, "Edited Tone")?;
-
-        Ok(())
-    }
-
-    /// Play the current tone without modifying any parameters
-    /// This is triggered by 'P' or 'SPACE' key
-    pub fn play_current_tone(&self) {
-        self.play_audio();
-    }
-
-    /// Toggle the keybind help overlay
-    /// This is triggered by '?' (SHIFT+/) key
-    pub fn toggle_help(&mut self) {
-        self.show_help = !self.show_help;
-    }
-
-    /// Move cursor to FB parameter and increase its value
-    /// This is triggered by 'F' key
-    pub fn increase_fb(&mut self) {
-        self.jump_to_ch_param(CH_PARAM_FB, true);
-    }
-
-    /// Move cursor to FB parameter and decrease its value
-    /// This is triggered by 'Shift+F' key
-    pub fn decrease_fb(&mut self) {
-        self.jump_to_ch_param(CH_PARAM_FB, false);
-    }
-
-    /// Move cursor to ALG parameter and increase its value
-    /// This is triggered by 'g' key
-    pub fn increase_alg(&mut self) {
-        self.jump_to_ch_param(CH_PARAM_ALG, true);
-    }
-
-    /// Move cursor to ALG parameter and decrease its value
-    /// This is triggered by 'G' key (Shift+g)
-    pub fn decrease_alg(&mut self) {
-        self.jump_to_ch_param(CH_PARAM_ALG, false);
-    }
-
-    /// Jump to operator row and increase value at current column
-    pub fn jump_to_operator_and_increase(&mut self, operator_row: usize) {
-        if operator_row >= 4 {
-            return; // Invalid operator row
-        }
-        self.cursor_y = operator_row;
-        self.last_operator_row = operator_row;
-        if self.cursor_x > GRID_WIDTH - 1 {
-            self.cursor_x = GRID_WIDTH - 1;
-        }
-        self.increase_value();
-    }
-
-    /// Jump to operator row and decrease value at current column
-    pub fn jump_to_operator_and_decrease(&mut self, operator_row: usize) {
-        if operator_row >= 4 {
-            return; // Invalid operator row
-        }
-        self.cursor_y = operator_row;
-        self.last_operator_row = operator_row;
-        if self.cursor_x > GRID_WIDTH - 1 {
-            self.cursor_x = GRID_WIDTH - 1;
-        }
-        self.decrease_value();
-    }
-
-    /// Jump to Note Number parameter and increase its value
-    /// This is triggered by 'j' key
-    pub fn jump_to_note_and_increase(&mut self) {
-        self.jump_to_ch_param(CH_PARAM_NOTE, true);
-    }
-
-    /// Jump to Note Number parameter and decrease its value
-    /// This is triggered by 'J' key (Shift+j)
-    pub fn jump_to_note_and_decrease(&mut self) {
-        self.jump_to_ch_param(CH_PARAM_NOTE, false);
-    }
-
-    /// Cleanup - stop interactive mode if active
-    #[cfg(windows)]
-    pub fn cleanup(&self) {
-        if self.use_interactive_mode {
-            audio::cleanup_interactive_mode();
-        }
-    }
-
-    /// アップデートが利用可能かどうかを返す
-    pub fn is_update_available(&self) -> bool {
-        self.update_available.load(Ordering::Relaxed)
-    }
-}
-
-{% endraw %}
-```
-
-### src/tests/mod.rs
-```rs
-{% raw %}
-//! Unit tests separated from main source files
-//!
-//! This module structure allows tests to access private functions
-//! while keeping them separate to prevent hallucination issues.
-
-#[cfg(test)]
-mod app_tests;
-
-#[cfg(test)]
-mod app_ch_param_tests;
-
-#[cfg(test)]
-mod app_value_by_tests;
-
-#[cfg(test)]
-mod app_adsr_mul_sm_tests;
-
-#[cfg(test)]
-mod app_tl_d1l_dt_dt2_tests;
-
-#[cfg(test)]
-mod app_ks_ams_tests;
-
-#[cfg(test)]
-mod file_ops_tests;
-
-#[cfg(test)]
-mod midi_conversion_tests;
-
-#[cfg(test)]
-mod register_tests;
-
-#[cfg(test)]
-mod register_roundtrip_tests;
-
-#[cfg(test)]
-mod ui_tests;
-
-#[cfg(test)]
-mod variation_selector_tests;
-
-#[cfg(test)]
-mod verbose_logging_tests;
-
-#[cfg(test)]
-mod random_tone_tests;
-
-#[cfg(test)]
-mod history_tests;
-
-#[cfg(test)]
-mod favorites_tests;
-
-{% endraw %}
-```
-
-### src/ui/mod.rs
-```rs
-{% raw %}
-mod helpers;
-pub use helpers::*;
-
-use crate::{app::App, models::*};
-use ratatui::{
-    layout::{Alignment, Rect},
-    style::{Color, Modifier, Style},
-    symbols::Marker,
-    text::{Line, Span, Text},
-    widgets::{
-        canvas::{Canvas, Line as CanvasLine},
-        Block, Borders, Clear, Paragraph,
+use crate::config::{Action, Config};
+use crossterm::{
+    event::{
+        self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, KeyModifiers,
+        MouseEventKind,
     },
-    Frame,
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+use ratatui::backend::Backend;
+use ratatui::Terminal;
+use std::io;
 
-/// Background color for shortcut key guides
-const KEY_GUIDE_BG_COLOR: Color = Color::Rgb(40, 40, 40);
+use crate::models::{CH_PARAM_ALG, ROW_CH};
 
-/// Height (in character rows) of the operator envelope canvas.
-/// Each row in Braille mode provides 4 pixels of vertical resolution.
-const ENVELOPE_CANVAS_HEIGHT: u16 = 6;
-
-/// Colors used to draw the four operator envelopes (O1–O4).
-const OP_ENVELOPE_COLORS: [Color; 4] = [Color::Cyan, Color::Green, Color::Yellow, Color::Magenta];
-
-pub fn ui(f: &mut Frame, app: &App) {
-    let size = f.area();
-
-    let block = Block::default()
-        .title("YM2151 Tone Editor")
-        .borders(Borders::ALL);
-    let inner = block.inner(size);
-    f.render_widget(block, size);
-
-    // Calculate cell dimensions
-    let cell_width = 4; // 2 digits + spacing
-    let cell_height = 1;
-    let label_offset = 1; // Space for parameter name labels
-    let row_label_width = 4; // Width for row labels (e.g., "OP1 ")
-
-    // Draw parameter names (column headers) for operator rows
-    for (col, param_name) in PARAM_NAMES.iter().enumerate().take(GRID_WIDTH) {
-        let x = inner.x + row_label_width + (col as u16 * cell_width);
-        let y = inner.y;
-
-        let area = Rect {
-            x,
-            y,
-            width: cell_width,
-            height: 1,
-        };
-
-        let color = get_param_color(col, false);
-        let paragraph = Paragraph::new(Span::styled(
-            *param_name,
-            Style::default().fg(color).add_modifier(Modifier::BOLD),
-        ));
-        f.render_widget(paragraph, area);
-    }
-
-    let alg_value = app.values[ROW_CH][CH_PARAM_ALG];
-    let operator_roles = get_operator_roles_for_alg(alg_value);
-    // Draw grid values with row labels for operators (rows 0-3)
-    for display_row in 0..4 {
-        let slot_mask_enabled = app.values[display_row][PARAM_SM] != 0;
-        // Draw row label (operator name)
-        let row_label_area = Rect {
-            x: inner.x,
-            y: inner.y + label_offset + display_row as u16,
-            width: row_label_width,
-            height: cell_height,
-        };
-        let row_name = ROW_NAMES[display_row];
-        let row_label_color = if slot_mask_enabled {
-            if operator_roles[display_row] {
-                Color::White
-            } else {
-                Color::Green
+/// Convert KeyCode and KeyModifiers to a key string for config lookup
+fn key_to_string(code: KeyCode, modifiers: KeyModifiers) -> Option<String> {
+    match code {
+        KeyCode::Char(c) => {
+            // Handle CTRL+SHIFT modifier (for CTRL+SHIFT+1,2,3,4)
+            if modifiers.contains(KeyModifiers::CONTROL) && modifiers.contains(KeyModifiers::SHIFT)
+            {
+                Some(format!("Ctrl+Shift+{}", c))
             }
-        } else {
-            Color::DarkGray
-        };
-        let row_label =
-            Paragraph::new(Span::styled(row_name, Style::default().fg(row_label_color)));
-        f.render_widget(row_label, row_label_area);
-        // Draw values
-        for col in 0..GRID_WIDTH {
-            let value = app.values[display_row][col];
-            let x = inner.x + row_label_width + (col as u16 * cell_width);
-            let y = inner.y + label_offset + display_row as u16;
-            let area = Rect {
-                x,
-                y,
-                width: cell_width,
-                height: cell_height,
-            };
-            let value_style = if app.cursor_x == col && app.cursor_y == display_row {
-                Style::default()
-                    .fg(Color::Black)
-                    .bg(Color::White)
-                    .add_modifier(Modifier::BOLD)
+            // Handle CTRL modifier (for CTRL+1,2,3,4)
+            else if modifiers.contains(KeyModifiers::CONTROL) {
+                Some(format!("Ctrl+{}", c))
+            }
+            // Handle space key
+            else if c == ' ' {
+                Some("Space".to_string())
+            }
+            // Handle SHIFT modifier for special characters
+            else if modifiers.contains(KeyModifiers::SHIFT) {
+                // For shifted characters, return the character as-is
+                Some(c.to_string())
             } else {
-                let color = if slot_mask_enabled {
-                    if operator_roles[display_row] {
-                        Color::White
-                    } else {
-                        Color::Green
-                    }
-                } else {
-                    Color::DarkGray
-                };
-                Style::default().fg(color)
-            };
+                Some(c.to_string())
+            }
+        }
+        KeyCode::Left => Some("Left".to_string()),
+        KeyCode::Right => Some("Right".to_string()),
+        KeyCode::Up => Some("Up".to_string()),
+        KeyCode::Down => Some("Down".to_string()),
+        KeyCode::Home => Some("Home".to_string()),
+        KeyCode::End => Some("End".to_string()),
+        KeyCode::PageUp => Some("PageUp".to_string()),
+        KeyCode::PageDown => Some("PageDown".to_string()),
+        KeyCode::Esc => Some("Esc".to_string()),
+        KeyCode::F(n) => Some(format!("F{}", n)),
+        _ => None,
+    }
+}
 
-            // Display guide to the left of the value
-            // Show operator number guide in current column, or parameter key guide on current row
-            // When cursor is on CH row, show guides on the last operator row the cursor was on
-            let is_current_row = app.cursor_y == display_row;
-            let is_current_col = app.cursor_x == col;
-            let show_guide_for_ch_row =
-                app.cursor_y == ROW_CH && display_row == app.last_operator_row;
+/// Handle variation selector action by suspending TUI, running selector, and restoring state
+/// Returns Ok(()) if successful, Err if terminal operations fail
+fn handle_open_variation_selector<B: Backend>(
+    terminal: &mut Terminal<B>,
+    app: &mut App,
+) -> io::Result<()> {
+    // Suspend terminal UI to allow variation selector to take over
+    let mut stdout = io::stdout();
+    disable_raw_mode()?;
+    execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
 
-            let line = if is_current_col {
-                // In current column, show operator number guide
-                if let Some(op_guide) = get_operator_guide(display_row) {
-                    let op_guide_style =
-                        Style::default().fg(Color::DarkGray).bg(KEY_GUIDE_BG_COLOR);
-                    Line::from(vec![
-                        Span::styled(op_guide.to_string(), op_guide_style),
-                        Span::styled(format!("{:2}", value), value_style),
-                    ])
-                } else {
-                    // No guide for non-operator rows in current column
-                    Line::from(Span::styled(format!(" {:2}", value), value_style))
+    // Run variation selector
+    let selection_result = crate::variation_selector::open_variation_selector();
+
+    // Restore terminal UI first
+    enable_raw_mode()?;
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    terminal.clear()?;
+
+    // Process selection result after UI is restored
+    match selection_result {
+        Ok(Some(tone_data)) => {
+            app.values = tone_data;
+            #[cfg(windows)]
+            {
+                if app.use_interactive_mode {
+                    // Play the loaded tone with current cursor position
+                    audio::play_tone(
+                        &app.values,
+                        app.use_interactive_mode,
+                        app.cursor_x,
+                        app.cursor_y,
+                        app.envelope_delay_seconds,
+                    );
                 }
-            } else if let Some(key_guide) = get_key_guide(col) {
-                if is_current_row || show_guide_for_ch_row {
-                    // Show parameter key guide on current row (for non-current columns)
-                    // or on last operator row when cursor is on CH row
-                    let key_guide_style =
-                        Style::default().fg(Color::DarkGray).bg(KEY_GUIDE_BG_COLOR);
-                    Line::from(vec![
-                        Span::styled(key_guide.to_string(), key_guide_style),
-                        Span::styled(format!("{:2}", value), value_style),
-                    ])
-                } else {
-                    // No guide on non-current rows in non-current columns
-                    Line::from(Span::styled(format!(" {:2}", value), value_style))
-                }
-            } else {
-                Line::from(Span::styled(format!(" {:2}", value), value_style))
-            };
-            let paragraph = Paragraph::new(line);
-            f.render_widget(paragraph, area);
+            }
+        }
+        Ok(None) => {
+            // User cancelled selection, do nothing
+        }
+        Err(e) => {
+            eprintln!("Error loading variation: {}", e);
         }
     }
 
-    // Draw CH row header (parameter names for CH row)
-    let ch_header_y = inner.y + label_offset + 4;
-    for (col, ch_param_name) in CH_PARAM_NAMES.iter().enumerate().take(CH_PARAM_COUNT) {
-        let x = inner.x + row_label_width + (col as u16 * cell_width);
-
-        let area = Rect {
-            x,
-            y: ch_header_y,
-            width: cell_width,
-            height: 1,
-        };
-
-        let color = get_param_color(col, true);
-        let paragraph = Paragraph::new(Span::styled(
-            *ch_param_name,
-            Style::default().fg(color).add_modifier(Modifier::BOLD),
-        ));
-        f.render_widget(paragraph, area);
-    }
-
-    // Draw CH row (row 4) with ALG, FB, and MIDI note number
-    let ch_row_y = inner.y + label_offset + 5;
-
-    // Draw row label (CH)
-    let row_label_area = Rect {
-        x: inner.x,
-        y: ch_row_y,
-        width: row_label_width,
-        height: cell_height,
-    };
-    let row_label = Paragraph::new(Span::styled(
-        ROW_NAMES[ROW_CH],
-        Style::default().fg(Color::Yellow),
-    ));
-    f.render_widget(row_label, row_label_area);
-
-    // Draw all CH row values (ALG, FB, and MIDI note number)
-    for col in 0..CH_PARAM_COUNT {
-        let value = app.values[ROW_CH][col];
-        let x = inner.x + row_label_width + (col as u16 * cell_width);
-
-        let area = Rect {
-            x,
-            y: ch_row_y,
-            width: cell_width,
-            height: cell_height,
-        };
-
-        let value_style = if app.cursor_x == col && app.cursor_y == ROW_CH {
-            Style::default()
-                .fg(Color::Black)
-                .bg(Color::White)
-                .add_modifier(Modifier::BOLD)
-        } else {
-            let color = get_param_color(col, true);
-            Style::default().fg(color)
-        };
-
-        // Display guide to the left of the value on the CH row
-        // ALG and FB guides are always shown because 'g'/'G' and 'f'/'F' can jump to them from anywhere
-        let line = if let Some(key_guide) = get_ch_key_guide(col) {
-            let key_guide_style = Style::default().fg(Color::DarkGray).bg(KEY_GUIDE_BG_COLOR);
-            Line::from(vec![
-                Span::styled(key_guide.to_string(), key_guide_style),
-                Span::styled(format!("{:2}", value), value_style),
-            ])
-        } else {
-            // No guide for parameters without keybindings
-            Line::from(Span::styled(format!(" {:2}", value), value_style))
-        };
-
-        let paragraph = Paragraph::new(line);
-        f.render_widget(paragraph, area);
-    }
-
-    // Draw algorithm diagram below the CH row
-    let alg_value = app.values[ROW_CH][CH_PARAM_ALG];
-    let diagram = get_algorithm_diagram(alg_value);
-    let diagram_start_y = ch_row_y + 2; // Leave one line of space
-
-    for (i, line) in diagram.iter().enumerate() {
-        let y = diagram_start_y + i as u16;
-        if y < size.height - 1 {
-            // Make sure we don't draw outside the terminal
-            let area = Rect {
-                x: inner.x,
-                y,
-                width: inner.width,
-                height: 1,
-            };
-            let paragraph = Paragraph::new(Span::styled(*line, Style::default().fg(Color::Green)));
-            f.render_widget(paragraph, area);
-        }
-    }
-
-    let penta_keyboard_y = diagram_start_y + diagram.len() as u16 + 1;
-    // Only draw keyboard if it fits within terminal bounds
-    if penta_keyboard_y < size.height - 1 {
-        draw_virtual_pentatonic_keyboard_at_y(f, app, inner, penta_keyboard_y);
-    }
-
-    // Draw envelope canvas below keyboard if there is enough vertical space.
-    // The canvas needs ENVELOPE_CANVAS_HEIGHT character rows + 1 gap row.
-    let envelope_y = penta_keyboard_y + 1;
-    // Reserve 1 row at the bottom for keybind hints and 1 row for border.
-    let available_for_envelope = size.height.saturating_sub(2).saturating_sub(envelope_y);
-    if available_for_envelope >= ENVELOPE_CANVAS_HEIGHT {
-        let envelope_area = Rect {
-            x: inner.x,
-            y: envelope_y,
-            width: inner.width,
-            height: ENVELOPE_CANVAS_HEIGHT,
-        };
-        draw_envelope_canvas(f, app, envelope_area);
-    }
-
-    // Draw keybind hints at the bottom of the screen (left-aligned)
-    draw_keybind_hints(f, app, inner);
+    Ok(())
 }
 
-/// Draw operator envelope shapes for all 4 OPs into `area` using ratatui's Braille Canvas.
-///
-/// Each operator's ADSR-like envelope is rendered as a line-chart using a distinct colour:
-/// - O1: Cyan, O2: Green, O3: Yellow, O4: Magenta.
-///
-/// Operators whose slot-mask (SM) is 0 are drawn in dark-gray to indicate they are muted.
-///
-/// The x-axis represents normalised time (note-on → note-off → release).
-/// The y-axis represents normalised amplitude (0 = silent, 1 = max).
-fn draw_envelope_canvas(f: &mut Frame, app: &App, area: Rect) {
-    // Build all envelope point-sets before the closure (avoids capturing `app` by ref inside FnMut).
-    let envelope_points: Vec<Vec<(f64, f64)>> = (0..4)
-        .map(|op| compute_op_envelope_points(&app.values[op]))
-        .collect();
-    let ops_enabled: [bool; 4] = std::array::from_fn(|op| app.values[op][PARAM_SM] != 0);
+/// Handle history selector action by suspending TUI, running selector, and restoring state
+/// Returns Ok(()) if successful, Err if terminal operations fail
+fn handle_open_history_selector<B: Backend>(
+    terminal: &mut Terminal<B>,
+    app: &mut App,
+) -> io::Result<()> {
+    // Suspend terminal UI to allow history selector to take over
+    let mut stdout = io::stdout();
+    disable_raw_mode()?;
+    execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
 
-    let canvas = Canvas::default()
-        .block(
-            Block::default()
-                .title("Envelope (O1=Cyan O2=Green O3=Yellow O4=Magenta)")
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::DarkGray)),
-        )
-        .marker(Marker::Braille)
-        .x_bounds([0.0, 1.0])
-        .y_bounds([0.0, 1.0])
-        .paint(move |ctx| {
-            for (op, points) in envelope_points.iter().enumerate() {
-                let color = if ops_enabled[op] {
-                    OP_ENVELOPE_COLORS[op]
-                } else {
-                    Color::DarkGray
-                };
-                for segment in points.windows(2) {
-                    let (x1, y1) = segment[0];
-                    let (x2, y2) = segment[1];
-                    ctx.draw(&CanvasLine {
-                        x1,
-                        y1,
-                        x2,
-                        y2,
-                        color,
-                    });
-                }
-            }
-        });
-
-    f.render_widget(canvas, area);
-}
-
-fn draw_virtual_pentatonic_keyboard_at_y(f: &mut Frame, app: &App, inner: Rect, keyboard_y: u16) {
-    let center_note = 60;
-    let width = inner.width as i16;
-    const PENTA_INTERVALS: [i16; 5] = [0, 2, 4, 7, 9];
-    const PENTA_LABELS: [&str; 5] = ["C", "D", "E", "G", "A"];
-
-    let center_x = width / 2;
+    // Run history selector
     #[cfg(windows)]
-    let mut hovered_note: Option<u8> = None;
-    for x in 0..width {
-        let rel = x - center_x;
-        let octave = rel.div_euclid(5);
-        let penta_idx = rel.rem_euclid(5);
-        let note = center_note as i16 + octave * 12 + PENTA_INTERVALS[penta_idx as usize];
-        if !(0..=127).contains(&note) {
+    let use_interactive_mode = app.use_interactive_mode;
+    #[cfg(not(windows))]
+    let use_interactive_mode = false;
+    let selection_result = crate::history_selector::open_history_selector(use_interactive_mode);
+
+    // Restore terminal UI first
+    enable_raw_mode()?;
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    terminal.clear()?;
+
+    // Process selection result after UI is restored
+    match selection_result {
+        Ok(Some(tone_data)) => {
+            app.values = tone_data;
+            #[cfg(windows)]
+            {
+                if app.use_interactive_mode {
+                    // Play the loaded tone with current cursor position
+                    audio::play_tone(
+                        &app.values,
+                        app.use_interactive_mode,
+                        app.cursor_x,
+                        app.cursor_y,
+                        app.envelope_delay_seconds,
+                    );
+                }
+            }
+        }
+        Ok(None) => {
+            // User pressed ESC without selecting, do nothing
+        }
+        Err(e) => {
+            eprintln!("Error loading history entry: {}", e);
+        }
+    }
+
+    Ok(())
+}
+
+pub(crate) fn run_app<B: Backend>(
+    terminal: &mut Terminal<B>,
+    app: &mut App,
+    config: &Config,
+) -> io::Result<()> {
+    // 初回描画
+    terminal.draw(|f| {
+        crate::ui::ui(f, app);
+    })?;
+    #[cfg(windows)]
+    print_sixel_waveform(app)?;
+
+    loop {
+        // アップデートが利用可能になったら保存・後始末してループを抜ける
+        if app.is_update_available() {
+            app.save_to_json()?;
+            #[cfg(windows)]
+            app.cleanup();
+            return Ok(());
+        }
+
+        // アイドル検出: 5秒間音色変更がなければsixel波形を生成する
+        #[cfg(windows)]
+        {
+            if app.use_interactive_mode
+                && !app.waveform_generating
+                && app
+                    .sixel_waveform
+                    .lock()
+                    .ok()
+                    .map(|g| g.is_none())
+                    .unwrap_or(false)
+                && app.last_tone_change.elapsed() >= std::time::Duration::from_secs(5)
+            {
+                app.waveform_generating = true;
+                let sixel_arc = std::sync::Arc::clone(&app.sixel_waveform);
+                let expected_gen = app
+                    .waveform_generation
+                    .load(std::sync::atomic::Ordering::SeqCst);
+                let generation_arc = std::sync::Arc::clone(&app.waveform_generation);
+                crate::waveform::spawn_waveform_generation(
+                    app.values,
+                    sixel_arc,
+                    expected_gen,
+                    generation_arc,
+                );
+            }
+        }
+
+        // イベントをポーリング（タイムアウト付き）。イベントがなければ再描画せずに次ループへ
+        if !event::poll(std::time::Duration::from_millis(50))? {
+            // sixel生成が完了していたら再描画して表示を更新する。
+            // waveform_generating フラグは使わない: 生成カウンタが世代ミスマッチを防ぐため
+            // sixel_ready が true なら常に有効な波形が格納されている。
+            #[cfg(windows)]
+            {
+                let sixel_ready = app
+                    .sixel_waveform
+                    .lock()
+                    .ok()
+                    .map(|g| g.is_some())
+                    .unwrap_or(false);
+                if sixel_ready {
+                    terminal.draw(|f| {
+                        crate::ui::ui(f, app);
+                    })?;
+                    print_sixel_waveform(app)?;
+                }
+            }
             continue;
         }
-        let label = PENTA_LABELS[penta_idx as usize];
-        let area = Rect {
-            x: inner.x + x as u16,
-            y: keyboard_y,
-            width: 1,
-            height: 1,
-        };
-        let is_hovered = match app.hovered_penta_x {
-            Some(hx) => hx == x as usize,
-            None => false,
-        };
+
+        // イベント処理前の音色データを記録（変更検出用）
         #[cfg(windows)]
-        if is_hovered {
-            hovered_note = Some(note as u8);
-        }
-        let style = if is_hovered {
-            Style::default()
-                .fg(Color::Magenta)
-                .add_modifier(Modifier::BOLD)
-        } else {
-            Style::default().fg(Color::Cyan)
-        };
-        let paragraph = Paragraph::new(Span::styled(label, style));
-        f.render_widget(paragraph, area);
-    }
+        let values_before = app.values;
 
-    #[cfg(windows)]
-    if let Some(note_num) = hovered_note {
-        use crate::audio;
-        let mut preview_values = app.values;
-        preview_values[ROW_CH][CH_PARAM_NOTE] = note_num;
-        audio::play_tone(
-            &preview_values,
-            app.use_interactive_mode,
-            CH_PARAM_NOTE,
-            ROW_CH,
-            app.envelope_delay_seconds,
-        );
+        match event::read()? {
+            Event::Key(key) => {
+                // Only process key press and repeat events, ignore release events
+                // This follows crossterm/ratatui best practices for avoiding duplicate
+                // actions while still supporting key repeat functionality
+                if key.kind == KeyEventKind::Press || key.kind == KeyEventKind::Repeat {
+                    // Convert key to string for config lookup
+                    if let Some(key_string) = key_to_string(key.code, key.modifiers) {
+                        // Look up action in config
+                        if let Some(action) = config.get_action(&key_string) {
+                            match action {
+                                Action::DecreaseValue => app.decrease_value(),
+                                Action::IncreaseValue => app.increase_value(),
+                                Action::SetValueToMax => app.set_value_to_max(),
+                                Action::SetValueToMin => app.set_value_to_min(),
+                                Action::SetValueToRandom => app.set_value_to_random(),
+                                Action::IncreaseValueBy1 => app.increase_value_by(1),
+                                Action::IncreaseValueBy2 => app.increase_value_by(2),
+                                Action::IncreaseValueBy3 => app.increase_value_by(3),
+                                Action::IncreaseValueBy4 => app.increase_value_by(4),
+                                Action::IncreaseValueBy5 => app.increase_value_by(5),
+                                Action::IncreaseValueBy6 => app.increase_value_by(6),
+                                Action::IncreaseValueBy7 => app.increase_value_by(7),
+                                Action::IncreaseValueBy8 => app.increase_value_by(8),
+                                Action::IncreaseValueBy9 => app.increase_value_by(9),
+                                Action::IncreaseValueBy10 => app.increase_value_by(10),
+                                Action::DecreaseValueBy1 => app.decrease_value_by(1),
+                                Action::DecreaseValueBy2 => app.decrease_value_by(2),
+                                Action::DecreaseValueBy3 => app.decrease_value_by(3),
+                                Action::DecreaseValueBy4 => app.decrease_value_by(4),
+                                Action::DecreaseValueBy5 => app.decrease_value_by(5),
+                                Action::DecreaseValueBy6 => app.decrease_value_by(6),
+                                Action::DecreaseValueBy7 => app.decrease_value_by(7),
+                                Action::DecreaseValueBy8 => app.decrease_value_by(8),
+                                Action::DecreaseValueBy9 => app.decrease_value_by(9),
+                                Action::DecreaseValueBy10 => app.decrease_value_by(10),
+                                Action::PlayCurrentTone => app.play_current_tone(),
+                                Action::IncreaseFb => app.increase_fb(),
+                                Action::DecreaseFb => app.decrease_fb(),
+                                Action::IncreaseAlg => app.increase_alg(),
+                                Action::DecreaseAlg => app.decrease_alg(),
+                                Action::MoveCursorLeft => app.move_cursor_left(),
+                                Action::MoveCursorRight => app.move_cursor_right(),
+                                Action::MoveCursorUp => app.move_cursor_up(),
+                                Action::MoveCursorDown => app.move_cursor_down(),
+                                Action::JumpToOp1AndIncrease => {
+                                    app.jump_to_operator_and_increase(0)
+                                }
+                                Action::JumpToOp2AndIncrease => {
+                                    app.jump_to_operator_and_increase(1)
+                                }
+                                Action::JumpToOp3AndIncrease => {
+                                    app.jump_to_operator_and_increase(2)
+                                }
+                                Action::JumpToOp4AndIncrease => {
+                                    app.jump_to_operator_and_increase(3)
+                                }
+                                Action::JumpToOp1AndDecrease => {
+                                    app.jump_to_operator_and_decrease(0)
+                                }
+                                Action::JumpToOp2AndDecrease => {
+                                    app.jump_to_operator_and_decrease(1)
+                                }
+                                Action::JumpToOp3AndDecrease => {
+                                    app.jump_to_operator_and_decrease(2)
+                                }
+                                Action::JumpToOp4AndDecrease => {
+                                    app.jump_to_operator_and_decrease(3)
+                                }
+                                Action::JumpToArAndIncrease => app.jump_to_ar_and_increase(),
+                                Action::JumpToD1rAndIncrease => app.jump_to_d1r_and_increase(),
+                                Action::JumpToD2rAndIncrease => app.jump_to_d2r_and_increase(),
+                                Action::JumpToRrAndIncrease => app.jump_to_rr_and_increase(),
+                                Action::JumpToArAndDecrease => app.jump_to_ar_and_decrease(),
+                                Action::JumpToD1rAndDecrease => app.jump_to_d1r_and_decrease(),
+                                Action::JumpToD2rAndDecrease => app.jump_to_d2r_and_decrease(),
+                                Action::JumpToRrAndDecrease => app.jump_to_rr_and_decrease(),
+                                Action::JumpToMulAndIncrease => app.jump_to_mul_and_increase(),
+                                Action::JumpToMulAndDecrease => app.jump_to_mul_and_decrease(),
+                                Action::JumpToSmAndIncrease => app.jump_to_sm_and_increase(),
+                                Action::JumpToSmAndDecrease => app.jump_to_sm_and_decrease(),
+                                Action::JumpToTlAndIncrease => app.jump_to_tl_and_increase(),
+                                Action::JumpToTlAndDecrease => app.jump_to_tl_and_decrease(),
+                                Action::JumpToD1lAndIncrease => app.jump_to_d1l_and_increase(),
+                                Action::JumpToD1lAndDecrease => app.jump_to_d1l_and_decrease(),
+                                Action::JumpToDtAndIncrease => app.jump_to_dt_and_increase(),
+                                Action::JumpToDtAndDecrease => app.jump_to_dt_and_decrease(),
+                                Action::JumpToDt2AndIncrease => app.jump_to_dt2_and_increase(),
+                                Action::JumpToDt2AndDecrease => app.jump_to_dt2_and_decrease(),
+                                Action::JumpToKsAndIncrease => app.jump_to_ks_and_increase(),
+                                Action::JumpToKsAndDecrease => app.jump_to_ks_and_decrease(),
+                                Action::JumpToAmsAndIncrease => app.jump_to_ams_and_increase(),
+                                Action::JumpToAmsAndDecrease => app.jump_to_ams_and_decrease(),
+                                Action::JumpToNoteAndIncrease => app.jump_to_note_and_increase(),
+                                Action::JumpToNoteAndDecrease => app.jump_to_note_and_decrease(),
+                                Action::SaveToGmVariations => {
+                                    let _ = app.save_to_gm_variations();
+                                }
+                                Action::OpenVariationSelector => {
+                                    handle_open_variation_selector(terminal, app)?;
+                                }
+                                Action::OpenHistorySelector => {
+                                    handle_open_history_selector(terminal, app)?;
+                                }
+                                Action::RandomizeTone => app.randomize_tone(),
+                                Action::ToggleHelp => app.toggle_help(),
+                                Action::Exit => {
+                                    // Save tone data to JSON before exiting
+                                    app.save_to_json()?;
+                                    // Stop interactive mode if active (Windows only)
+                                    #[cfg(windows)]
+                                    app.cleanup();
+                                    return Ok(());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Event::Mouse(mouse) => {
+                if mouse.kind == MouseEventKind::Moved {
+                    // ペンタトニック鍵盤ホバー座標を更新
+                    let term_size = terminal.size().unwrap_or(ratatui::prelude::Size {
+                        width: 80,
+                        height: 24,
+                    });
+                    // ui.rsのレイアウト計算を再現
+                    let inner_x = 1u16; // Block border
+                    let inner_y = 1u16;
+                    let inner = ratatui::layout::Rect {
+                        x: inner_x,
+                        y: inner_y,
+                        width: term_size.width - 2,
+                        height: term_size.height - 2,
+                    };
+                    let label_offset = 1u16;
+                    let ch_row_y = inner.y + label_offset + 5;
+                    let alg_value = app.values[ROW_CH][CH_PARAM_ALG];
+                    let diagram = crate::ui::get_algorithm_diagram(alg_value);
+                    let diagram_start_y = ch_row_y + 2;
+                    let penta_keyboard_y = diagram_start_y + diagram.len() as u16 + 1;
+                    // Only update hover if keyboard is within terminal bounds
+                    if penta_keyboard_y < term_size.height - 1 {
+                        app.update_hovered_penta_x(
+                            mouse.column,
+                            mouse.row,
+                            inner,
+                            penta_keyboard_y,
+                        );
+                    } else {
+                        app.hovered_penta_x = None;
+                    }
+                    // 旧モード: パラメータ値も更新
+                    if app.value_by_mouse_move {
+                        app.update_value_from_mouse_x(mouse.column, term_size.width);
+                    }
+                } else {
+                    // Default mode: Handle mouse wheel events at mouse pointer position
+                    match mouse.kind {
+                        MouseEventKind::ScrollUp => {
+                            app.move_cursor_to_mouse_position(mouse.column, mouse.row);
+                            app.increase_value();
+                        }
+                        MouseEventKind::ScrollDown => {
+                            app.move_cursor_to_mouse_position(mouse.column, mouse.row);
+                            app.decrease_value();
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            _ => {}
+        }
+
+        // 音色データが変更されたらアイドルタイマーをリセットする
+        #[cfg(windows)]
+        if app.values != values_before {
+            app.on_tone_changed();
+        }
+
+        // イベント処理後に再描画
+        terminal.draw(|f| {
+            crate::ui::ui(f, app);
+        })?;
+        // sixel波形が生成済みなら再描画後に端末へ書き出す
+        #[cfg(windows)]
+        print_sixel_waveform(app)?;
     }
 }
 
-fn draw_keybind_hints(f: &mut Frame, app: &App, inner: Rect) {
-    // Bottom line inside the inner area (inside the block border)
-    let inner_bottom = inner.y + inner.height.saturating_sub(1);
-    if inner.height == 0 {
-        return;
-    }
+/// Print the sixel waveform to stdout at the envelope display area position.
+///
+/// Called after each ratatui draw so that the sixel waveform replaces the
+/// braille envelope canvas when a waveform has been generated.
+///
+/// If `app.sixel_waveform` is `None` (generation not yet complete) or the
+/// mutex is poisoned the function returns early without printing anything.
+///
+/// # Terminal compatibility
+/// Terminals that do not support sixel will display the raw DCS escape
+/// sequence, which is an accepted limitation for this experimental feature.
+#[cfg(windows)]
+fn print_sixel_waveform(app: &App) -> io::Result<()> {
+    use std::io::Write;
 
-    if app.show_help {
-        draw_help_dialog(f, inner);
-    } else {
-        // Brief hint on the last line of the inner area
-        let area = Rect {
-            x: inner.x,
-            y: inner_bottom,
-            width: inner.width,
-            height: 1,
-        };
-        let paragraph = Paragraph::new(Span::styled(
-            "?:help | hjkl/wasd:move  q/e:dec/inc  H:history  ESC:quit",
-            Style::default().fg(Color::DarkGray),
-        ));
-        f.render_widget(paragraph, area);
-    }
-}
-
-/// Render a centered help dialog with key bindings grouped by category.
-fn draw_help_dialog(f: &mut Frame, inner: Rect) {
-    // Group definitions: (header, lines...)
-    let groups: &[(&str, &[&str])] = &[
-        (
-            " Navigation ",
-            &[
-                "hjkl / wasd  : Move cursor",
-                "1 - 4        : Jump to OP row",
-            ],
-        ),
-        (
-            " Value Edit ",
-            &[
-                "q / e        : Decrease / Increase",
-                ". / ,        : +1 / -1",
-                "> / <        : +10 / -10",
-                "Home / End   : Max / Min",
-            ],
-        ),
-        (
-            " Operator Parameters ",
-            &[
-                "a/A : AR    d/D : D1R   s/S : D2R   r/R : RR",
-                "t/T : TL    m/M : MUL   l/L : D1L",
-                "u/U : DT    n/N : DT2   k/K : KS",
-                "i/I : AMS   o/O : SM",
-            ],
-        ),
-        (
-            " Channel Parameters ",
-            &["f/F : FB    g/G : ALG   j/J : Note"],
-        ),
-        (
-            " App ",
-            &[
-                "Space / p    : Play",
-                "F5           : Random tone",
-                "Ctrl+s       : Save",
-                "Ctrl+o       : Open / Select file",
-                "H            : History",
-                "?            : Close this help",
-                "ESC          : Quit",
-            ],
-        ),
-    ];
-
-    // Build content lines: group header + key lines, separated by blank lines between groups.
-    // A footer note clarifies that these are the default keybinds (may differ if TOML overrides exist).
-    let mut content_lines: Vec<Line> = Vec::new();
-    let header_style = Style::default()
-        .fg(Color::Yellow)
-        .add_modifier(Modifier::BOLD);
-    let key_style = Style::default().fg(Color::Cyan);
-    let note_style = Style::default().fg(Color::DarkGray);
-
-    for (i, (group_header, lines)) in groups.iter().enumerate() {
-        if i > 0 {
-            content_lines.push(Line::from(""));
+    let sixel = {
+        match app.sixel_waveform.lock() {
+            Ok(guard) => guard.clone(),
+            Err(_) => return Ok(()),
         }
-        content_lines.push(Line::from(Span::styled(*group_header, header_style)));
-        for line in *lines {
-            content_lines.push(Line::from(Span::styled(*line, key_style)));
-        }
-    }
-    content_lines.push(Line::from(""));
-    content_lines.push(Line::from(Span::styled(
-        "(default keybinds — may differ if ym2151-tone-editor.toml overrides exist)",
-        note_style,
-    )));
-
-    // Compute dialog width from the longest content line + 2 for left/right borders
-    let max_content_width = content_lines.iter().map(|l| l.width()).max().unwrap_or(0) as u16;
-    let dialog_width: u16 = max_content_width + 2;
-    // +2 for top and bottom border lines
-    let dialog_height: u16 = content_lines.len() as u16 + 2;
-
-    // Center the dialog within the inner area
-    let x = inner
-        .x
-        .saturating_add(inner.width.saturating_sub(dialog_width) / 2);
-    let y = inner
-        .y
-        .saturating_add(inner.height.saturating_sub(dialog_height) / 2);
-    let width = dialog_width.min(inner.width);
-    let height = dialog_height.min(inner.height);
-
-    let dialog_area = Rect {
-        x,
-        y,
-        width,
-        height,
     };
 
-    // Clear the background behind the dialog
-    f.render_widget(Clear, dialog_area);
+    let Some(sixel_str) = sixel else {
+        return Ok(());
+    };
 
-    let block = Block::default()
-        .title(Span::styled(
-            " Help ",
-            Style::default()
-                .fg(Color::White)
-                .add_modifier(Modifier::BOLD),
-        ))
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::White))
-        .style(Style::default().bg(Color::Rgb(20, 20, 40)));
+    let alg_value = app.values[ROW_CH][CH_PARAM_ALG];
+    let envelope_y = crate::ui::compute_envelope_area_y(alg_value);
 
-    let paragraph = Paragraph::new(Text::from(content_lines))
-        .block(block)
-        .alignment(Alignment::Left);
+    let mut stdout = io::stdout();
+    // カーソルをエンベロープ表示エリアの先頭に移動してsixelを書き出す
+    execute!(stdout, crossterm::cursor::MoveTo(0, envelope_y))?;
+    stdout.write_all(sixel_str.as_bytes())?;
+    stdout.flush()?;
 
-    f.render_widget(paragraph, dialog_area);
+    Ok(())
+}
+
+#[cfg(test)]
+mod key_to_string_tests {
+    use super::*;
+    use crossterm::event::{KeyCode, KeyModifiers};
+
+    #[test]
+    fn test_space_maps_to_space_string() {
+        let result = key_to_string(KeyCode::Char(' '), KeyModifiers::NONE);
+        assert_eq!(result, Some("Space".to_string()));
+    }
+
+    #[test]
+    fn test_shift_space_maps_to_space_string() {
+        let result = key_to_string(KeyCode::Char(' '), KeyModifiers::SHIFT);
+        assert_eq!(result, Some("Space".to_string()));
+    }
+
+    #[test]
+    fn test_regular_char_maps_to_itself() {
+        let result = key_to_string(KeyCode::Char('a'), KeyModifiers::NONE);
+        assert_eq!(result, Some("a".to_string()));
+    }
+
+    #[test]
+    fn test_function_key_f5_maps_to_f5_string() {
+        let result = key_to_string(KeyCode::F(5), KeyModifiers::NONE);
+        assert_eq!(result, Some("F5".to_string()));
+    }
+
+    #[test]
+    fn test_function_key_maps_generically() {
+        let result = key_to_string(KeyCode::F(1), KeyModifiers::NONE);
+        assert_eq!(result, Some("F1".to_string()));
+        let result = key_to_string(KeyCode::F(12), KeyModifiers::NONE);
+        assert_eq!(result, Some("F12".to_string()));
+    }
+
+    #[test]
+    fn test_question_mark_shift_slash_maps_to_question_mark() {
+        // On most keyboard layouts, '?' is Shift+/ and crossterm delivers it as Char('?') with SHIFT
+        let result = key_to_string(KeyCode::Char('?'), KeyModifiers::SHIFT);
+        assert_eq!(result, Some("?".to_string()));
+    }
+
+    #[test]
+    fn test_question_mark_no_modifier_maps_to_question_mark() {
+        let result = key_to_string(KeyCode::Char('?'), KeyModifiers::NONE);
+        assert_eq!(result, Some("?".to_string()));
+    }
 }
 
 {% endraw %}
@@ -2187,32 +1656,35 @@ fn draw_help_dialog(f: &mut Frame, inner: Rect) {
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-19e55bd Merge branch 'main' of github.com:cat2151/ym2151-tone-editor into main
-f17e9c2 ignore tones 試し
-cd6c5eb Change 'q' to 'quit' for improved user experience
-9be0283 Add issue note for #220 [auto]
-b04c533 Revise help display instructions in issue #219
-34eb0cc Update issue help for key bindings
-e71a991 Add issue note for #219 [auto]
-d2e1d2a Update issue notes for envelope graph improvements
-9a62e7f Add issue note for #218 [auto]
-c6ad8d3 Enhance issue notes for #177 with detailed task description
+cc89f48 Merge pull request #225 from cat2151/copilot/refactor-large-file-mod-rs
+95a9472 refactor: extract draw_keybind_hints and draw_help_dialog into src/ui/help.rs
+d9cc5ad Initial plan
+2be951e Merge pull request #222 from cat2151/copilot/update-q-to-quit
+24652d0 Clarify desired file location for issue #224
+2c4a2be Add issue note for #224 [auto]
+ca8544f Remove q/e decrement/increment keybinds and make q quit
+f9b2e46 Add issue note for #223 [auto]
+ddb3aa2 Initial plan
+9869bba Merge pull request #217 from cat2151/copilot/test-drawing-waveform-with-sixel
 
 ### 変更されたファイル:
-.gitignore
-core/src/lib.rs
-core/src/tests.rs
-issue-notes/176.md
-issue-notes/177.md
-issue-notes/210.md
-issue-notes/212.md
-issue-notes/218.md
-issue-notes/219.md
-issue-notes/220.md
-src/tests/ui_tests.rs
+generated-docs/development-status-generated-prompt.md
+generated-docs/development-status.md
+generated-docs/project-overview-generated-prompt.md
+generated-docs/project-overview.md
+issue-notes/223.md
+issue-notes/224.md
+src/app/mod.rs
+src/app_init.rs
+src/config.rs
+src/event_loop.rs
+src/main.rs
+src/ui/help.rs
 src/ui/helpers.rs
 src/ui/mod.rs
+src/waveform.rs
+ym2151-tone-editor.toml.example
 
 
 ---
-Generated at: 2026-03-17 07:16:16 JST
+Generated at: 2026-03-18 07:15:42 JST

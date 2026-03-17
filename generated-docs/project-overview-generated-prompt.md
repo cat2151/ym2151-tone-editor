@@ -1,4 +1,4 @@
-Last updated: 2026-03-17
+Last updated: 2026-03-18
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -412,6 +412,8 @@ cargo run
   📖 218.md
   📖 219.md
   📖 220.md
+  📖 223.md
+  📖 224.md
   📖 95.md
   📖 96.md
 📁 src/
@@ -452,10 +454,12 @@ cargo run
     📄 variation_selector_tests.rs
     📄 verbose_logging_tests.rs
   📁 ui/
+    📄 help.rs
     📄 helpers.rs
     📄 mod.rs
   📄 updater.rs
   📄 variation_selector.rs
+  📄 waveform.rs
 📁 tones/
   📁 general_midi/
     📊 000_AcousticGrand.json
@@ -500,6 +504,8 @@ issue-notes/177.md
 issue-notes/218.md
 issue-notes/219.md
 issue-notes/220.md
+issue-notes/223.md
+issue-notes/224.md
 issue-notes/95.md
 issue-notes/96.md
 tones/general_midi/000_AcousticGrand.json
@@ -515,4 +521,4 @@ tones/general_midi/tone_names.json
 
 
 ---
-Generated at: 2026-03-17 07:16:15 JST
+Generated at: 2026-03-18 07:15:42 JST
