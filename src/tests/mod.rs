@@ -50,3 +50,6 @@ mod history_tests;
 
 #[cfg(test)]
 mod favorites_tests;
+
+#[cfg(test)]
+mod event_loop_tests;
