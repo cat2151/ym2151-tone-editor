@@ -31,9 +31,7 @@
 
 [keybinds]
 # Value modification keys
-"q" = "decrease_value"
 "PageDown" = "decrease_value"
-"e" = "increase_value"
 "PageUp" = "increase_value"
 "Home" = "set_value_to_max"
 "End" = "set_value_to_min"
@@ -116,6 +114,7 @@
 
 # Exit
 "Esc" = "exit"
+"q" = "exit"
 
 # Audio Settings
 # Configure the envelope delay (in seconds) before tone parameters are set.
