@@ -21,7 +21,7 @@ fn test_history_file_path_ends_with_history_tone_json() {
             path
         );
     }
-    // If config_dir() returns None (some CI environments), we just skip the assertion
+    // If config_local_dir() returns None (some CI environments), we just skip the assertion
 }
 
 #[test]
@@ -219,6 +219,62 @@ fn test_load_history_at_path_returns_saved_entries() {
     assert_eq!(history[1], expected1);
 
     std::fs::remove_file(&path).ok();
+}
+
+#[test]
+fn test_migrate_history_from_roaming_copies_when_new_missing() {
+    let legacy_path = temp_history_path();
+    let new_path = temp_history_path();
+
+    let mut values = [[0u8; GRID_WIDTH]; GRID_HEIGHT];
+    values[0][PARAM_MUL] = 5;
+    save_to_history_at_path(&legacy_path, &values).unwrap();
+
+    // new_path does not exist yet; simulate migration
+    migrate_history_from_roaming_at_paths(&legacy_path, &new_path);
+
+    assert!(new_path.exists(), "migration should copy file to new path");
+    let history = load_history_at_path(&new_path).unwrap();
+    assert_eq!(history.len(), 1);
+    assert_eq!(history[0], register::editor_rows_to_registers(&values));
+
+    std::fs::remove_file(&legacy_path).ok();
+    std::fs::remove_file(&new_path).ok();
+}
+
+#[test]
+fn test_migrate_history_from_roaming_skips_when_new_exists() {
+    let legacy_path = temp_history_path();
+    let new_path = temp_history_path();
+
+    let mut legacy_values = [[0u8; GRID_WIDTH]; GRID_HEIGHT];
+    legacy_values[0][PARAM_MUL] = 3;
+    save_to_history_at_path(&legacy_path, &legacy_values).unwrap();
+
+    let mut new_values = [[0u8; GRID_WIDTH]; GRID_HEIGHT];
+    new_values[0][PARAM_MUL] = 7;
+    save_to_history_at_path(&new_path, &new_values).unwrap();
+
+    // new_path already exists; migration should be a no-op
+    migrate_history_from_roaming_at_paths(&legacy_path, &new_path);
+
+    let history = load_history_at_path(&new_path).unwrap();
+    assert_eq!(history.len(), 1, "existing new file should not be overwritten");
+    assert_eq!(history[0], register::editor_rows_to_registers(&new_values));
+
+    std::fs::remove_file(&legacy_path).ok();
+    std::fs::remove_file(&new_path).ok();
+}
+
+#[test]
+fn test_migrate_history_from_roaming_noop_when_legacy_missing() {
+    let legacy_path = temp_history_path();
+    let new_path = temp_history_path();
+
+    // Neither file exists; migration should be a no-op and not create new_path
+    migrate_history_from_roaming_at_paths(&legacy_path, &new_path);
+
+    assert!(!new_path.exists(), "new path should not be created when legacy is also missing");
 }
 
 #[test]
