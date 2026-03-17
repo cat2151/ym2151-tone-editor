@@ -403,4 +403,3 @@ fn draw_virtual_pentatonic_keyboard_at_y(f: &mut Frame, app: &App, inner: Rect, 
         );
     }
 }
-

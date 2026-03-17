@@ -458,5 +458,3 @@ fn print_sixel_waveform(app: &App) -> io::Result<()> {
 
     Ok(())
 }
-
-

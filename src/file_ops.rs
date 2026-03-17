@@ -1,19 +1,53 @@
 use crate::models::*;
 use crate::register;
-use std::{fs, io};
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+};
 
-/// Find the newest JSON file in the current directory matching the pattern ym2151_tone*.json
+/// Returns the application data directory: `{config_local_dir}/ym2151-tone-editor`
+pub fn app_data_dir() -> Option<PathBuf> {
+    dirs::config_local_dir().map(|dir| dir.join("ym2151-tone-editor"))
+}
+
+/// Returns the path for the main tone JSON file in the app data directory.
+pub fn tone_file_path() -> Option<PathBuf> {
+    app_data_dir().map(|dir| dir.join("ym2151_tone.json"))
+}
+
+/// Returns the path for the General MIDI tone file in the app data directory.
+pub fn gm_file_path() -> Option<PathBuf> {
+    app_data_dir().map(|dir| {
+        dir.join("tones")
+            .join("general_midi")
+            .join("000_AcousticGrand.json")
+    })
+}
+
+/// Find the newest JSON file in the app data directory matching the pattern ym2151_tone*.json.
 /// Prioritizes the fixed filename "ym2151_tone.json" if it exists, otherwise falls back to
-/// timestamped files (ym2151_tone_*.json) for backwards compatibility
-pub fn find_newest_json_file() -> io::Result<String> {
-    // First, check if the fixed filename exists
-    let fixed_filename = "ym2151_tone.json";
-    if fs::metadata(fixed_filename).is_ok() {
-        return Ok(fixed_filename.to_string());
+/// timestamped files (ym2151_tone_*.json) for backwards compatibility.
+pub fn find_newest_json_file() -> io::Result<PathBuf> {
+    let dir = app_data_dir().ok_or_else(|| {
+        io::Error::new(io::ErrorKind::NotFound, "Could not find app data directory")
+    })?;
+    find_newest_json_file_in_dir(&dir)
+}
+
+/// Find the newest JSON file in the given directory matching the pattern ym2151_tone*.json.
+/// Used internally and in tests to allow specifying an explicit directory.
+pub fn find_newest_json_file_in_dir(dir: &Path) -> io::Result<PathBuf> {
+    // First, check if the fixed filename exists as a file
+    let fixed_path = dir.join("ym2151_tone.json");
+    if fs::metadata(&fixed_path)
+        .map(|m| m.is_file())
+        .unwrap_or(false)
+    {
+        return Ok(fixed_path);
     }
 
     // Fall back to finding timestamped files
-    let entries = fs::read_dir(".")?;
+    let entries = fs::read_dir(dir)?;
 
     let mut json_files: Vec<_> = entries
         .filter_map(|e| e.ok())
@@ -39,13 +73,13 @@ pub fn find_newest_json_file() -> io::Result<String> {
 
     json_files
         .first()
-        .map(|e| e.file_name().to_string_lossy().to_string())
+        .map(|e| e.path())
         .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "Could not get filename"))
 }
 
 /// Load tone data from a JSON file
-pub fn load_from_json(filename: &str) -> io::Result<ToneData> {
-    let json_string = fs::read_to_string(filename)?;
+pub fn load_from_json(path: impl AsRef<Path>) -> io::Result<ToneData> {
+    let json_string = fs::read_to_string(path)?;
     let log: Ym2151Log = serde_json::from_str(&json_string).map_err(io::Error::other)?;
 
     register::json_events_to_editor_rows(&log.events)
@@ -53,26 +87,33 @@ pub fn load_from_json(filename: &str) -> io::Result<ToneData> {
 
 /// Load the newest JSON file and convert to tone data
 pub fn load_newest_json() -> io::Result<ToneData> {
-    let filename = find_newest_json_file()?;
-    load_from_json(&filename)
+    let path = find_newest_json_file()?;
+    load_from_json(path)
 }
 
-/// Save tone data to JSON file in ym2151-log-play-server format
+/// Save tone data to JSON file in the app data directory.
 pub fn save_to_json(values: &ToneData) -> io::Result<()> {
+    let path = tone_file_path().ok_or_else(|| {
+        io::Error::new(io::ErrorKind::NotFound, "Could not find app data directory")
+    })?;
+    save_to_json_at_path(&path, values)
+}
+
+/// Save tone data to JSON file at the given path (creates parent directories if needed).
+/// Used internally and in tests to allow specifying an explicit path.
+pub fn save_to_json_at_path(path: &Path, values: &ToneData) -> io::Result<()> {
     let json_string = register::to_json_string(values).map_err(io::Error::other)?;
-
-    // Use fixed filename without timestamp
-    let filename = "ym2151_tone.json";
-
-    fs::write(filename, json_string)?;
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    fs::write(path, json_string)?;
     Ok(())
 }
 
-/// Load tone data from General MIDI tone file format
-/// Reads from tones/general_midi/000_AcousticGrand.json
-/// Returns the first variation's tone data
-pub fn load_from_gm_file(filename: &str) -> io::Result<ToneData> {
-    let json_string = fs::read_to_string(filename)?;
+/// Load tone data from General MIDI tone file format.
+/// Returns the first variation's tone data.
+pub fn load_from_gm_file(path: impl AsRef<Path>) -> io::Result<ToneData> {
+    let json_string = fs::read_to_string(path)?;
     let tone_file: crate::models::ToneFile =
         serde_json::from_str(&json_string).map_err(io::Error::other)?;
 
@@ -88,10 +129,15 @@ pub fn load_from_gm_file(filename: &str) -> io::Result<ToneData> {
     register::registers_to_editor_rows(&variation.registers)
 }
 
-/// Save tone data to General MIDI tone file format
-/// Writes to tones/general_midi/000_AcousticGrand.json
-/// Creates a single variation with the current tone data
-pub fn save_to_gm_file(filename: &str, values: &ToneData, description: &str) -> io::Result<()> {
+/// Save tone data to General MIDI tone file format.
+/// Creates a single variation with the current tone data.
+pub fn save_to_gm_file(
+    path: impl AsRef<Path>,
+    values: &ToneData,
+    description: &str,
+) -> io::Result<()> {
+    let path = path.as_ref();
+
     // Convert tone data to registers hex string
     let registers = register::editor_rows_to_registers(values);
 
@@ -117,18 +163,24 @@ pub fn save_to_gm_file(filename: &str, values: &ToneData, description: &str) -> 
         serialize_tone_file_with_minified_variations(&tone_file).map_err(io::Error::other)?;
 
     // Ensure directory exists
-    if let Some(parent) = std::path::Path::new(filename).parent() {
+    if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
 
     // Write to file
-    fs::write(filename, json_string)?;
+    fs::write(path, json_string)?;
     Ok(())
 }
 
-/// Append tone data as a new variation to General MIDI tone file
-/// Reads existing file, adds new variation to the end, and writes back
-pub fn append_to_gm_file(filename: &str, values: &ToneData, description: &str) -> io::Result<()> {
+/// Append tone data as a new variation to General MIDI tone file.
+/// Reads existing file, adds new variation to the end, and writes back.
+pub fn append_to_gm_file(
+    path: impl AsRef<Path>,
+    values: &ToneData,
+    description: &str,
+) -> io::Result<()> {
+    let path = path.as_ref();
+
     // Convert tone data to registers hex string
     let registers = register::editor_rows_to_registers(values);
 
@@ -144,7 +196,7 @@ pub fn append_to_gm_file(filename: &str, values: &ToneData, description: &str) -
     };
 
     // Try to load existing file, or create new if it doesn't exist
-    let mut tone_file = match fs::read_to_string(filename) {
+    let mut tone_file = match fs::read_to_string(path) {
         Ok(json_string) => serde_json::from_str::<crate::models::ToneFile>(&json_string)
             .map_err(io::Error::other)?,
         Err(e) if e.kind() == io::ErrorKind::NotFound => {
@@ -165,12 +217,12 @@ pub fn append_to_gm_file(filename: &str, values: &ToneData, description: &str) -
         serialize_tone_file_with_minified_variations(&tone_file).map_err(io::Error::other)?;
 
     // Ensure directory exists
-    if let Some(parent) = std::path::Path::new(filename).parent() {
+    if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
 
     // Write to file
-    fs::write(filename, json_string)?;
+    fs::write(path, json_string)?;
     Ok(())
 }
 
