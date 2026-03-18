@@ -36,14 +36,14 @@ pub fn init_app(
         #[cfg(windows)]
         waveform_generation: std::sync::Arc::new(std::sync::atomic::AtomicU32::new(0)),
     };
-    const GM_FILE_PATH: &str = "tones/general_midi/000_AcousticGrand.json";
     #[cfg(windows)]
     use crate::audio::log_verbose;
 
-    if let Ok(loaded_values) = file_ops::load_from_gm_file(GM_FILE_PATH) {
+    let gm_loaded = file_ops::gm_file_path().and_then(|p| file_ops::load_from_gm_file(p).ok());
+    if let Some(loaded_values) = gm_loaded {
         app.values = loaded_values;
         #[cfg(windows)]
-        log_verbose("init_app: loaded from GM_FILE_PATH");
+        log_verbose("init_app: loaded from gm_file_path (AppData Local)");
     } else if let Ok(loaded_values) = file_ops::load_newest_json() {
         app.values = loaded_values;
         #[cfg(windows)]

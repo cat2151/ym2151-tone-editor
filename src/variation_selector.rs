@@ -325,9 +325,11 @@ fn run_selector<B: Backend>(
 /// - Audio preview on cursor movement (Windows only)
 /// - Keyboard navigation (↑↓/jk for movement, Enter to select, Esc/q to cancel)
 pub fn open_variation_selector() -> io::Result<Option<ToneData>> {
-    // Load GM000 tone file
-    let filename = "tones/general_midi/000_AcousticGrand.json";
-    let json_string = fs::read_to_string(filename)?;
+    // Load GM000 tone file from the app data directory
+    let gm_path = crate::file_ops::gm_file_path().ok_or_else(|| {
+        io::Error::new(io::ErrorKind::NotFound, "Could not find app data directory")
+    })?;
+    let json_string = fs::read_to_string(gm_path)?;
     let tone_file: ToneFile = serde_json::from_str(&json_string).map_err(io::Error::other)?;
 
     if tone_file.variations.is_empty() {

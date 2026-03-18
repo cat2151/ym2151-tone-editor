@@ -364,10 +364,14 @@ impl App {
 
     /// Save tone data to JSON file
     pub fn save_to_json(&self) -> std::io::Result<()> {
-        const GM_FILE_PATH: &str = "tones/general_midi/000_AcousticGrand.json";
-
-        // Save to GM format
-        file_ops::save_to_gm_file(GM_FILE_PATH, &self.values, "Edited Tone")?;
+        // Save to GM format in app data directory
+        let gm_path = file_ops::gm_file_path().ok_or_else(|| {
+            std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "Could not find app data directory",
+            )
+        })?;
+        file_ops::save_to_gm_file(gm_path, &self.values, "Edited Tone")?;
 
         // Also save to legacy format for backward compatibility
         file_ops::save_to_json(&self.values)?;
@@ -378,10 +382,15 @@ impl App {
     /// Append current tone data as a new variation to GM file
     /// This is triggered by CTRL+S
     pub fn save_to_gm_variations(&self) -> std::io::Result<()> {
-        const GM_FILE_PATH: &str = "tones/general_midi/000_AcousticGrand.json";
+        let gm_path = file_ops::gm_file_path().ok_or_else(|| {
+            std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "Could not find app data directory",
+            )
+        })?;
 
         // Append to GM format variations array
-        file_ops::append_to_gm_file(GM_FILE_PATH, &self.values, "Edited Tone")?;
+        file_ops::append_to_gm_file(gm_path, &self.values, "Edited Tone")?;
 
         Ok(())
     }

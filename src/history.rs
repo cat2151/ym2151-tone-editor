@@ -2,8 +2,7 @@ use crate::models::ToneData;
 use crate::register;
 use crate::register_list;
 use std::{
-    fs,
-    io,
+    fs, io,
     path::{Path, PathBuf},
 };
 

@@ -259,7 +259,11 @@ fn test_migrate_history_from_roaming_skips_when_new_exists() {
     migrate_history_from_roaming_at_paths(&legacy_path, &new_path);
 
     let history = load_history_at_path(&new_path).unwrap();
-    assert_eq!(history.len(), 1, "existing new file should not be overwritten");
+    assert_eq!(
+        history.len(),
+        1,
+        "existing new file should not be overwritten"
+    );
     assert_eq!(history[0], register::editor_rows_to_registers(&new_values));
 
     std::fs::remove_file(&legacy_path).ok();
@@ -274,7 +278,10 @@ fn test_migrate_history_from_roaming_noop_when_legacy_missing() {
     // Neither file exists; migration should be a no-op and not create new_path
     migrate_history_from_roaming_at_paths(&legacy_path, &new_path);
 
-    assert!(!new_path.exists(), "new path should not be created when legacy is also missing");
+    assert!(
+        !new_path.exists(),
+        "new path should not be created when legacy is also missing"
+    );
 }
 
 #[test]

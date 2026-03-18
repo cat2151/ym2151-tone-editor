@@ -3,11 +3,23 @@
 use crate::file_ops::*;
 use crate::models::*;
 use crate::register;
+use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
+
+static TEMP_DIR_COUNTER: AtomicU64 = AtomicU64::new(0);
+
+fn temp_dir() -> PathBuf {
+    let id = TEMP_DIR_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let dir =
+        std::env::temp_dir().join(format!("ym2151_file_ops_test_{}_{id}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    dir
+}
 
 #[test]
-fn test_save_to_json_creates_valid_file() {
-    // Clean up any leftover test files first
-    let _ = std::fs::remove_file("ym2151_tone.json");
+fn test_save_to_json_at_path_creates_valid_file() {
+    let dir = temp_dir();
+    let path = dir.join("ym2151_tone.json");
 
     let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
 
@@ -22,18 +34,14 @@ fn test_save_to_json_creates_valid_file() {
     values[ROW_CH][CH_PARAM_FB] = 0;
 
     // Save to JSON
-    let result = save_to_json(&values);
+    let result = save_to_json_at_path(&path, &values);
     assert!(result.is_ok());
 
-    // Check that the fixed filename was created
-    let filename = "ym2151_tone.json";
-    assert!(
-        std::fs::metadata(filename).is_ok(),
-        "JSON file was not created"
-    );
+    // Check that the file was created
+    assert!(path.exists(), "JSON file was not created");
 
     // Read and parse the JSON
-    let content = std::fs::read_to_string(filename).unwrap();
+    let content = std::fs::read_to_string(&path).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&content).unwrap();
 
     // Verify structure
@@ -41,28 +49,26 @@ fn test_save_to_json_creates_valid_file() {
     assert!(parsed["events"].is_array());
 
     // Clean up
-    std::fs::remove_file(filename).ok();
+    std::fs::remove_dir_all(&dir).ok();
 }
 
 #[test]
 fn test_load_from_json() {
+    let dir = temp_dir();
+
     let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
     values[0][PARAM_MUL] = 5;
     values[0][PARAM_TL] = 30;
     values[ROW_CH][CH_PARAM_ALG] = 3;
 
-    let timestamp = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-    let test_filename = format!("ym2151_tone_test_{}.json", timestamp);
+    let test_path = dir.join("ym2151_tone_test.json");
 
     // Save current tone data
     let json_string = register::to_json_string(&values).unwrap();
-    std::fs::write(&test_filename, json_string).unwrap();
+    std::fs::write(&test_path, json_string).unwrap();
 
     // Load it back
-    let result = load_from_json(&test_filename);
+    let result = load_from_json(&test_path);
     assert!(result.is_ok());
 
     let loaded_values = result.unwrap();
@@ -72,20 +78,20 @@ fn test_load_from_json() {
     assert_eq!(loaded_values[0][PARAM_TL], values[0][PARAM_TL]);
 
     // Clean up
-    std::fs::remove_file(&test_filename).ok();
+    std::fs::remove_dir_all(&dir).ok();
 }
 
 #[test]
-fn test_find_newest_json_file() {
-    // Clean up any test files first
-    let _ = std::fs::remove_file("ym2151_tone.json");
+fn test_find_newest_json_file_in_dir() {
+    let dir = temp_dir();
 
     // Test 1: If fixed filename exists, it should be returned
-    std::fs::write("ym2151_tone.json", "{}").unwrap();
-    let result = find_newest_json_file();
+    let fixed_path = dir.join("ym2151_tone.json");
+    std::fs::write(&fixed_path, "{}").unwrap();
+    let result = find_newest_json_file_in_dir(&dir);
     assert!(result.is_ok());
-    assert_eq!(result.unwrap(), "ym2151_tone.json");
-    std::fs::remove_file("ym2151_tone.json").ok();
+    assert_eq!(result.unwrap(), fixed_path);
+    std::fs::remove_file(&fixed_path).ok();
 
     // Test 2: If fixed filename doesn't exist, fall back to timestamped files
     let base_time = std::time::SystemTime::now()
@@ -93,9 +99,9 @@ fn test_find_newest_json_file() {
         .unwrap()
         .as_secs();
 
-    let file1 = format!("ym2151_tone_{}.json", base_time);
-    let file2 = format!("ym2151_tone_{}.json", base_time + 1);
-    let file3 = format!("ym2151_tone_{}.json", base_time + 2);
+    let file1 = dir.join(format!("ym2151_tone_{}.json", base_time));
+    let file2 = dir.join(format!("ym2151_tone_{}.json", base_time + 1));
+    let file3 = dir.join(format!("ym2151_tone_{}.json", base_time + 2));
 
     std::fs::write(&file1, "{}").unwrap();
     std::thread::sleep(std::time::Duration::from_millis(10));
@@ -104,23 +110,60 @@ fn test_find_newest_json_file() {
     std::fs::write(&file3, "{}").unwrap();
 
     // Find newest file (should be file3)
-    let result = find_newest_json_file();
+    let result = find_newest_json_file_in_dir(&dir);
     assert!(result.is_ok());
 
     let newest = result.unwrap();
     assert_eq!(newest, file3);
 
     // Clean up
-    std::fs::remove_file(&file1).ok();
-    std::fs::remove_file(&file2).ok();
-    std::fs::remove_file(&file3).ok();
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
+fn test_app_data_dir_ends_with_ym2151_tone_editor() {
+    if let Some(dir) = app_data_dir() {
+        assert!(
+            dir.ends_with("ym2151-tone-editor"),
+            "app_data_dir should end with ym2151-tone-editor, got: {:?}",
+            dir
+        );
+    }
+    // If config_local_dir() returns None (some CI environments), skip the assertion
+}
+
+#[test]
+fn test_tone_file_path_ends_with_ym2151_tone_json() {
+    if let Some(path) = tone_file_path() {
+        assert!(
+            path.ends_with("ym2151_tone.json"),
+            "tone_file_path should end with ym2151_tone.json, got: {:?}",
+            path
+        );
+    }
+}
+
+#[test]
+fn test_gm_file_path_ends_with_expected_path() {
+    if let Some(path) = gm_file_path() {
+        let path_str = path.to_string_lossy();
+        assert!(
+            path_str.contains("000_AcousticGrand.json"),
+            "gm_file_path should contain 000_AcousticGrand.json, got: {:?}",
+            path
+        );
+        assert!(
+            path_str.contains("general_midi"),
+            "gm_file_path should contain general_midi, got: {:?}",
+            path
+        );
+    }
 }
 
 #[test]
 fn test_save_and_load_gm_file() {
-    use std::path::Path;
-
-    let test_filename = "test_gm_tone.json";
+    let dir = temp_dir();
+    let test_path = dir.join("test_gm_tone.json");
 
     // Create test tone data
     let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
@@ -131,14 +174,14 @@ fn test_save_and_load_gm_file() {
     values[ROW_CH][CH_PARAM_NOTE] = 60;
 
     // Save to GM file format
-    let result = save_to_gm_file(test_filename, &values, "Test Piano");
+    let result = save_to_gm_file(&test_path, &values, "Test Piano");
     assert!(result.is_ok(), "Failed to save GM file: {:?}", result.err());
 
     // Verify file exists
-    assert!(Path::new(test_filename).exists(), "GM file was not created");
+    assert!(test_path.exists(), "GM file was not created");
 
     // Load from GM file format
-    let loaded_result = load_from_gm_file(test_filename);
+    let loaded_result = load_from_gm_file(&test_path);
     assert!(
         loaded_result.is_ok(),
         "Failed to load GM file: {:?}",
@@ -166,12 +209,13 @@ fn test_save_and_load_gm_file() {
     );
 
     // Clean up
-    std::fs::remove_file(test_filename).ok();
+    std::fs::remove_dir_all(&dir).ok();
 }
 
 #[test]
 fn test_load_gm_file_format() {
-    let test_filename = "test_gm_format.json";
+    let dir = temp_dir();
+    let test_path = dir.join("test_gm_format.json");
 
     // Create test tone data to generate a valid registers string
     let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
@@ -199,19 +243,20 @@ fn test_load_gm_file_format() {
         registers
     );
 
-    std::fs::write(test_filename, json_content).unwrap();
+    std::fs::write(&test_path, json_content).unwrap();
 
     // Load the file
-    let result = load_from_gm_file(test_filename);
+    let result = load_from_gm_file(&test_path);
     assert!(result.is_ok(), "Failed to load GM file: {:?}", result.err());
 
     // Clean up
-    std::fs::remove_file(test_filename).ok();
+    std::fs::remove_dir_all(&dir).ok();
 }
 
 #[test]
 fn test_load_gm_file_empty_variations() {
-    let test_filename = "test_empty_variations.json";
+    let dir = temp_dir();
+    let test_path = dir.join("test_empty_variations.json");
 
     // Create a GM file with no variations
     let json_content = r#"{
@@ -219,19 +264,20 @@ fn test_load_gm_file_empty_variations() {
   "variations": []
 }"#;
 
-    std::fs::write(test_filename, json_content).unwrap();
+    std::fs::write(&test_path, json_content).unwrap();
 
     // Try to load - should fail
-    let result = load_from_gm_file(test_filename);
+    let result = load_from_gm_file(&test_path);
     assert!(result.is_err(), "Should fail when no variations present");
 
     // Clean up
-    std::fs::remove_file(test_filename).ok();
+    std::fs::remove_dir_all(&dir).ok();
 }
 
 #[test]
 fn test_gm_file_minified_variations_format() {
-    let test_filename = "test_minified_format.json";
+    let dir = temp_dir();
+    let test_path = dir.join("test_minified_format.json");
 
     // Create test tone data
     let mut values = [[0; GRID_WIDTH]; GRID_HEIGHT];
@@ -242,11 +288,11 @@ fn test_gm_file_minified_variations_format() {
     values[ROW_CH][CH_PARAM_NOTE] = 60;
 
     // Save to GM file format
-    let result = save_to_gm_file(test_filename, &values, "Test Piano");
+    let result = save_to_gm_file(&test_path, &values, "Test Piano");
     assert!(result.is_ok(), "Failed to save GM file: {:?}", result.err());
 
     // Read the file content
-    let content = std::fs::read_to_string(test_filename).unwrap();
+    let content = std::fs::read_to_string(&test_path).unwrap();
 
     // Verify the format
     // 1. Should contain "description" on a separate line
@@ -303,17 +349,13 @@ fn test_gm_file_minified_variations_format() {
     );
 
     // Clean up
-    std::fs::remove_file(test_filename).ok();
+    std::fs::remove_dir_all(&dir).ok();
 }
 
 #[test]
 fn test_append_to_gm_file() {
-    use std::path::Path;
-
-    let test_filename = "test_append_gm.json";
-
-    // Clean up any existing test file
-    let _ = std::fs::remove_file(test_filename);
+    let dir = temp_dir();
+    let test_path = dir.join("test_append_gm.json");
 
     // Create first tone data
     let mut values1 = [[0; GRID_WIDTH]; GRID_HEIGHT];
@@ -324,7 +366,7 @@ fn test_append_to_gm_file() {
     values1[ROW_CH][CH_PARAM_NOTE] = 60;
 
     // Append first variation (file doesn't exist yet)
-    let result = append_to_gm_file(test_filename, &values1, "First Variation");
+    let result = append_to_gm_file(&test_path, &values1, "First Variation");
     assert!(
         result.is_ok(),
         "Failed to append first variation: {:?}",
@@ -332,10 +374,10 @@ fn test_append_to_gm_file() {
     );
 
     // Verify file exists
-    assert!(Path::new(test_filename).exists(), "GM file was not created");
+    assert!(test_path.exists(), "GM file was not created");
 
     // Read and parse the file
-    let content = std::fs::read_to_string(test_filename).unwrap();
+    let content = std::fs::read_to_string(&test_path).unwrap();
     let tone_file: ToneFile = serde_json::from_str(&content).unwrap();
     assert_eq!(tone_file.variations.len(), 1, "Should have 1 variation");
     assert_eq!(tone_file.variations[0].description, "First Variation");
@@ -349,7 +391,7 @@ fn test_append_to_gm_file() {
     values2[ROW_CH][CH_PARAM_NOTE] = 72;
 
     // Append second variation
-    let result = append_to_gm_file(test_filename, &values2, "Second Variation");
+    let result = append_to_gm_file(&test_path, &values2, "Second Variation");
     assert!(
         result.is_ok(),
         "Failed to append second variation: {:?}",
@@ -357,7 +399,7 @@ fn test_append_to_gm_file() {
     );
 
     // Read and verify we now have 2 variations
-    let content = std::fs::read_to_string(test_filename).unwrap();
+    let content = std::fs::read_to_string(&test_path).unwrap();
     let tone_file: ToneFile = serde_json::from_str(&content).unwrap();
     assert_eq!(tone_file.variations.len(), 2, "Should have 2 variations");
     assert_eq!(tone_file.variations[0].description, "First Variation");
@@ -368,10 +410,10 @@ fn test_append_to_gm_file() {
     assert_eq!(tone_file.variations[1].note_number, Some(72));
 
     // Load first variation and verify values
-    let loaded1 = load_from_gm_file(test_filename).unwrap();
+    let loaded1 = load_from_gm_file(&test_path).unwrap();
     assert_eq!(loaded1[0][PARAM_MUL], values1[0][PARAM_MUL]);
     assert_eq!(loaded1[0][PARAM_TL], values1[0][PARAM_TL]);
 
     // Clean up
-    std::fs::remove_file(test_filename).ok();
+    std::fs::remove_dir_all(&dir).ok();
 }
