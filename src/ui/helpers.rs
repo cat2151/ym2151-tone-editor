@@ -81,10 +81,25 @@ pub(crate) fn get_param_color(col: usize, is_ch_row: bool) -> Color {
     }
 }
 
+/// Normalised time (x-axis value in `[0.0, 1.0]`) at which the note-off event occurs.
+///
+/// This is the boundary between the Sustain/Decay-2 phase and the Release phase.
+/// It is shared by `compute_op_envelope_points` (which places a polyline vertex here)
+/// and `draw_envelope_canvas` (which draws a vertical marker at this x position),
+/// so that both always agree on the note-off location.
+pub(crate) const ENVELOPE_NOTE_OFF_T: f64 = 0.70;
+
+/// Minimum width reserved for the Sustain/Decay-2 phase.
+///
+/// `t_decay1_end` is clamped to `ENVELOPE_NOTE_OFF_T - ENVELOPE_MIN_SUSTAIN_SPAN`
+/// so that there is always at least this much canvas space between the end of
+/// Decay-1 and the note-off marker, keeping the sustain segment visible.
+const ENVELOPE_MIN_SUSTAIN_SPAN: f64 = 0.10;
+
 /// Compute key points for a YM2151 operator envelope visualization.
 ///
 /// Returns a `Vec<(f64, f64)>` of `(time, level)` pairs, where:
-/// - Time is in `[0.0, 1.0]`: 0.0 = note-on, 0.70 = note-off, 1.0 = end.
+/// - Time is in `[0.0, 1.0]`: 0.0 = note-on, [`ENVELOPE_NOTE_OFF_T`] = note-off, 1.0 = end.
 /// - Level is in `[0.0, 1.0]`: 0.0 = silent, 1.0 = maximum amplitude.
 ///
 /// The shape is a linear approximation of the four-phase YM2151 envelope:
@@ -141,12 +156,14 @@ pub(crate) fn compute_op_envelope_points(row: &[u8; GRID_WIDTH]) -> Vec<(f64, f6
     } else {
         0.0
     };
-    // Clamp so Decay-1 always ends before the fixed note-off at t=0.70.
-    let t_decay1_end = (t_attack_end + t_decay1_span).min(0.60);
+    // Clamp so Decay-1 always ends before the fixed note-off, leaving room for
+    // the sustain phase to remain visible on the canvas.
+    let t_decay1_end =
+        (t_attack_end + t_decay1_span).min(ENVELOPE_NOTE_OFF_T - ENVELOPE_MIN_SUSTAIN_SPAN);
 
     // Fixed time boundaries.
-    //   [t_noteoff, 1.0] is the Release phase (note off).
-    let t_noteoff = 0.70_f64;
+    //   [ENVELOPE_NOTE_OFF_T, 1.0] is the Release phase (note off).
+    let t_noteoff = ENVELOPE_NOTE_OFF_T;
     let t_end = 1.00_f64;
 
     // Sustain target after Decay-1: only meaningful when there was an attack.

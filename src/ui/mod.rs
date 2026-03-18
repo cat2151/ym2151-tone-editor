@@ -305,7 +305,7 @@ pub fn ui(f: &mut Frame, app: &App) {
 /// from the current algorithm value, so the user can immediately see which operators
 /// contribute to the output and which are modulators.
 ///
-/// A vertical dark-gray marker is drawn at x = 0.70 to indicate the note-off point,
+/// A vertical dark-gray marker is drawn at x = [`ENVELOPE_NOTE_OFF_T`] to indicate the note-off point,
 /// visually separating the sustain phase from the release phase.
 ///
 /// Operators whose slot-mask (SM) is 0 are drawn in dark-gray to indicate they are muted.
@@ -342,11 +342,11 @@ fn draw_envelope_canvas(f: &mut Frame, app: &App, area: Rect) {
         .x_bounds([0.0, 1.0])
         .y_bounds([0.0, 1.0])
         .paint(move |ctx| {
-            // Draw note-off marker at t=0.70 to show where sustain ends and release begins.
+            // Draw note-off marker at ENVELOPE_NOTE_OFF_T to show where sustain ends and release begins.
             ctx.draw(&CanvasLine {
-                x1: 0.70,
+                x1: ENVELOPE_NOTE_OFF_T,
                 y1: 0.0,
-                x2: 0.70,
+                x2: ENVELOPE_NOTE_OFF_T,
                 y2: 1.0,
                 color: Color::DarkGray,
             });
