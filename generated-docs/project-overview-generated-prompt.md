@@ -1,4 +1,4 @@
-Last updated: 2026-03-18
+Last updated: 2026-03-19
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -442,6 +442,7 @@ cargo run
     📄 app_tests.rs
     📄 app_tl_d1l_dt_dt2_tests.rs
     📄 app_value_by_tests.rs
+    📄 event_loop_tests.rs
     📄 favorites_tests.rs
     📄 file_ops_tests.rs
     📄 history_tests.rs
@@ -521,4 +522,4 @@ tones/general_midi/tone_names.json
 
 
 ---
-Generated at: 2026-03-18 07:15:42 JST
+Generated at: 2026-03-19 07:14:51 JST

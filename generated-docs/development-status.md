@@ -1,75 +1,59 @@
-Last updated: 2026-03-18
+Last updated: 2026-03-19
 
 # Development Status
 
 ## 現在のIssues
-- `src/event_loop.rs`が500行を超えており、リファクタリングの優先度が高い（[Issue #226](../issue-notes/226.md)）。
-- Windows環境での設定ファイル保存先が`AppData\Roaming`となっているため、`AppData\Local`への変更が求められています（[Issue #224](../issue-notes/224.md), [Issue #223](../issue-notes/223.md)）。
-- UI/UXの改善として、ヘルプ表示の動的生成（[Issue #219](../issue-notes/219.md)）やエンベロープ折れ線グラフの視認性向上の課題が残っています（[Issue #218](../issue-notes/218.md)）。
+- カーソル移動キーの廃止に伴い、ヘルプ表示のキーバインドを`config`から自動生成し、hjkl/wasdを削除して矢印キーを表示する必要があることが課題となっています。([Issue #231](../issue-notes/231.md), [Issue #219](../issue-notes/219.md))
+- また、ヘルプのヒント「?:help」を常に画面左下に表示する機能も求められています。([Issue #231](../issue-notes/231.md), [Issue #219](../issue-notes/219.md))
+- その他の主要な課題として、音色テンプレートJSONのローカル生成機能の検討([Issue #174](../issue-notes/174.md))や、プレビュー時のノイズ問題が別リポジトリの進捗待ちとなっています。([Issue #167](../issue-notes/167.md))
 
 ## 次の一手候補
-1. `src/event_loop.rs` のマウスイベントハンドリングロジックを抽出する [Issue #226](../issue-notes/226.md)
-   - 最初の小さな一歩: `src/event_loop.rs` 内で、マウスイベントの処理ブロックを特定し、関連するロジック（ペンタトニック鍵盤ホバー座標の更新、値の更新など）を新しい関数として`src/ui/helpers.rs`に抽出し、`event_loop.rs`からその関数を呼び出すように変更します。
+1. ヘルプ表示をキーバインド設定から自動生成し、UIを更新する [Issue #231](../issue-notes/231.md), [Issue #219](../issue-notes/219.md)
+   - 最初の小さな一歩: `src/ui/help.rs` の `draw_keybind_hints` 関数が `Config` を参照できるように、`src/ui/mod.rs` の `ui` 関数と `src/event_loop.rs` の `ui` 呼び出しに `Config` 引数を追加する。
    - Agent実行プロンプト:
      ```
-     対象ファイル: src/event_loop.rs, src/ui/helpers.rs, src/app/mod.rs
+     対象ファイル: `src/ui/help.rs`, `src/ui/mod.rs`, `src/event_loop.rs`
 
-     実行内容: src/event_loop.rs 内の `Event::Mouse` に関する処理ブロックを特定し、そのロジックを `src/ui/helpers.rs` 内の新しい関数 `handle_mouse_event` として抽出してください。この関数は `App` の可変参照とマウスイベントデータを受け取り、`App`の状態を適切に更新できるように設計してください。抽出後、`src/event_loop.rs`から新しい関数を呼び出すように変更してください。
+     実行内容: `src/ui/help.rs` の `draw_keybind_hints` 関数がアプリケーションのキーバインド設定 `Config` を参照してヘルプテキストを生成できるように、以下の変更を提案してください。
+     1. `src/ui/mod.rs` の `ui` 関数のシグネチャに `config: &Config` 引数を追加する。
+     2. `src/ui/help.rs` の `draw_keybind_hints` 関数のシグネチャに `config: &Config` 引数を追加する。
+     3. `src/event_loop.rs` 内の `crate::ui::ui(f, app);` の呼び出し箇所を `crate::ui::ui(f, app, config);` に変更する。
+     4. `src/ui/mod.rs` 内の `help::draw_keybind_hints(f, app, inner);` の呼び出し箇所を `help::draw_keybind_hints(f, app, config, inner);` に変更する。
 
-     確認事項:
-     - 抽出後もマウスイベント処理（ホバー表示、値の更新、スクロールによる値変更）が正しく機能すること。
-     - `src/event_loop.rs` のイベントハンドリングロジックが簡素化され、行数が減少すること。
-     - 既存の他のイベント処理（キーイベントなど）に影響がないこと。
-     - 必要に応じて `src/app/mod.rs` に新しいメソッドを追加または修正してください。
+     確認事項: シグネチャ変更に伴う全ての呼び出し箇所が適切に更新され、既存のUI描画ロジックに影響がないことを確認してください。
 
-     期待する出力:
-     - 修正された `src/event_loop.rs` と `src/ui/helpers.rs` のコード。
-     - 変更内容の概要をMarkdown形式で記述してください。
+     期待する出力: 上記の変更を反映したコード差分と、変更内容を説明するmarkdown形式のテキスト。
      ```
 
-2. Windowsでの設定・音色ファイル保存パスを`AppData\Local`に変更する [Issue #224](../issue-notes/224.md) [Issue #223](../issue-notes/223.md)
-   - 最初の小さな一歩: `src/file_ops.rs` で、アプリケーションのデータディレクトリパスを解決している箇所を特定し、`directories-rs`クレートの`ProjectDirs::config_dir()`や`ProjectDirs::data_local_dir()`メソッドを使用して、パスが`AppData\Local`を指すように修正します。
+2. 音色テンプレートJSONのローカル生成機能の検討と既存ファイルの分析 [Issue #174](../issue-notes/174.md)
+   - 最初の小さな一歩: `generate_gm_templates.rs` の現在の実装と `src/file_ops.rs` を分析し、`generate_gm_templates.rs` の機能をアプリケーションから呼び出し、生成されたJSONファイルを`file_ops`で管理されるディレクトリに保存するための統合プロセスを検討する。
    - Agent実行プロンプト:
      ```
-     対象ファイル: src/file_ops.rs, src/config.rs, Cargo.toml
+     対象ファイル: `generate_gm_templates.rs`, `src/file_ops.rs`
 
-     実行内容:
-     1. `src/file_ops.rs` 内で、Windows環境におけるアプリケーション設定ファイルや音色ファイルのパスを生成しているロジックを特定してください。
-     2. これを `C:\Users\<your name>\AppData\Local\ym2151-tone-editor` を指すように修正してください。修正には `directories-rs` クレートの `ProjectDirs::from` メソッドを利用し、設定ファイルとデータファイルで適切なローカルパスを解決するようにしてください。
-     3. `src/config.rs` でパス解決に関連するロジックがあれば、同様に修正してください。
-     4. `Cargo.toml` に `directories-rs` クレートがまだ追加されていない場合は、追加してください。
+     実行内容: `generate_gm_templates.rs` の現在の機能と `src/file_ops.rs` のファイル操作ユーティリティを分析してください。その上で、ユーザーがアプリケーション内でGMテンプレートJSONファイルをローカルに生成し、それを `file_ops` モジュールが管理する適切なディレクトリ（例: `tones/general_midi/`）に保存するための統合案をmarkdown形式で出力してください。具体的には、以下の点を明確にしてください。
+     1. `generate_gm_templates.rs` をアプリケーションから呼び出すためのエントリポイントや必要な引数。
+     2. 生成されたJSONファイルを `file_ops::gm_file_path()` など既存のファイルI/O関数を使って保存する方法。
+     3. アプリケーションの既存のワークフロー（例: メニュー項目や新しいキーバインド）にこの機能を統合するためのUI/ロジックの概要。
 
-     確認事項:
-     - Windows以外のOS（Linux, macOSなど）でのファイルパス解決に影響がないこと。
-     - アプリケーションが設定ファイルや音色ファイルを正しく読み書きできること。
-     - 既存のテスト（特に`src/tests/file_ops_tests.rs`）が引き続きパスすること、または必要に応じてテストを更新すること。
+     確認事項: 提案される統合案が既存のファイル構造や `file_ops` の設計と整合性があることを確認してください。ハルシネーションを避け、具体的なファイルパスや関数呼び出しに焦点を当ててください。
 
-     期待する出力:
-     - 修正された `src/file_ops.rs`、`src/config.rs`、および `Cargo.toml` のコード。
-     - 変更内容の概要をMarkdown形式で記述してください。
+     期待する出力: 統合案をmarkdown形式で出力し、具体的なコードスニペットや擬似コードを含むこと。
      ```
 
-3. ヘルプ画面を現在のキーバインド設定に基づいて動的に生成する [Issue #219](../issue-notes/219.md)
-   - 最初の小さな一歩: `src/ui/help.rs` 内の `draw_help_dialog` 関数で、ハードコードされたキーバインド説明を削除し、`src/config.rs` から読み込んだ `Config` オブジェクトを引数として受け取り、その内容を基にヘルプテキストを生成するように変更します。また、ヘルプダイアログから`hjkl`と`wasd`に関する記述を削除し、代わりに矢印キーに関する記述を含めます。
+3. 新しいファイルI/Oパスでの保存・ロードに関するテストの拡充 [Issue #155](../issue-notes/155.md)
+   - 最初の小さな一歩: `src/tests/file_ops_tests.rs` を分析し、最近 `src/file_ops.rs` に加えられた `AppData\Local` への移行およびGMフォーマット対応に関するテストケースが存在するかを確認し、不足している場合はそれらを追加するためのテスト計画を立案する。
    - Agent実行プロンプト:
      ```
-     対象ファイル: src/ui/help.rs, src/ui/mod.rs, src/config.rs, src/app/mod.rs
+     対象ファイル: `src/file_ops.rs`, `src/tests/file_ops_tests.rs`
 
-     実行内容:
-     1. `src/ui/help.rs` の `draw_help_dialog` 関数を修正し、`src/app/mod.rs` の `App` 構造体を通じて `src/config.rs` から取得したキーバインド設定 (`Config` オブジェクト) を受け取り、その情報に基づいてヘルプダイアログの内容を動的に生成するように変更してください。
-     2. ヘルプダイアログ内の `hjkl` および `wasd` キーに関する古い記述を削除し、現在の矢印キー (`Left`, `Right`, `Up`, `Down`) を中心とした移動キーバインドの説明に置き換えてください。
-     3. `src/ui/mod.rs` 内の `ui` 関数を修正し、常に画面の左下隅に「?:help」というテキストが表示されるようにしてください。
+     実行内容: `src/file_ops.rs` と `src/tests/file_ops_tests.rs` のコードを分析し、最近 `src/file_ops.rs` に加えられた以下の変更をカバーするための新しいテストケースを `src/tests/file_ops_tests.rs` に追加する変更案を記述してください。
+     1. `AppData\Local` ディレクトリへの設定ファイル（`ym2151-tone-editor.json` や履歴ファイル）の保存と読み込み。
+     2. 新しいGMフォーマットでの音色ファイル（`tones/general_midi/` 内の `.json`）の保存と読み込み、特に `save_to_gm_file` および `append_to_gm_file` の機能検証。
 
-     確認事項:
-     - ヘルプダイアログの内容が `src/config.rs` の最新のキーバインド設定と一致すること。
-     - ヘルプダイアログが表示/非表示切り替え時に正しくレンダリングされ、レイアウトが崩れないこと。
-     - 画面左下の「?:help」表示が他のUI要素と重ならないこと。
-     - 既存のキーバインド動作に影響がないこと。
+     確認事項: 既存のテストを重複させず、新しいファイルパスとフォーマットのロジックが確実に検証されることを確認してください。テストは隔離されており、システム環境に副作用を与えないように配慮してください。
 
-     期待する出力:
-     - 修正された `src/ui/help.rs`、`src/ui/mod.rs`、および `src/app/mod.rs` のコード。
-     - 変更内容の概要をMarkdown形式で記述してください。
-     ```
+     期待する出力: `src/tests/file_ops_tests.rs` に追加すべき新しいテスト関数のコードスニペットと、それぞれのテストが検証する内容を説明するmarkdown形式のテキスト。
 
 ---
-Generated at: 2026-03-18 07:16:07 JST
+Generated at: 2026-03-19 07:15:15 JST
