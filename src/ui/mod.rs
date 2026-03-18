@@ -301,6 +301,13 @@ pub fn ui(f: &mut Frame, app: &App) {
 /// Each operator's ADSR-like envelope is rendered as a line-chart using a distinct colour:
 /// - O1: Cyan, O2: Green, O3: Yellow, O4: Magenta.
 ///
+/// The canvas title shows each operator's role (C = Carrier, M = Modulator) derived
+/// from the current algorithm value, so the user can immediately see which operators
+/// contribute to the output and which are modulators.
+///
+/// A vertical dark-gray marker is drawn at x = 0.70 to indicate the note-off point,
+/// visually separating the sustain phase from the release phase.
+///
 /// Operators whose slot-mask (SM) is 0 are drawn in dark-gray to indicate they are muted.
 ///
 /// The x-axis represents normalised time (note-on → note-off → release).
@@ -312,10 +319,22 @@ fn draw_envelope_canvas(f: &mut Frame, app: &App, area: Rect) {
         .collect();
     let ops_enabled: [bool; 4] = std::array::from_fn(|op| app.values[op][PARAM_SM] != 0);
 
+    // Build title with per-operator carrier (C) / modulator (M) role labels.
+    let alg_value = app.values[ROW_CH][CH_PARAM_ALG];
+    let operator_roles = get_operator_roles_for_alg(alg_value);
+    let role_label = |op: usize| if operator_roles[op] { "C" } else { "M" };
+    let title = format!(
+        "Env O1({})=Cy O2({})=Gn O3({})=Ye O4({})=Mg",
+        role_label(0),
+        role_label(1),
+        role_label(2),
+        role_label(3),
+    );
+
     let canvas = Canvas::default()
         .block(
             Block::default()
-                .title("Envelope (O1=Cyan O2=Green O3=Yellow O4=Magenta)")
+                .title(title)
                 .borders(Borders::ALL)
                 .border_style(Style::default().fg(Color::DarkGray)),
         )
@@ -323,6 +342,15 @@ fn draw_envelope_canvas(f: &mut Frame, app: &App, area: Rect) {
         .x_bounds([0.0, 1.0])
         .y_bounds([0.0, 1.0])
         .paint(move |ctx| {
+            // Draw note-off marker at t=0.70 to show where sustain ends and release begins.
+            ctx.draw(&CanvasLine {
+                x1: 0.70,
+                y1: 0.0,
+                x2: 0.70,
+                y2: 1.0,
+                color: Color::DarkGray,
+            });
+            // Draw operator envelope polylines on top of the marker.
             for (op, points) in envelope_points.iter().enumerate() {
                 let color = if ops_enabled[op] {
                     OP_ENVELOPE_COLORS[op]
