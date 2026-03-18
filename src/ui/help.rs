@@ -8,7 +8,26 @@ use ratatui::{
     Frame,
 };
 
-/// Returns all keys bound to `action`, sorted alphabetically.
+/// Sort priority for a key string: named keys (len>1) first, then lowercase, uppercase, symbols.
+fn key_sort_priority(k: &str) -> (u8, String) {
+    let lower = k.to_ascii_lowercase();
+    if k.chars().count() != 1 {
+        // Named keys: Left, Space, Ctrl+s, F5, etc.
+        (0, lower)
+    } else {
+        let c = k.chars().next().unwrap();
+        if c.is_ascii_lowercase() {
+            (1, lower)
+        } else if c.is_ascii_uppercase() {
+            (2, lower)
+        } else {
+            (3, k.to_string())
+        }
+    }
+}
+
+/// Returns all keys bound to `action`, sorted by user-friendly display order.
+/// Named keys come first, then lowercase, then uppercase, then symbols.
 fn keys_for_action(config: &Config, action: &Action) -> Vec<String> {
     let mut keys: Vec<String> = config
         .keybinds
@@ -16,7 +35,7 @@ fn keys_for_action(config: &Config, action: &Action) -> Vec<String> {
         .filter(|(_, a)| *a == action)
         .map(|(k, _)| k.clone())
         .collect();
-    keys.sort();
+    keys.sort_by_key(|k| key_sort_priority(k));
     keys
 }
 
@@ -45,10 +64,15 @@ pub(super) fn draw_keybind_hints(f: &mut Frame, app: &App, config: &Config, inne
     if inner.height == 0 {
         return;
     }
-    // Bottom line inside the inner area (inside the block border)
-    let inner_bottom = inner.y + inner.height.saturating_sub(1);
 
-    // Always show ?:help at the bottom-left of the screen
+    // Draw help dialog first so the bottom hint is painted on top of it.
+    if app.show_help {
+        draw_help_dialog(f, inner, config);
+    }
+
+    // Always show ?:help at the bottom-left of the screen (rendered last so it is never
+    // overwritten by the dialog's Clear widget even on small terminals).
+    let inner_bottom = inner.y + inner.height.saturating_sub(1);
     let help_key = fmt_action_keys(config, &Action::ToggleHelp);
     let area = Rect {
         x: inner.x,
@@ -61,10 +85,6 @@ pub(super) fn draw_keybind_hints(f: &mut Frame, app: &App, config: &Config, inne
         Style::default().fg(Color::DarkGray),
     ));
     f.render_widget(paragraph, area);
-
-    if app.show_help {
-        draw_help_dialog(f, inner, config);
-    }
 }
 
 /// Render a centered help dialog with key bindings grouped by category.
@@ -75,6 +95,35 @@ fn draw_help_dialog(f: &mut Frame, inner: Rect, config: &Config) {
     let up = fmt_action_keys(config, &Action::MoveCursorUp);
     let down = fmt_action_keys(config, &Action::MoveCursorDown);
     let nav_move = format!("{} / {} / {} / {} : Move cursor", left, right, up, down);
+
+    // OP-row jump shortcuts — generated from config (inc and dec variants)
+    let nav_op_row = format!(
+        "{}   {}   {}   {}",
+        fmt_param(
+            config,
+            &Action::JumpToOp1AndIncrease,
+            &Action::JumpToOp1AndDecrease,
+            "OP1"
+        ),
+        fmt_param(
+            config,
+            &Action::JumpToOp2AndIncrease,
+            &Action::JumpToOp2AndDecrease,
+            "OP2"
+        ),
+        fmt_param(
+            config,
+            &Action::JumpToOp3AndIncrease,
+            &Action::JumpToOp3AndDecrease,
+            "OP3"
+        ),
+        fmt_param(
+            config,
+            &Action::JumpToOp4AndIncrease,
+            &Action::JumpToOp4AndDecrease,
+            "OP4"
+        ),
+    );
 
     // Operator parameter shortcuts — generated from config
     let op_line1 = format!(
@@ -225,10 +274,7 @@ fn draw_help_dialog(f: &mut Frame, inner: Rect, config: &Config) {
     let quit = format!("{} : Quit", fmt_action_keys(config, &Action::Exit));
 
     let groups: Vec<(&str, Vec<String>)> = vec![
-        (
-            " Navigation ",
-            vec![nav_move, "1 - 4 : Jump to OP row".to_string()],
-        ),
+        (" Navigation ", vec![nav_move, nav_op_row]),
         (
             " Value Edit ",
             vec![dec_inc, plus1_minus1, plus10_minus10, max_min],
