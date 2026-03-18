@@ -43,7 +43,7 @@ pub fn init_app(
     if let Some(loaded_values) = gm_loaded {
         app.values = loaded_values;
         #[cfg(windows)]
-        log_verbose("init_app: loaded from GM_FILE_PATH");
+        log_verbose("init_app: loaded from gm_file_path (AppData Local)");
     } else if let Ok(loaded_values) = file_ops::load_newest_json() {
         app.values = loaded_values;
         #[cfg(windows)]

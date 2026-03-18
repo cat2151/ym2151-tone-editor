@@ -52,11 +52,14 @@ pub fn find_newest_json_file_in_dir(dir: &Path) -> io::Result<PathBuf> {
     let mut json_files: Vec<_> = entries
         .filter_map(|e| e.ok())
         .filter(|e| {
-            e.path()
+            let is_file = e.metadata().map(|m| m.is_file()).unwrap_or(false);
+            let name_matches = e
+                .path()
                 .file_name()
                 .and_then(|n| n.to_str())
                 .map(|s| s.starts_with("ym2151_tone_") && s.ends_with(".json"))
-                .unwrap_or(false)
+                .unwrap_or(false);
+            is_file && name_matches
         })
         .collect();
 
@@ -71,10 +74,8 @@ pub fn find_newest_json_file_in_dir(dir: &Path) -> io::Result<PathBuf> {
     json_files.sort_by_key(|e| e.metadata().and_then(|m| m.modified()).ok());
     json_files.reverse();
 
-    json_files
-        .first()
-        .map(|e| e.path())
-        .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "Could not get filename"))
+    // SAFETY: json_files is non-empty at this point
+    Ok(json_files[0].path())
 }
 
 /// Load tone data from a JSON file

@@ -4,13 +4,14 @@ use crate::file_ops::*;
 use crate::models::*;
 use crate::register;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
+
+static TEMP_DIR_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 fn temp_dir() -> PathBuf {
-    let ts = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    let dir = std::env::temp_dir().join(format!("ym2151_file_ops_test_{}", ts));
+    let id = TEMP_DIR_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let dir =
+        std::env::temp_dir().join(format!("ym2151_file_ops_test_{}_{id}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     dir
 }
