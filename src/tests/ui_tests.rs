@@ -274,3 +274,53 @@ fn test_envelope_release_midpoint_rr_max_near_zero() {
         "RR=max midpoint should be near 0.0, got {level_mid}"
     );
 }
+
+#[test]
+fn test_envelope_fast_ar_shorter_attack_than_slow_ar() {
+    // A higher (faster) AR should produce a shorter attack time window so that
+    // the slope of the attack segment in the polyline reflects the attack speed.
+    let fast_row = make_op_row(31, 0, 0, 0, 0, 0); // AR=31 (maximum / instant)
+    let slow_row = make_op_row(1, 0, 0, 0, 0, 0); // AR=1  (near minimum / slow)
+    let fast_pts = compute_op_envelope_points(&fast_row);
+    let slow_pts = compute_op_envelope_points(&slow_row);
+    let (t_fast_attack, _) = fast_pts[1];
+    let (t_slow_attack, _) = slow_pts[1];
+    assert!(
+        t_fast_attack < t_slow_attack,
+        "fast AR=31 should reach peak sooner (t={t_fast_attack}) than slow AR=1 (t={t_slow_attack})"
+    );
+}
+
+#[test]
+fn test_envelope_fast_d1r_shorter_decay_than_slow_d1r() {
+    // A higher (faster) D1R should produce a shorter Decay-1 time window.
+    let fast_row = make_op_row(31, 31, 7, 0, 0, 0); // D1R=31 (fast)
+    let slow_row = make_op_row(31, 1, 7, 0, 0, 0); // D1R=1  (slow)
+    let fast_pts = compute_op_envelope_points(&fast_row);
+    let slow_pts = compute_op_envelope_points(&slow_row);
+    // Both rows have AR=31 so the attack end time is identical.
+    let (t_fast_attack, _) = fast_pts[1];
+    let (t_fast_d1, _) = fast_pts[2];
+    let (t_slow_attack, _) = slow_pts[1];
+    let (t_slow_d1, _) = slow_pts[2];
+    let fast_decay_span = t_fast_d1 - t_fast_attack;
+    let slow_decay_span = t_slow_d1 - t_slow_attack;
+    assert!(
+        fast_decay_span < slow_decay_span,
+        "fast D1R=31 decay span ({fast_decay_span}) should be shorter than slow D1R=1 ({slow_decay_span})"
+    );
+}
+
+#[test]
+fn test_envelope_ar0_entire_envelope_is_silent() {
+    // AR=0 means no attack; every level in the envelope must be 0.0, regardless
+    // of other parameters that would otherwise produce non-zero decay levels.
+    let row = make_op_row(0, 31, 0, 0, 0, 0); // AR=0 but D1R=31, D1L=0, TL=0
+    let pts = compute_op_envelope_points(&row);
+    for (i, (_, level)) in pts.iter().enumerate() {
+        assert_eq!(
+            *level, 0.0,
+            "AR=0 should keep all levels at 0.0 (point {i}), got {level}"
+        );
+    }
+}
