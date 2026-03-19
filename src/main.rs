@@ -19,8 +19,6 @@ mod tests;
 mod ui;
 mod updater;
 mod variation_selector;
-#[cfg(windows)]
-mod waveform;
 
 pub use logging::{enable_verbose_logging, log_verbose};
 
