@@ -1,59 +1,50 @@
-Last updated: 2026-03-19
+Last updated: 2026-03-20
 
 # Development Status
 
 ## 現在のIssues
-- カーソル移動キーの廃止に伴い、ヘルプ表示のキーバインドを`config`から自動生成し、hjkl/wasdを削除して矢印キーを表示する必要があることが課題となっています。([Issue #231](../issue-notes/231.md), [Issue #219](../issue-notes/219.md))
-- また、ヘルプのヒント「?:help」を常に画面左下に表示する機能も求められています。([Issue #231](../issue-notes/231.md), [Issue #219](../issue-notes/219.md))
-- その他の主要な課題として、音色テンプレートJSONのローカル生成機能の検討([Issue #174](../issue-notes/174.md))や、プレビュー時のノイズ問題が別リポジトリの進捗待ちとなっています。([Issue #167](../issue-notes/167.md))
+- [Issue #174](../issue-notes/174.md) は、issue 149で得られた知見を活用し、ユーザーがローカルで音色テンプレートJSONファイルを生成する機能の実装を目指しています。
+- [Issue #167](../issue-notes/167.md) は、音色プレビュー時のプチノイズ発生問題で、その原因究明のため軽量GUIでのJSON編集ツールの開発を別リポジトリで進行中であり、本Issueは現在待ち状態です。
+- [Issue #155](../issue-notes/155.md) は、プロジェクトの品質向上と実用性確認のための、開発者自身によるドッグフーディングを促すタスクです。
 
 ## 次の一手候補
-1. ヘルプ表示をキーバインド設定から自動生成し、UIを更新する [Issue #231](../issue-notes/231.md), [Issue #219](../issue-notes/219.md)
-   - 最初の小さな一歩: `src/ui/help.rs` の `draw_keybind_hints` 関数が `Config` を参照できるように、`src/ui/mod.rs` の `ui` 関数と `src/event_loop.rs` の `ui` 呼び出しに `Config` 引数を追加する。
+1. [Issue #174](../issue-notes/174.md) - 音色テンプレート生成機能のデータ構造分析
+   - 最初の小さな一歩: 既存の音色データがどのように表現されているか、`src/models.rs` や `tones/general_midi/*.json` を調査し、テンプレート化に必要な要素を特定します。
+   - Agent実行プロンプ:
+     ```
+     対象ファイル: src/models.rs, tones/general_midi/tone_names.json, tones/general_midi/000_AcousticGrand.json
+
+     実行内容: 既存の音色データ構造とGeneral MIDI JSONファイルの構造を分析し、ユーザーがローカルに生成する音色テンプレートJSONファイルに必要なフィールド（オペレータ設定、エンベロープ、LFO等）と、それらのデフォルト値や許容範囲を定義してください。
+
+     確認事項: `src/models.rs` で定義されているYM2151のレジスタ構造と、既存のGeneral MIDI JSONファイルにおけるパラメータ表現の整合性を確認してください。
+
+     期待する出力: 提案する音色テンプレートJSONのスキーマ定義（フィールド名、型、説明、デフォルト値があればそれも）をMarkdown形式で出力してください。
+     ```
+
+2. [Issue #174](../issue-notes/174.md) - 音色テンプレート生成処理のロジック検討
+   - 最初の小さな一歩: 既存の音色データをJSON形式で出力するための基本的なRust関数スケルトンを検討します。`src/file_ops.rs` を参考に、ファイル書き込み処理の既存パターンを理解します。
    - Agent実行プロンプト:
      ```
-     対象ファイル: `src/ui/help.rs`, `src/ui/mod.rs`, `src/event_loop.rs`
+     対象ファイル: src/file_ops.rs, src/models.rs
 
-     実行内容: `src/ui/help.rs` の `draw_keybind_hints` 関数がアプリケーションのキーバインド設定 `Config` を参照してヘルプテキストを生成できるように、以下の変更を提案してください。
-     1. `src/ui/mod.rs` の `ui` 関数のシグネチャに `config: &Config` 引数を追加する。
-     2. `src/ui/help.rs` の `draw_keybind_hints` 関数のシグネチャに `config: &Config` 引数を追加する。
-     3. `src/event_loop.rs` 内の `crate::ui::ui(f, app);` の呼び出し箇所を `crate::ui::ui(f, app, config);` に変更する。
-     4. `src/ui/mod.rs` 内の `help::draw_keybind_hints(f, app, inner);` の呼び出し箇所を `help::draw_keybind_hints(f, app, config, inner);` に変更する。
+     実行内容: `src/file_ops.rs` に新しい関数 `generate_tone_template_json` を追加することを想定し、現在のアプリケーションでロードされている音色データ（`src/models.rs` の構造体を参照）をJSON形式で指定されたパスに保存するためのRustコードのスケルトンを生成してください。既存のファイル保存処理のパターンに沿ってください。
 
-     確認事項: シグネチャ変更に伴う全ての呼び出し箇所が適切に更新され、既存のUI描画ロジックに影響がないことを確認してください。
+     確認事項: `src/file_ops.rs` の既存のファイル書き込み処理（例: `save_favorites_to_file`）との整合性、および`src/models.rs` の`Tone`構造体からJSONへのシリアライズ方法を確認してください。
 
-     期待する出力: 上記の変更を反映したコード差分と、変更内容を説明するmarkdown形式のテキスト。
+     期待する出力: `src/file_ops.rs` に追加する関数のRustコードスニペットと、その関数の呼び出し例をMarkdown形式で出力してください。
      ```
 
-2. 音色テンプレートJSONのローカル生成機能の検討と既存ファイルの分析 [Issue #174](../issue-notes/174.md)
-   - 最初の小さな一歩: `generate_gm_templates.rs` の現在の実装と `src/file_ops.rs` を分析し、`generate_gm_templates.rs` の機能をアプリケーションから呼び出し、生成されたJSONファイルを`file_ops`で管理されるディレクトリに保存するための統合プロセスを検討する。
+3. [Issue #174](../issue-notes/174.md) - コマンドラインからのテンプレート生成の検討
+   - 最初の小さな一歩: アプリケーションに新しいコマンドライン引数を追加し、テンプレート生成をトリガーするエントリポイントを検討します。`src/main.rs` や `src/app_init.rs` の引数処理部分を調査します。
    - Agent実行プロンプト:
      ```
-     対象ファイル: `generate_gm_templates.rs`, `src/file_ops.rs`
+     対象ファイル: src/main.rs, src/app_init.rs, src/file_ops.rs
 
-     実行内容: `generate_gm_templates.rs` の現在の機能と `src/file_ops.rs` のファイル操作ユーティリティを分析してください。その上で、ユーザーがアプリケーション内でGMテンプレートJSONファイルをローカルに生成し、それを `file_ops` モジュールが管理する適切なディレクトリ（例: `tones/general_midi/`）に保存するための統合案をmarkdown形式で出力してください。具体的には、以下の点を明確にしてください。
-     1. `generate_gm_templates.rs` をアプリケーションから呼び出すためのエントリポイントや必要な引数。
-     2. 生成されたJSONファイルを `file_ops::gm_file_path()` など既存のファイルI/O関数を使って保存する方法。
-     3. アプリケーションの既存のワークフロー（例: メニュー項目や新しいキーバインド）にこの機能を統合するためのUI/ロジックの概要。
+     実行内容: アプリケーションが起動時に新しいコマンドライン引数 `--generate-template <output_path>` を受け取るように変更し、`output_path` に音色テンプレートJSONファイルを生成する処理（候補2で作成する関数を呼び出す想定）を追加するための変更点を分析してください。
 
-     確認事項: 提案される統合案が既存のファイル構造や `file_ops` の設計と整合性があることを確認してください。ハルシネーションを避け、具体的なファイルパスや関数呼び出しに焦点を当ててください。
+     確認事項: 既存のコマンドライン引数処理との競合がないか、また、ファイル生成処理を呼び出す際に必要なアプリケーションの状態（例: デフォルトの音色データ）が利用可能であるかを確認してください。
 
-     期待する出力: 統合案をmarkdown形式で出力し、具体的なコードスニペットや擬似コードを含むこと。
-     ```
-
-3. 新しいファイルI/Oパスでの保存・ロードに関するテストの拡充 [Issue #155](../issue-notes/155.md)
-   - 最初の小さな一歩: `src/tests/file_ops_tests.rs` を分析し、最近 `src/file_ops.rs` に加えられた `AppData\Local` への移行およびGMフォーマット対応に関するテストケースが存在するかを確認し、不足している場合はそれらを追加するためのテスト計画を立案する。
-   - Agent実行プロンプト:
-     ```
-     対象ファイル: `src/file_ops.rs`, `src/tests/file_ops_tests.rs`
-
-     実行内容: `src/file_ops.rs` と `src/tests/file_ops_tests.rs` のコードを分析し、最近 `src/file_ops.rs` に加えられた以下の変更をカバーするための新しいテストケースを `src/tests/file_ops_tests.rs` に追加する変更案を記述してください。
-     1. `AppData\Local` ディレクトリへの設定ファイル（`ym2151-tone-editor.json` や履歴ファイル）の保存と読み込み。
-     2. 新しいGMフォーマットでの音色ファイル（`tones/general_midi/` 内の `.json`）の保存と読み込み、特に `save_to_gm_file` および `append_to_gm_file` の機能検証。
-
-     確認事項: 既存のテストを重複させず、新しいファイルパスとフォーマットのロジックが確実に検証されることを確認してください。テストは隔離されており、システム環境に副作用を与えないように配慮してください。
-
-     期待する出力: `src/tests/file_ops_tests.rs` に追加すべき新しいテスト関数のコードスニペットと、それぞれのテストが検証する内容を説明するmarkdown形式のテキスト。
+     期待する出力: `src/main.rs` および `src/app_init.rs` に加えるべき変更の概要と、引数解析およびテンプレート生成関数呼び出しの簡単なRustコードスニペットをMarkdown形式で出力してください。
 
 ---
-Generated at: 2026-03-19 07:15:15 JST
+Generated at: 2026-03-20 07:11:14 JST
