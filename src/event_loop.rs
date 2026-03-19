@@ -162,7 +162,7 @@ pub(crate) fn run_app<B: Backend>(
 ) -> io::Result<()> {
     // 初回描画
     terminal.draw(|f| {
-        crate::ui::ui(f, app);
+        crate::ui::ui(f, app, config);
     })?;
     #[cfg(windows)]
     print_sixel_waveform(app)?;
@@ -219,7 +219,7 @@ pub(crate) fn run_app<B: Backend>(
                     .unwrap_or(false);
                 if sixel_ready {
                     terminal.draw(|f| {
-                        crate::ui::ui(f, app);
+                        crate::ui::ui(f, app, config);
                     })?;
                     print_sixel_waveform(app)?;
                 }
@@ -413,7 +413,7 @@ pub(crate) fn run_app<B: Backend>(
 
         // イベント処理後に再描画
         terminal.draw(|f| {
-            crate::ui::ui(f, app);
+            crate::ui::ui(f, app, config);
         })?;
         // sixel波形が生成済みなら再描画後に端末へ書き出す
         #[cfg(windows)]

@@ -2,7 +2,7 @@ mod helpers;
 pub use helpers::*;
 mod help;
 
-use crate::{app::App, models::*};
+use crate::{app::App, config::Config, models::*};
 use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
@@ -30,7 +30,7 @@ pub const LAYOUT_CH_ROW_Y: u16 = 7;
 /// Colors used to draw the four operator envelopes (O1–O4).
 const OP_ENVELOPE_COLORS: [Color; 4] = [Color::Cyan, Color::Green, Color::Yellow, Color::Magenta];
 
-pub fn ui(f: &mut Frame, app: &App) {
+pub fn ui(f: &mut Frame, app: &App, config: &Config) {
     let size = f.area();
 
     let block = Block::default()
@@ -293,7 +293,7 @@ pub fn ui(f: &mut Frame, app: &App) {
     }
 
     // Draw keybind hints at the bottom of the screen (left-aligned)
-    help::draw_keybind_hints(f, app, inner);
+    help::draw_keybind_hints(f, app, config, inner);
 }
 
 /// Draw operator envelope shapes for all 4 OPs into `area` using ratatui's Braille Canvas.
