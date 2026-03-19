@@ -164,9 +164,6 @@ pub(crate) fn run_app<B: Backend>(
     terminal.draw(|f| {
         crate::ui::ui(f, app, config);
     })?;
-    #[cfg(windows)]
-    print_sixel_waveform(app)?;
-
     loop {
         // アップデートが利用可能になったら保存・後始末してループを抜ける
         if app.is_update_available() {
@@ -176,60 +173,10 @@ pub(crate) fn run_app<B: Backend>(
             return Ok(());
         }
 
-        // アイドル検出: 5秒間音色変更がなければsixel波形を生成する
-        #[cfg(windows)]
-        {
-            if app.use_interactive_mode
-                && !app.waveform_generating
-                && app
-                    .sixel_waveform
-                    .lock()
-                    .ok()
-                    .map(|g| g.is_none())
-                    .unwrap_or(false)
-                && app.last_tone_change.elapsed() >= std::time::Duration::from_secs(5)
-            {
-                app.waveform_generating = true;
-                let sixel_arc = std::sync::Arc::clone(&app.sixel_waveform);
-                let expected_gen = app
-                    .waveform_generation
-                    .load(std::sync::atomic::Ordering::SeqCst);
-                let generation_arc = std::sync::Arc::clone(&app.waveform_generation);
-                crate::waveform::spawn_waveform_generation(
-                    app.values,
-                    sixel_arc,
-                    expected_gen,
-                    generation_arc,
-                );
-            }
-        }
-
         // イベントをポーリング（タイムアウト付き）。イベントがなければ再描画せずに次ループへ
         if !event::poll(std::time::Duration::from_millis(50))? {
-            // sixel生成が完了していたら再描画して表示を更新する。
-            // waveform_generating フラグは使わない: 生成カウンタが世代ミスマッチを防ぐため
-            // sixel_ready が true なら常に有効な波形が格納されている。
-            #[cfg(windows)]
-            {
-                let sixel_ready = app
-                    .sixel_waveform
-                    .lock()
-                    .ok()
-                    .map(|g| g.is_some())
-                    .unwrap_or(false);
-                if sixel_ready {
-                    terminal.draw(|f| {
-                        crate::ui::ui(f, app, config);
-                    })?;
-                    print_sixel_waveform(app)?;
-                }
-            }
             continue;
         }
-
-        // イベント処理前の音色データを記録（変更検出用）
-        #[cfg(windows)]
-        let values_before = app.values;
 
         match event::read()? {
             Event::Key(key) => {
@@ -405,56 +352,9 @@ pub(crate) fn run_app<B: Backend>(
             _ => {}
         }
 
-        // 音色データが変更されたらアイドルタイマーをリセットする
-        #[cfg(windows)]
-        if app.values != values_before {
-            app.on_tone_changed();
-        }
-
         // イベント処理後に再描画
         terminal.draw(|f| {
             crate::ui::ui(f, app, config);
         })?;
-        // sixel波形が生成済みなら再描画後に端末へ書き出す
-        #[cfg(windows)]
-        print_sixel_waveform(app)?;
     }
-}
-
-/// Print the sixel waveform to stdout at the envelope display area position.
-///
-/// Called after each ratatui draw so that the sixel waveform replaces the
-/// braille envelope canvas when a waveform has been generated.
-///
-/// If `app.sixel_waveform` is `None` (generation not yet complete) or the
-/// mutex is poisoned the function returns early without printing anything.
-///
-/// # Terminal compatibility
-/// Terminals that do not support sixel will display the raw DCS escape
-/// sequence, which is an accepted limitation for this experimental feature.
-#[cfg(windows)]
-fn print_sixel_waveform(app: &App) -> io::Result<()> {
-    use std::io::Write;
-
-    let sixel = {
-        match app.sixel_waveform.lock() {
-            Ok(guard) => guard.clone(),
-            Err(_) => return Ok(()),
-        }
-    };
-
-    let Some(sixel_str) = sixel else {
-        return Ok(());
-    };
-
-    let alg_value = app.values[ROW_CH][CH_PARAM_ALG];
-    let envelope_y = crate::ui::compute_envelope_area_y(alg_value);
-
-    let mut stdout = io::stdout();
-    // カーソルをエンベロープ表示エリアの先頭に移動してsixelを書き出す
-    execute!(stdout, crossterm::cursor::MoveTo(0, envelope_y))?;
-    stdout.write_all(sixel_str.as_bytes())?;
-    stdout.flush()?;
-
-    Ok(())
 }
