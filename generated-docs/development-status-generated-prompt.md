@@ -1,4 +1,4 @@
-Last updated: 2026-03-20
+Last updated: 2026-04-07
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -107,6 +107,8 @@ Last updated: 2026-03-20
 - .github/actions-tmp/.github/workflows/call-check-large-files.yml
 - .github/actions-tmp/.github/workflows/call-daily-project-summary.yml
 - .github/actions-tmp/.github/workflows/call-issue-note.yml
+- .github/actions-tmp/.github/workflows/call-rust-fmt-commit.yml
+- .github/actions-tmp/.github/workflows/call-rust-windows-cargo-check.yml
 - .github/actions-tmp/.github/workflows/call-rust-windows-check.yml
 - .github/actions-tmp/.github/workflows/call-translate-readme.yml
 - .github/actions-tmp/.github/workflows/callgraph.yml
@@ -114,6 +116,8 @@ Last updated: 2026-03-20
 - .github/actions-tmp/.github/workflows/check-recent-human-commit.yml
 - .github/actions-tmp/.github/workflows/daily-project-summary.yml
 - .github/actions-tmp/.github/workflows/issue-note.yml
+- .github/actions-tmp/.github/workflows/rust-fmt-commit.yml
+- .github/actions-tmp/.github/workflows/rust-windows-cargo-check.yml
 - .github/actions-tmp/.github/workflows/rust-windows-check.yml
 - .github/actions-tmp/.github/workflows/translate-readme.yml
 - .github/actions-tmp/.github_automation/callgraph/codeql-queries/callgraph.ql
@@ -157,6 +161,7 @@ Last updated: 2026-03-20
 - .github/actions-tmp/.github_automation/translate/scripts/translate-readme.cjs
 - .github/actions-tmp/.gitignore
 - .github/actions-tmp/.vscode/settings.json
+- .github/actions-tmp/AGENTS.md
 - .github/actions-tmp/LICENSE
 - .github/actions-tmp/README.ja.md
 - .github/actions-tmp/README.md
@@ -197,7 +202,8 @@ Last updated: 2026-03-20
 - .github/actions-tmp/issue-notes/4.md
 - .github/actions-tmp/issue-notes/40.md
 - .github/actions-tmp/issue-notes/44.md
-- .github/actions-tmp/issue-notes/52.md
+- .github/actions-tmp/issue-notes/57.md
+- .github/actions-tmp/issue-notes/67.md
 - .github/actions-tmp/issue-notes/7.md
 - .github/actions-tmp/issue-notes/8.md
 - .github/actions-tmp/issue-notes/9.md
@@ -245,8 +251,8 @@ Last updated: 2026-03-20
 - issue-notes/219.md
 - issue-notes/220.md
 - issue-notes/224.md
-- issue-notes/232.md
 - issue-notes/234.md
+- issue-notes/236.md
 - issue-notes/95.md
 - issue-notes/96.md
 - src/app/mod.rs
@@ -272,6 +278,7 @@ Last updated: 2026-03-20
 - src/tests/app_tests.rs
 - src/tests/app_tl_d1l_dt_dt2_tests.rs
 - src/tests/app_value_by_tests.rs
+- src/tests/cli_tests.rs
 - src/tests/event_loop_tests.rs
 - src/tests/favorites_tests.rs
 - src/tests/file_ops_tests.rs
@@ -532,6 +539,17 @@ jobs:
 {% endraw %}
 ```
 
+### .github/actions-tmp/issue-notes/67.md
+```md
+{% raw %}
+# issue ワークフローymlとscriptのうち、windows rustのissue文言を修正する #67
+[issues #67](https://github.com/cat2151/github-actions/issues/67)
+
+
+
+{% endraw %}
+```
+
 ### .github/actions-tmp/issue-notes/7.md
 ```md
 {% raw %}
@@ -622,35 +640,38 @@ jobs:
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-1c85db1 Merge pull request #235 from cat2151/copilot/remove-envelope-line-graph-feature
-4e4e247 feat: remove envelope polyline graph display feature
-f6e8a41 Initial plan
-7ae67b2 Delete envelope line graph display feature
-f80295a Merge pull request #233 from cat2151/copilot/remove-wav-waveform-sixel
-60d8613 refactor: remove windows sixel waveform feature
-b65a57e Add issue note for #234 [auto]
-a71016f Initial plan
-7ab4c88 Add issue note for #232 [auto]
-1c96303 Merge pull request #231 from cat2151/copilot/remove-hjkl-wasd-from-help
+b31bf9b Merge pull request #237 from cat2151/copilot/update-check-subcommands-using-cat-self-update-lib
+cb56644 test: share unavailable update-check formatting path
+40320ff fix: address PR review follow-ups
+84e5709 docs: add CLI type documentation
+5b18efb feat: add clap update and check subcommands
+1663a88 Add issue note for #236 [auto]
+ff83867 Initial plan
+d33b9bf Jekyll設定
 
 ### 変更されたファイル:
+Cargo.lock
+Cargo.toml
+_config.yml
 generated-docs/development-status-generated-prompt.md
 generated-docs/development-status.md
 generated-docs/project-overview-generated-prompt.md
 generated-docs/project-overview.md
-issue-notes/223.md
 issue-notes/232.md
 issue-notes/234.md
+issue-notes/236.md
 src/app/mod.rs
 src/app_init.rs
 src/event_loop.rs
 src/main.rs
+src/tests/cli_tests.rs
+src/tests/mod.rs
 src/tests/ui_tests.rs
-src/ui/help.rs
 src/ui/helpers.rs
 src/ui/mod.rs
+src/updater.rs
 src/waveform.rs
 
 
 ---
-Generated at: 2026-03-20 07:10:52 JST
+Generated at: 2026-04-07 07:16:29 JST
