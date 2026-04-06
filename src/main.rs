@@ -44,15 +44,17 @@ use std::io;
 struct Cli {
     #[arg(
         long = "legacy-play-mode",
+        global = true,
         help = "Windows限定: ym2151-log-play-serverを使わないレガシープレイモードで起動"
     )]
     legacy_play_mode: bool,
     #[arg(
         long = "value-by-mouse-move",
+        global = true,
         help = "マウス移動で値変更するレガシーモードを有効化"
     )]
     value_by_mouse_move: bool,
-    #[arg(long = "verbose", help = "詳細なログ出力を有効化")]
+    #[arg(long = "verbose", global = true, help = "詳細なログ出力を有効化")]
     verbose: bool,
     #[command(subcommand)]
     command: Option<Commands>,
@@ -87,7 +89,7 @@ fn run_command(command: &Commands) -> anyhow::Result<()> {
     match command {
         Commands::Update => updater::run_foreground_update(),
         Commands::Check => {
-            println!("{}", updater::check_for_update()?);
+            println!("{}", updater::check_for_update_output()?);
             Ok(())
         }
     }
