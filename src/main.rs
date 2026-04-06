@@ -40,6 +40,7 @@ use std::io;
 #[command(
     after_help = "例:\n  ym2151-tone-editor --verbose\n  ym2151-tone-editor check\n  ym2151-tone-editor update"
 )]
+/// YM2151 tone editor のコマンドラインインターフェース定義。
 struct Cli {
     #[arg(
         long = "legacy-play-mode",
@@ -58,6 +59,7 @@ struct Cli {
 }
 
 #[derive(Subcommand, Debug, Clone, PartialEq, Eq)]
+/// ym2151-tone-editor が提供する CLI サブコマンド。
 enum Commands {
     /// アプリを自己更新する
     Update,
