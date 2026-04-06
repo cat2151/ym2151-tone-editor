@@ -63,14 +63,18 @@ pub fn check_for_update() -> Result<Option<CheckResult>> {
         .map_err(|e| anyhow::anyhow!("アップデートチェックに失敗しました: {}", e))
 }
 
+fn unavailable_update_check_message(local_hash: &str) -> String {
+    format!(
+        "embedded: {}\nresult: update check unavailable (git metadata not embedded)",
+        local_hash.trim()
+    )
+}
+
 /// CLI 向けに更新確認結果を表示用文字列へ変換する。
 pub fn check_for_update_output() -> Result<String> {
     match check_for_update()? {
         Some(result) => Ok(result.to_string()),
-        None => Ok(format!(
-            "embedded: {}\nresult: update check unavailable (git metadata not embedded)",
-            LOCAL_HASH.trim()
-        )),
+        None => Ok(unavailable_update_check_message(LOCAL_HASH)),
     }
 }
 
@@ -138,10 +142,7 @@ mod tests {
 
     #[test]
     fn test_check_for_update_output_reports_unavailable_without_git_hash() {
-        let output = format!(
-            "embedded: {}\nresult: update check unavailable (git metadata not embedded)",
-            "unknown"
-        );
+        let output = unavailable_update_check_message("unknown");
         assert_eq!(
             output,
             "embedded: unknown\nresult: update check unavailable (git metadata not embedded)"
