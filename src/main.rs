@@ -23,7 +23,7 @@ mod variation_selector;
 pub use logging::{enable_verbose_logging, log_verbose};
 
 use app::App;
-use clap::{Arg, Command};
+use clap::{Parser, Subcommand};
 use config::Config;
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
@@ -33,44 +33,70 @@ use crossterm::{
 use ratatui::{backend::CrosstermBackend, Terminal};
 use std::io;
 
-fn main() -> Result<(), io::Error> {
-    let matches = Command::new("ym2151-tone-editor")
-        .version("0.1.0")
-        .about("YM2151 FM音色エディタ")
-        .arg(
-            Arg::new("legacy_play_mode")
-                .long("legacy-play-mode")
-                .help("Windows限定: ym2151-log-play-serverを使わないレガシープレイモードで起動")
-                .action(clap::ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new("value-by-mouse-move")
-                .long("value-by-mouse-move")
-                .help("マウス移動で値変更するレガシーモードを有効化")
-                .action(clap::ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new("verbose")
-                .long("verbose")
-                .help("詳細なログ出力を有効化")
-                .action(clap::ArgAction::SetTrue),
-        )
-        .after_help("例: ym2151-tone-editor --verbose")
-        .get_matches();
+#[derive(Parser, Debug, PartialEq, Eq)]
+#[command(name = "ym2151-tone-editor")]
+#[command(version = "0.1.0")]
+#[command(about = "YM2151 FM音色エディタ")]
+#[command(
+    after_help = "例:\n  ym2151-tone-editor --verbose\n  ym2151-tone-editor check\n  ym2151-tone-editor update"
+)]
+struct Cli {
+    #[arg(
+        long = "legacy-play-mode",
+        help = "Windows限定: ym2151-log-play-serverを使わないレガシープレイモードで起動"
+    )]
+    legacy_play_mode: bool,
+    #[arg(
+        long = "value-by-mouse-move",
+        help = "マウス移動で値変更するレガシーモードを有効化"
+    )]
+    value_by_mouse_move: bool,
+    #[arg(long = "verbose", help = "詳細なログ出力を有効化")]
+    verbose: bool,
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
 
-    let legacy_play_mode = matches.get_flag("legacy_play_mode");
-    let value_by_mouse_move = matches.get_flag("value-by-mouse-move");
-    let verbose = matches.get_flag("verbose");
+#[derive(Subcommand, Debug, Clone, PartialEq, Eq)]
+enum Commands {
+    /// アプリを自己更新する
+    Update,
+    /// ビルド時コミットとリモート main の差分を確認する
+    Check,
+}
 
-    if verbose {
+fn main() -> anyhow::Result<()> {
+    let cli = Cli::parse();
+
+    if cli.verbose {
         enable_verbose_logging();
         log_verbose("Verbose logging enabled");
     }
+
+    if let Some(command) = cli.command.as_ref() {
+        return run_command(command);
+    }
+
+    run_tui(&cli)?;
+    Ok(())
+}
+
+fn run_command(command: &Commands) -> anyhow::Result<()> {
+    match command {
+        Commands::Update => updater::run_foreground_update(),
+        Commands::Check => {
+            println!("{}", updater::check_for_update()?);
+            Ok(())
+        }
+    }
+}
+
+fn run_tui(cli: &Cli) -> Result<(), io::Error> {
     #[cfg(windows)]
-    ym2151_log_play_server::client::init_client(verbose);
+    ym2151_log_play_server::client::init_client(cli.verbose);
 
     let config = Config::load_or_default();
-    let use_interactive_mode = !legacy_play_mode;
+    let use_interactive_mode = !cli.legacy_play_mode;
 
     #[cfg(windows)]
     {
@@ -90,7 +116,7 @@ fn main() -> Result<(), io::Error> {
 
     let mut app = App::new(
         use_interactive_mode,
-        value_by_mouse_move,
+        cli.value_by_mouse_move,
         config.audio.envelope_delay_seconds,
     );
 
